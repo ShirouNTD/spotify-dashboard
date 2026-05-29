@@ -109,23 +109,34 @@ def make_card(label, value, pct=None):
     </div>
     """
 
-def tao_sheet_tong_hop():
+def tao_sheet_tong_hop(thang_chon):
     df_kq = pd.read_csv(FILE_DU_LIEU)
     df_kpi = pd.read_csv(FILE_KPI)
-    df_master = pd.DataFrame(danh_sach_kenh_master, columns=["Kênh_Spotify"])
     
-    kpi_cols = df_kpi[["Kênh_Spotify", "KPI_Doanh_Thu", "KPI_Luot_Play"]]
-    kq_cols = df_kq.groupby("Kênh_Spotify")[["Doanh_Thu_USD", "Luot_Play"]].sum().reset_index()
+    # Lấy thông tin KPI và Số tuần
+    kpi_thang = df_kpi[df_kpi["Tháng"] == thang_chon]
+    master = pd.DataFrame(danh_sach_kenh_master, columns=["Kênh_Spotify"])
+    master = master.merge(kpi_thang[["Kênh_Spotify", "KPI_Doanh_Thu", "So_Tuan"]], on="Kênh_Spotify", how="left")
     
-    df_master = df_master.merge(kpi_cols, on="Kênh_Spotify", how="left") \
-                         .merge(kq_cols, on="Kênh_Spotify", how="left")
+    # 1. Cột Tháng tổng
+    thang_kq_sum = df_kq[df_kq["Tháng"] == thang_chon].groupby("Kênh_Spotify")["Doanh_Thu_USD"].sum().reset_index()
+    master = master.merge(thang_kq_sum, on="Kênh_Spotify", how="left")
+    master["%_Tháng"] = (master["Doanh_Thu_USD"] / master["KPI_Doanh_Thu"] * 100).fillna(0)
     
-    df_master["%_Doanh_Thu"] = (df_master["Doanh_Thu_USD"] / df_master["KPI_Doanh_Thu"] * 100).fillna(0)
-    return df_master
-
-tab_dashboard, tab_master, tab_nhap_kpi, tab_nhap_kq, tab_xoa_data = st.tabs([
-    "📊 Dashboard", "📑 Sheet Tổng Hợp", "🎯 Nhập Mục Tiêu", "📥 Nhập Kết Quả", "🛠️ Quản Lý"
-])
+    # 2. Vòng lặp trải cột theo Tuần
+    tuan_trong_thang = sorted([t for t in df_kq[df_kq["Tháng"] == thang_chon]["Tuần"].unique()])
+    for tuan in tuan_trong_thang:
+        # Target tuần = KPI tháng / Số tuần
+        master[f"{tuan}_Target"] = (master["KPI_Doanh_Thu"] / master["So_Tuan"]).fillna(0)
+        
+        # Actual tuần
+        kq_tuan = df_kq[(df_kq["Tháng"] == thang_chon) & (df_kq["Tuần"] == tuan)][["Kênh_Spotify", "Doanh_Thu_USD"]]
+        master = master.merge(kq_tuan.rename(columns={"Doanh_Thu_USD": f"{tuan}_Actual"}), on="Kênh_Spotify", how="left")
+        
+        # % Tuần
+        master[f"{tuan}_%"] = (master[f"{tuan}_Actual"] / master[f"{tuan}_Target"] * 100).fillna(0)
+        
+    return master
 
 # ==========================================
 # Thêm logic cho tab mới này
