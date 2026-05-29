@@ -158,12 +158,19 @@ with tab_master:
     df_master_display = df_master.copy()
     df_master_display.index = range(1, len(df_master_display) + 1)
     
-# Đổi tên cột chỉ khi hiển thị, không đổi tên cột trong dữ liệu gốc
-    df_master_display = df_master.rename(columns={"So_Tuan": "Số Tuần"})
-    
-    # Hiển thị df_master_display thay vì df_master
+# 1. Tách các cột để định dạng riêng biệt
+    def formatter_func(val):
+        if isinstance(val, float):
+            # Nếu là tiền (lớn hơn 100) thì format kiểu tiền
+            if abs(val) > 100:
+                return f"${val:,.0f}"
+            # Nếu là % thì format kiểu %
+            return f"{val:.1f}%"
+        return val
+
+    # 2. Hiển thị bảng với hàm định dạng đã định nghĩa
     st.dataframe(
-        df_master_display.style.format(...), 
+        df_master_display.style.format(formatter_func),
         use_container_width=True
     )
 
