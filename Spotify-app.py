@@ -101,47 +101,28 @@ def make_card(label, value, pct=None):
 def tao_sheet_tong_hop():
     df_kq = pd.read_csv(FILE_DU_LIEU)
     df_kpi = pd.read_csv(FILE_KPI)
-    
-    # Tạo khung bảng dựa trên danh sách kênh
     df_master = pd.DataFrame(danh_sach_kenh_master, columns=["Kênh_Spotify"])
     
-    # Gộp dữ liệu: Mục tiêu + Kết quả
-    # Lấy KPI (Giả sử lấy theo Tháng 1 để demo, Boss có thể loop qua list tháng)
     kpi_cols = df_kpi[["Kênh_Spotify", "KPI_Doanh_Thu", "KPI_Luot_Play"]]
     kq_cols = df_kq.groupby("Kênh_Spotify")[["Doanh_Thu_USD", "Luot_Play"]].sum().reset_index()
     
     df_master = df_master.merge(kpi_cols, on="Kênh_Spotify", how="left") \
                          .merge(kq_cols, on="Kênh_Spotify", how="left")
     
-    # Tính % hoàn thành
     df_master["%_Doanh_Thu"] = (df_master["Doanh_Thu_USD"] / df_master["KPI_Doanh_Thu"] * 100).fillna(0)
     return df_master
 
-    """
-
-if "rk_kq" not in st.session_state: st.session_state.rk_kq = 0
-if "rk_kpi" not in st.session_state: st.session_state.rk_kpi = 0
-
-st.title("🎧 TRUNG TÂM QUẢN TRỊ HIỆU SUẤT SPOTIFY")
-st.markdown("---")
-
-if "toast_msg" in st.session_state:
-    st.toast(st.session_state.toast_msg[0], icon=st.session_state.toast_msg[1])
-    del st.session_state.toast_msg
-
-cac_key_can_xoa = ["loc_thang", "loc_tuan", "loc_kenh", "loc_bkt", "loc_tuan_phan_tich", "loc_tuan_rank"]
-
-tab_dashboard, tab_master, tab_nhap_kpi, tab_nhap_kq, tab_xoa_data = st.tabs([ "📊 Dashboard", "📑 Sheet Tổng Hợp", "🎯 Nhập Mục Tiêu", "📥 Nhập Kết Quả", "🛠️ Quản Lý" ]) 
+tab_dashboard, tab_master, tab_nhap_kpi, tab_nhap_kq, tab_xoa_data = st.tabs([
+    "📊 Dashboard", "📑 Sheet Tổng Hợp", "🎯 Nhập Mục Tiêu", "📥 Nhập Kết Quả", "🛠️ Quản Lý"
+])
 
 # ==========================================
 # Thêm logic cho tab mới này
 # ==========================================
 with tab_master:
     st.header("📑 Sheet Tổng Hợp Hiệu Suất")
-    st.markdown("Ma trận so sánh KPI vs Thực tế toàn kênh.")
-    
-    df_master = tao_sheet_tong_hop()
-    
+    df_master = tao_sheet_tong_hop() # Dòng này chính là nơi gọi cái hàm ở Bước A
+    st.dataframe(df_master, use_container_width=True)
     # Định dạng bảng với màu sắc (Style)
     st.dataframe(
         df_master.style.format({
