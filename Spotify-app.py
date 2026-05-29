@@ -508,50 +508,34 @@ with tab_dashboard:
             else:
                 df_plot = df_pie.groupby("Kênh_Spotify")[cot_tieu_chi].sum().reset_index()
                 
-            # --- VẼ DONUT TỰ ĐỘNG THEO THEME ---
+            # --- VẼ DONUT BẰNG CÁCH ÉP TEMPLATE THEME ---
             df_plot = df_pie.groupby("Kênh_Spotify")[cot_tieu_chi].sum().sort_values(ascending=False).reset_index()
-            
-            if df_plot.empty:
-                st.info("Không có dữ liệu để hiển thị biểu đồ.")
-            else:
-                # 1. Xác định Theme để chọn Palette
-                is_light = st.get_option("theme.base") == "light"
-                
-                # Light Mode: Tông Cam-Vàng đậm (Tương phản cao trên nền Xanh lá)
-                # Dark Mode: Tông Pastel dịu mắt
-                if is_light:
-                    palette = ['#E65100', '#F57F17', '#FBC02D', '#BF360C', '#FF8F00', '#FFD600']
-                else:
-                    palette = ['#A8D08D', '#BEE5A3', '#D5F9B9', '#FFE699', '#FFD966', '#FFC555', '#FFB347', '#FFA07A']
-                
-                # Tạo màu phù hợp với số lượng kênh
-                colors = (palette * (len(df_plot) // len(palette) + 1))[:len(df_plot)]
 
-                # 2. Vẽ biểu đồ
-                fig_pie = px.pie(
-                    df_plot, 
-                    values=cot_tieu_chi, 
-                    names="Kênh_Spotify", 
-                    hole=0.4, 
-                    title=f"Tỷ Trọng theo {tieu_chi_chon}",
-                    color_discrete_sequence=colors
-                )
-                
-                # 3. Layout chỉnh màu chữ theo Theme
-                fig_pie.update_layout(
-                    paper_bgcolor='rgba(0,0,0,0)', 
-                    plot_bgcolor='rgba(0,0,0,0)',
-                    showlegend=True,
-                    legend=dict(orientation="h", yanchor="top", y=-0.2, xanchor="center", x=0.5),
-                    font=dict(color="#1B5E20" if is_light else "#555555")
-                )
-                
-                # 4. Chữ trắng trên lát cắt (vẫn để trắng để rõ chữ trên mọi nền)
-                fig_pie.update_traces(
-                    textinfo='percent', 
-                    textfont_color="white", 
-                    textfont_size=12,
-                    textposition='inside'
-                )
-                
-                st.plotly_chart(fig_pie, use_container_width=True)
+            # Chọn template chuẩn của Plotly theo theme
+            # Nếu là light, dùng 'plotly_white', nếu là dark, dùng 'plotly_dark'
+            template_name = "plotly_white" if st.get_option("theme.base") == "light" else "plotly_dark"
+            
+            # Palette ép kiểu (dù thế nào cũng phải hiện màu này)
+            palette = ['#E65100', '#F57F17', '#FBC02D', '#BF360C', '#FF8F00', '#FFD600']
+
+            fig_pie = px.pie(
+                df_plot, 
+                values=cot_tieu_chi, 
+                names="Kênh_Spotify", 
+                hole=0.4, 
+                title=f"Tỷ Trọng theo {tieu_chi_chon}",
+                color_discrete_sequence=palette,
+                template=template_name # <--- Dòng này quan trọng nhất!
+            )
+            
+            # Cấu hình layout (Nền trong suốt)
+            fig_pie.update_layout(
+                paper_bgcolor='rgba(0,0,0,0)', 
+                plot_bgcolor='rgba(0,0,0,0)',
+                showlegend=True,
+                font=dict(color="#1B5E20" if st.get_option("theme.base") == "light" else "#555555")
+            )
+            
+            fig_pie.update_traces(textinfo='percent', textfont_color="white", textposition='inside')
+            
+            st.plotly_chart(fig_pie, use_container_width=True)
