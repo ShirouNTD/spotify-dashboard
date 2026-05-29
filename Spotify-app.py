@@ -6,51 +6,30 @@ import os
 from datetime import datetime
 import numpy as np
 
-# 1. CẤU HÌNH GIAO DIỆN & CSS (GIAO DIỆN SPOTIFY TỰ THÍCH ỨNG)
+# 1. CẤU HÌNH GIAO DIỆN & CSS
 st.set_page_config(page_title="Spotify Performance Hub", layout="wide", page_icon="🎧")
 
 st.markdown("""
 <style>
-    /* Nút Primary mang phong cách Spotify */
     div.stButton > button[kind="primary"] {
-        background-color: #1DB954;
-        color: white;
-        border: none;
-        border-radius: 20px;
-        font-weight: bold;
+        background-color: #1DB954; color: white; border: none; border-radius: 20px; font-weight: bold;
     }
-    div.stButton > button[kind="primary"]:hover {
-        background-color: #1ED760;
-        color: white;
-    }
+    div.stButton > button[kind="primary"]:hover { background-color: #1ED760; color: white; }
     
-    /* Giao diện Thẻ Scorecard */
     .spotify-card {
-        background-color: #ffffff;
-        border: 1px solid #e6e6e6;
-        border-radius: 8px;
-        padding: 15px;
-        color: #121212;
-        height: 100%;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        background-color: #ffffff; border: 1px solid #e6e6e6; border-radius: 8px;
+        padding: 15px; color: #121212; height: 100%; box-shadow: 0 2px 4px rgba(0,0,0,0.05);
     }
     .spotify-label { font-size: 13px; font-weight: 600; color: #535353; text-transform: uppercase; margin-bottom: 5px; }
     .spotify-value { font-size: 26px; font-weight: 900; margin-bottom: 10px; }
     .badge-green { background-color: #1DB954; color: #fff; padding: 4px 8px; border-radius: 4px; font-size: 13px; font-weight: bold; }
     .badge-red { background-color: #E22134; color: #fff; padding: 4px 8px; border-radius: 4px; font-size: 13px; font-weight: bold; }
 
-    /* Bảng Xếp Hạng Text */
     .text-success { color: #1DB954; font-size: 18px; font-weight: bold; }
     .text-danger { color: #E22134; font-size: 18px; font-weight: bold; }
 
-    /* Chế độ Dark Mode tự động */
     @media (prefers-color-scheme: dark) {
-        .spotify-card {
-            background-color: #181818;
-            border: 1px solid #282828;
-            color: #ffffff;
-            box-shadow: 0 2px 4px rgba(255,255,255,0.02);
-        }
+        .spotify-card { background-color: #181818; border: 1px solid #282828; color: #ffffff; box-shadow: 0 2px 4px rgba(255,255,255,0.02); }
         .spotify-label { color: #b3b3b3; }
         .badge-green { background-color: #1ED760; color: #000; } 
         .badge-red { background-color: #FF5722; color: #fff; } 
@@ -63,14 +42,10 @@ st.markdown("""
 FILE_DU_LIEU = "spotify_master_data.csv"
 FILE_KPI = "spotify_channel_kpi.csv" 
 
-# Hàm khởi tạo & nâng cấp file CSV tự động
+# Hàm khởi tạo file CSV
 def khoi_tao_he_thong_db():
     if not os.path.exists(FILE_DU_LIEU):
-        df_mau = pd.DataFrame(columns=[
-            "Tháng", "Tuần", "Kênh_Spotify", "Doanh_Thu_USD", 
-            "Luot_Play", "So_Gio_Nghe", "So_Tap_Upload", "Bat_Kiem_Tien", "Thoi_Gian_Nhap"
-        ])
-        df_mau.to_csv(FILE_DU_LIEU, index=False)
+        pd.DataFrame(columns=["Tháng", "Tuần", "Kênh_Spotify", "Doanh_Thu_USD", "Luot_Play", "So_Gio_Nghe", "So_Tap_Upload", "Bat_Kiem_Tien", "Thoi_Gian_Nhap"]).to_csv(FILE_DU_LIEU, index=False)
     else:
         df_hien_tai = pd.read_csv(FILE_DU_LIEU)
         if "Bat_Kiem_Tien" not in df_hien_tai.columns:
@@ -78,8 +53,7 @@ def khoi_tao_he_thong_db():
             df_hien_tai.to_csv(FILE_DU_LIEU, index=False)
             
     if not os.path.exists(FILE_KPI):
-        df_kpi_mau = pd.DataFrame(columns=["Tháng", "Kênh_Spotify", "KPI_Doanh_Thu", "KPI_Luot_Play", "KPI_So_Gio", "KPI_So_Tap", "So_Tuan", "Bat_Kiem_Tien"])
-        df_kpi_mau.to_csv(FILE_KPI, index=False)
+        pd.DataFrame(columns=["Tháng", "Kênh_Spotify", "KPI_Doanh_Thu", "KPI_Luot_Play", "KPI_So_Gio", "KPI_So_Tap", "So_Tuan", "Bat_Kiem_Tien"]).to_csv(FILE_KPI, index=False)
     else:
         df_kpi_hien_tai = pd.read_csv(FILE_KPI)
         if "Bat_Kiem_Tien" not in df_kpi_hien_tai.columns:
@@ -96,14 +70,12 @@ danh_sach_kenh_master.sort()
 
 def lay_trang_thai_kiem_tien(ten_kenh):
     kpi_match = df_kpi[df_kpi["Kênh_Spotify"] == ten_kenh]
-    if not kpi_match.empty:
-        return bool(kpi_match.iloc[-1]["Bat_Kiem_Tien"])
+    if not kpi_match.empty: return bool(kpi_match.iloc[-1]["Bat_Kiem_Tien"])
     df_match = df[df["Kênh_Spotify"] == ten_kenh]
-    if not df_match.empty:
-        return bool(df_match.iloc[-1]["Bat_Kiem_Tien"])
+    if not df_match.empty: return bool(df_match.iloc[-1]["Bat_Kiem_Tien"])
     return False
 
-# Hàm vẽ HTML Card Scorecard
+# Hàm vẽ thẻ HTML Scorecard
 def make_card(label, value, pct=None):
     if pct is not None:
         badge = f"<span class='{'badge-green' if pct >= 100 else 'badge-red'}'>{pct:.1f}% KPI</span>"
@@ -117,18 +89,19 @@ def make_card(label, value, pct=None):
     </div>
     """
 
+# Xử lý State Memory
 if "rk_kq" not in st.session_state: st.session_state.rk_kq = 0
 if "rk_kpi" not in st.session_state: st.session_state.rk_kpi = 0
 
 st.title("🎧 TRUNG TÂM QUẢN TRỊ HIỆU SUẤT SPOTIFY")
 st.markdown("---")
 
-# ==========================================
-# KHẮC PHỤC LỖI MẤT TOAST THÔNG BÁO KHI RERUN
-# ==========================================
 if "toast_msg" in st.session_state:
     st.toast(st.session_state.toast_msg[0], icon=st.session_state.toast_msg[1])
     del st.session_state.toast_msg
+
+# Khai báo biến reset chung
+cac_key_can_xoa = ["loc_thang", "loc_tuan", "loc_kenh", "loc_bkt", "loc_tuan_phan_tich", "loc_tuan_rank"]
 
 tab_dashboard, tab_nhap_kpi, tab_nhap_kq, tab_xoa_data = st.tabs([
     "📊 Báo Cáo Dashboard", "🎯 Nhập Mục Tiêu Kênh", "📥 Nhập Kết Quả Kênh", "🛠️ Quản Lý Dữ Liệu"
@@ -140,14 +113,12 @@ tab_dashboard, tab_nhap_kpi, tab_nhap_kq, tab_xoa_data = st.tabs([
 with tab_nhap_kpi:
     st.subheader("Thiết Lập Kênh & Mục Tiêu (KPI) Tháng")
     st.info("💡 Bạn có thể tạo Kênh mới tại đây. Hệ thống sẽ chia KPI Tháng ra các Tuần để vẽ biểu đồ.")
-    
     rk_kpi = st.session_state.rk_kpi
     
     col_kpi1, col_kpi2, col_kpi3 = st.columns(3)
     with col_kpi1:
         thang_kpi = st.selectbox("Chọn Tháng thiết lập:", [f"Tháng {i}" for i in range(1, 13)], key=f"t_kpi_{rk_kpi}")
         lua_chon_kenh_kpi = st.selectbox("Chọn Kênh / Thêm Kênh mới:", ["➕ Nhập kênh mới..."] + danh_sach_kenh_master, key=f"c_kpi_{rk_kpi}")
-        
         if lua_chon_kenh_kpi == "➕ Nhập kênh mới...":
             kenh_kpi = st.text_input("Gõ tên kênh mới:", key=f"new_c_kpi_{rk_kpi}").strip()
             trang_thai_mac_dinh = False
@@ -179,12 +150,10 @@ with tab_nhap_kpi:
                 "KPI_So_Gio": float(gio_kpi), "KPI_So_Tap": int(tap_kpi), 
                 "So_Tuan": int(so_tuan_kpi), "Bat_Kiem_Tien": bkt_kpi
             }])
-            
-            df_kpi_ghi = pd.concat([df_kpi_filtered, kpi_moi], ignore_index=True)
-            df_kpi_ghi.to_csv(FILE_KPI, index=False)
+            pd.concat([df_kpi_filtered, kpi_moi], ignore_index=True).to_csv(FILE_KPI, index=False)
             
             st.session_state.toast_msg = (f"🎯 Đã lưu cấu hình & KPI cho kênh {kenh_kpi} vào {thang_kpi}!", "🎯")
-            for k in ["loc_thang", "loc_kenh", "loc_bkt", "loc_tuan_phan_tich"]:
+            for k in cac_key_can_xoa:
                 if k in st.session_state: del st.session_state[k]
             st.session_state.rk_kpi += 1
             st.rerun()
@@ -195,7 +164,6 @@ with tab_nhap_kpi:
 with tab_nhap_kq:
     st.subheader("Cập Nhật Kết Quả Vận Hành Tuần")
     rk = st.session_state.rk_kq
-    
     col1, col2, col3 = st.columns(3)
     with col1:
         thang_kq = st.selectbox("Tháng Báo Cáo:", [f"Tháng {i}" for i in range(1, 13)], key=f"t_kq_{rk}")
@@ -232,13 +200,10 @@ with tab_nhap_kq:
                     "So_Gio_Nghe": float(gio_kq), "So_Tap_Upload": int(tap_kq),
                     "Bat_Kiem_Tien": trang_thai_bkt_kq, "Thoi_Gian_Nhap": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                 }])
-                df_ghi = pd.concat([df, du_lieu_moi], ignore_index=True)
-                df_ghi.to_csv(FILE_DU_LIEU, index=False)
+                pd.concat([df, du_lieu_moi], ignore_index=True).to_csv(FILE_DU_LIEU, index=False)
                 
-                # Fix lỗi nuốt thông báo
                 st.session_state.toast_msg = (f"✅ Đã lưu kết quả cho {kenh_kq} ({tuan_kq})!", "✅")
-                
-                for k in ["loc_thang", "loc_kenh", "loc_bkt", "loc_tuan_phan_tich"]:
+                for k in cac_key_can_xoa:
                     if k in st.session_state: del st.session_state[k]
                 st.session_state.rk_kq += 1
                 st.rerun()
@@ -250,16 +215,14 @@ with tab_xoa_data:
     if not danh_sach_kenh_master:
         st.info("Hệ thống chưa có dữ liệu kênh nào.")
     else:
-        # PHẦN 1: CHỈNH SỬA TÊN KÊNH & TRẠNG THÁI KIẾM TIỀN
         st.subheader("🛠️ Chỉnh Sửa Thông Tin Kênh")
-        st.markdown("Tính năng này sẽ tự động cập nhật tên kênh hoặc trạng thái kiếm tiền trên **toàn bộ dữ liệu lịch sử** (cả phần Kết quả và KPI) để đảm bảo không bị đứt gãy biểu đồ.")
-        
+        st.markdown("Cập nhật tên kênh hoặc trạng thái kiếm tiền trên toàn bộ dữ liệu lịch sử.")
         kenh_can_sua = st.selectbox("1. Chọn Kênh cần chỉnh sửa:", danh_sach_kenh_master, key="edit_k")
         trang_thai_hien_tai = lay_trang_thai_kiem_tien(kenh_can_sua)
         
         col_e1, col_e2 = st.columns(2)
         with col_e1:
-            ten_kenh_moi = st.text_input("Tên kênh (sửa tại đây nếu có lỗi gõ sai):", value=kenh_can_sua, key="edit_name").strip()
+            ten_kenh_moi = st.text_input("Tên kênh mới:", value=kenh_can_sua, key="edit_name").strip()
         with col_e2:
             st.markdown("<br>", unsafe_allow_html=True)
             bkt_moi = st.checkbox("✅ Kênh đã bật kiếm tiền", value=trang_thai_hien_tai, key="edit_bkt")
@@ -268,9 +231,8 @@ with tab_xoa_data:
             if not ten_kenh_moi:
                 st.error("⚠️ Tên kênh không được để trống!")
             elif ten_kenh_moi != kenh_can_sua and ten_kenh_moi in danh_sach_kenh_master:
-                st.error(f"⚠️ Tên kênh '{ten_kenh_moi}' đã tồn tại! Vui lòng chọn tên khác để tránh bị gộp nhầm dữ liệu của 2 kênh.")
+                st.error("⚠️ Tên kênh đã tồn tại! Vui lòng chọn tên khác.")
             else:
-                # Cập nhật DB
                 df.loc[df["Kênh_Spotify"] == kenh_can_sua, "Kênh_Spotify"] = ten_kenh_moi
                 df.loc[df["Kênh_Spotify"] == ten_kenh_moi, "Bat_Kiem_Tien"] = bkt_moi
                 df.to_csv(FILE_DU_LIEU, index=False)
@@ -279,21 +241,20 @@ with tab_xoa_data:
                 df_kpi.loc[df_kpi["Kênh_Spotify"] == ten_kenh_moi, "Bat_Kiem_Tien"] = bkt_moi
                 df_kpi.to_csv(FILE_KPI, index=False)
                 
-                st.session_state.toast_msg = (f"✅ Đã cập nhật thành công thông tin cho kênh {ten_kenh_moi}!", "✅")
-                for k in ["loc_thang", "loc_kenh", "loc_bkt", "loc_tuan_phan_tich"]:
+                st.session_state.toast_msg = (f"✅ Đã cập nhật thành công thông tin kênh {ten_kenh_moi}!", "✅")
+                for k in cac_key_can_xoa:
                     if k in st.session_state: del st.session_state[k]
                 st.rerun()
                 
         st.markdown("---")
         
-        # PHẦN 2: XÓA DỮ LIỆU KẾT QUẢ BỊ SAI
-        st.subheader("🗑️ Dọn Dẹp Dữ liệu Báo Cáo Sai")
+        st.subheader("🗑️ Dọn Dẹp Dữ Liệu Báo Cáo Sai")
         if df.empty:
             st.info("Kho dữ liệu báo cáo tuần đang trống.")
         else:
             col_x1, col_x2 = st.columns(2)
             with col_x1:
-                kenh_can_xoa = st.selectbox("1. Chọn Kênh cần xóa dữ liệu:", df["Kênh_Spotify"].unique(), key="del_k")
+                kenh_can_xoa = st.selectbox("1. Chọn Kênh cần xóa:", df["Kênh_Spotify"].unique(), key="del_k")
             with col_x2:
                 cac_tuan_da_co = df[df["Kênh_Spotify"] == kenh_can_xoa]["Tuần"].unique()
                 tuan_can_xoa = st.selectbox("2. Chọn Tuần bị sai:", cac_tuan_da_co, key="del_w")
@@ -303,7 +264,7 @@ with tab_xoa_data:
                 df_con_lai.to_csv(FILE_DU_LIEU, index=False)
                 
                 st.session_state.toast_msg = ("✅ Đã xóa thành công!", "✅")
-                for k in ["loc_thang", "loc_kenh", "loc_bkt", "loc_tuan_phan_tich"]:
+                for k in cac_key_can_xoa:
                     if k in st.session_state: del st.session_state[k]
                 st.rerun()
 
@@ -314,48 +275,61 @@ with tab_dashboard:
     if df.empty:
         st.info("Hệ thống chưa có dữ liệu kết quả nào được ghi nhận. Vui lòng cập nhật.")
     else:
-        # BỘ LỌC TỔNG 
-        col_loc1, col_loc2, col_loc3 = st.columns([1, 2, 1])
+        # BỘ LỌC TỔNG CÓ THÊM LỌC TUẦN
+        col_loc1, col_loc_tuan, col_loc2, col_loc3 = st.columns([1.2, 1.2, 2, 1.2])
         with col_loc1:
             thang_hien_co = list(df["Tháng"].unique())
-            thang_mac_dinh = thang_hien_co[-1] if thang_hien_co else "Tất cả các tháng"
-            thang_chon = st.selectbox("📅 Lọc Dashboard theo Tháng:", ["Tất cả các tháng"] + thang_hien_co, index=(len(thang_hien_co)), key="loc_thang")
+            thang_chon = st.selectbox("📅 Lọc theo Tháng:", ["Tất cả các tháng"] + thang_hien_co, index=(len(thang_hien_co)), key="loc_thang")
             
         df_thang = df if thang_chon == "Tất cả các tháng" else df[df["Tháng"] == thang_chon]
+        
+        with col_loc_tuan:
+            tuan_hien_co = list(df_thang["Tuần"].unique())
+            tuan_hien_co.sort(key=lambda x: int(x.replace("Tuần ", "")) if "Tuần " in x else 0)
+            tuan_chon = st.selectbox("📅 Lọc theo Tuần:", ["Tất cả các tuần"] + tuan_hien_co, key="loc_tuan")
+
         danh_sach_kenh_hien_co = list(df_thang["Kênh_Spotify"].unique())
         
         with col_loc2:
             kenh_duoc_chon = st.multiselect("🎧 Lọc theo Kênh:", options=danh_sach_kenh_hien_co, default=danh_sach_kenh_hien_co, key="loc_kenh")
             
         with col_loc3:
-            loc_bkt = st.selectbox("🚦 Trạng thái Kiếm Tiền:", ["Tất cả", "Đã bật kiếm tiền", "Chưa bật kiếm tiền"], key="loc_bkt")
+            loc_bkt = st.selectbox("🚦 Kiếm Tiền:", ["Tất cả", "Đã bật", "Chưa bật"], key="loc_bkt")
             
         st.markdown("---")
         
         kenh_hien_thi_cuoi_cung = []
         for k in kenh_duoc_chon:
             is_bkt = lay_trang_thai_kiem_tien(k)
-            if loc_bkt == "Tất cả":
-                kenh_hien_thi_cuoi_cung.append(k)
-            elif loc_bkt == "Đã bật kiếm tiền" and is_bkt:
-                kenh_hien_thi_cuoi_cung.append(k)
-            elif loc_bkt == "Chưa bật kiếm tiền" and not is_bkt:
-                kenh_hien_thi_cuoi_cung.append(k)
+            if loc_bkt == "Tất cả": kenh_hien_thi_cuoi_cung.append(k)
+            elif loc_bkt == "Đã bật" and is_bkt: kenh_hien_thi_cuoi_cung.append(k)
+            elif loc_bkt == "Chưa bật" and not is_bkt: kenh_hien_thi_cuoi_cung.append(k)
 
         if not kenh_hien_thi_cuoi_cung:
-            st.warning(f"⚠️ Không có kênh nào thỏa mãn điều kiện '{loc_bkt}' trong danh sách đã chọn!")
+            st.warning(f"⚠️ Không có kênh nào thỏa mãn điều kiện!")
         else:
+            # Gán lại tập dữ liệu chuẩn cho Dashboard
             df_final = df_thang[df_thang["Kênh_Spotify"].isin(kenh_hien_thi_cuoi_cung)]
+            if tuan_chon != "Tất cả các tuần":
+                df_final = df_final[df_final["Tuần"] == tuan_chon]
             
+            # ĐỌC & TÍNH TOÁN KPI ĐỘNG THÔNG MINH
             df_kpi_read = pd.read_csv(FILE_KPI)
             df_kpi_filter = df_kpi_read[df_kpi_read["Kênh_Spotify"].isin(kenh_hien_thi_cuoi_cung)]
             if thang_chon != "Tất cả các tháng":
                 df_kpi_filter = df_kpi_filter[df_kpi_filter["Tháng"] == thang_chon]
                 
-            target_dt = df_kpi_filter["KPI_Doanh_Thu"].sum()
-            target_play = df_kpi_filter["KPI_Luot_Play"].sum()
-            target_gio = df_kpi_filter["KPI_So_Gio"].sum()
-            target_tap = df_kpi_filter["KPI_So_Tap"].sum()
+            # Nếu người dùng chọn 1 tuần cụ thể, hệ thống sẽ chia tỷ lệ KPI ra cho tuần đó
+            if tuan_chon != "Tất cả các tuần":
+                target_dt = (df_kpi_filter["KPI_Doanh_Thu"] / df_kpi_filter["So_Tuan"].fillna(4)).sum()
+                target_play = (df_kpi_filter["KPI_Luot_Play"] / df_kpi_filter["So_Tuan"].fillna(4)).sum()
+                target_gio = (df_kpi_filter["KPI_So_Gio"] / df_kpi_filter["So_Tuan"].fillna(4)).sum()
+                target_tap = (df_kpi_filter["KPI_So_Tap"] / df_kpi_filter["So_Tuan"].fillna(4)).sum()
+            else:
+                target_dt = df_kpi_filter["KPI_Doanh_Thu"].sum()
+                target_play = df_kpi_filter["KPI_Luot_Play"].sum()
+                target_gio = df_kpi_filter["KPI_So_Gio"].sum()
+                target_tap = df_kpi_filter["KPI_So_Tap"].sum()
 
             st.markdown("### 🏆 CHỈ SỐ KẾT QUẢ TỔNG QUAN")
             
@@ -391,7 +365,7 @@ with tab_dashboard:
             cot_kpi = map_chiso[chiso_chon]["kpi"]
             kieu_format = map_chiso[chiso_chon]["format"]
 
-            # --- 1. BIỂU ĐỒ LINE KÉP (TIẾN ĐỘ) ĐÃ FIX LỖI .999999 ---
+            # --- 1. BIỂU ĐỒ LINE KÉP ---
             df_kpi_filter["Muc_Tieu_Tuan_Hien_Tai"] = df_kpi_filter[cot_kpi].fillna(0) / df_kpi_filter["So_Tuan"].fillna(4)
             tong_muc_tieu_1_tuan = df_kpi_filter["Muc_Tieu_Tuan_Hien_Tai"].sum()
             
@@ -415,10 +389,8 @@ with tab_dashboard:
                 df_kq_group_line = df_final.groupby("Tuần")[cot_kq].sum().reset_index()
                 df_trend = pd.merge(df_trend, df_kq_group_line, on="Tuần", how="left")
                 
-                # KHẮC PHỤC TRIỆT ĐỂ LỖI .999999
                 df_trend[cot_kq] = df_trend[cot_kq].round(2)
                 
-                # Format text hiển thị đẹp mắt
                 def format_text(val, chiso):
                     if pd.isna(val): return ""
                     if chiso == "Doanh Thu": return f"${val:,.2f}"
@@ -484,8 +456,7 @@ with tab_dashboard:
                         st.write("Không có dữ liệu.")
                     else:
                         for idx, row in top_5.iterrows():
-                            val = row[cot_kq]
-                            st.markdown(f"**#{idx+1}. {row['Kênh_Spotify']}** ➔ <span class='text-success'>{fmt(val)}</span>", unsafe_allow_html=True)
+                            st.markdown(f"**#{idx+1}. {row['Kênh_Spotify']}** ➔ <span class='text-success'>{fmt(row[cot_kq])}</span>", unsafe_allow_html=True)
                             st.markdown("")
                             
                 with col_bot:
@@ -494,8 +465,7 @@ with tab_dashboard:
                         st.write("Không có kênh nào trong danh sách này.")
                     else:
                         for idx, row in bot_5.iterrows():
-                            val = row[cot_kq]
-                            st.markdown(f"**🔻 {row['Kênh_Spotify']}** ➔ <span class='text-danger'>{fmt(val)}</span>", unsafe_allow_html=True)
+                            st.markdown(f"**🔻 {row['Kênh_Spotify']}** ➔ <span class='text-danger'>{fmt(row[cot_kq])}</span>", unsafe_allow_html=True)
                             st.markdown("")
 
             st.markdown("---")
@@ -513,14 +483,12 @@ with tab_dashboard:
                 with col_pie:
                     df_pie = df_phan_tich.groupby("Kênh_Spotify")[cot_kq].sum().reset_index()
                     df_pie[cot_kq] = df_pie[cot_kq].round(2)
-                    fig_pie = px.pie(df_pie, values=cot_kq, names="Kênh_Spotify", hole=0.4, 
-                                     title=f"Tỷ Trọng {chiso_chon} ({tuan_chon_pie})")
+                    fig_pie = px.pie(df_pie, values=cot_kq, names="Kênh_Spotify", hole=0.4, title=f"Tỷ Trọng {chiso_chon} ({tuan_chon_pie})")
                     st.plotly_chart(fig_pie, use_container_width=True)
                     
                 with col_bar:
                     df_bar = df_phan_tich.groupby("Kênh_Spotify")[cot_kq].sum().reset_index()
                     df_bar[cot_kq] = df_bar[cot_kq].round(2)
-                    fig_bar = px.bar(df_bar, x="Kênh_Spotify", y=cot_kq, 
-                                     title=f"So Sánh Lượng {chiso_chon} Giữa Các Kênh ({tuan_chon_pie})", text_auto='.2s')
+                    fig_bar = px.bar(df_bar, x="Kênh_Spotify", y=cot_kq, title=f"So Sánh Lượng {chiso_chon} Giữa Các Kênh ({tuan_chon_pie})", text_auto='.2s')
                     fig_bar.update_traces(marker_color='#1DB954', textfont_size=12, textangle=0, textposition="outside")
                     st.plotly_chart(fig_bar, use_container_width=True)
