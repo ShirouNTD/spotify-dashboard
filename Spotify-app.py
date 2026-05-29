@@ -15,54 +15,53 @@ if "rk_kq_thang" not in st.session_state:
 if "rk_kpi" not in st.session_state:
     st.session_state.rk_kpi = 0
 
+# 1. CẤU HÌNH GIAO DIỆN
+
+st.set_page_config(page_title="Spotify Performance Hub", layout="wide", page_icon="🎧")
+
 # ==========================================
-# 1. CẤU HÌNH GIAO DIỆN CHÍNH (VERSION MỚI NHẤT)
+# GIAO DIỆN NATIVE - OVERLAY KÍNH XANH
 # ==========================================
+
 st.markdown("""
 <style>
+/* Nhập Font Lexend từ Google Fonts */
     @import url('https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;600;800&display=swap');
-    
+    /* Ép toàn bộ App dùng font Lexend */
     html, body, [class*="css"], [class*="st-"], div, span, p, h1, h2, h3, h4, h5, h6 {
         font-family: 'Lexend', sans-serif !important;
     }
-
-    /* CARD CHỈ SỐ: ĐÃ CÓ MÀU NỀN CỐ ĐỊNH CHO TỪNG THEME */
-    [data-theme='light'] .spotify-card {
-        background-color: #FFFFFF !important;
-        border: 1px solid #E0E0E0 !important;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.05) !important;
+    [data-testid="stAppViewContainer"] { 
+        background-color: var(--background-color) !important; 
+        background-image: linear-gradient(rgba(29, 185, 84, 0.07), rgba(29, 185, 84, 0.07)) !important;
     }
-    [data-theme='dark'] .spotify-card {
-        background-color: #262730 !important;
-        border: 1px solid rgba(29, 185, 84, 0.2) !important;
+    [data-testid="stSidebar"] { 
+        background-color: var(--secondary-background-color) !important; 
+        background-image: linear-gradient(rgba(29, 185, 84, 0.12), rgba(29, 185, 84, 0.12)) !important;
     }
+    [data-testid="stHeader"] { background-color: transparent !important; }
+    p, h1, h2, h3, h4, h5, h6, li, label, .stMarkdown, .stText, div[data-testid="stMarkdownContainer"] { color: var(--text-color) !important; }
+    .spotify-card {
+        background-color: var(--secondary-background-color) !important; 
+        background-image: linear-gradient(rgba(29, 185, 84, 0.03), rgba(29, 185, 84, 0.03)) !important;
+        border: 1px solid rgba(29, 185, 84, 0.2) !important; 
+        border-radius: 12px; padding: 15px; height: 100%; 
+        box-shadow: 0 4px 10px rgba(0,0,0,0.05); transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .spotify-card:hover { transform: translateY(-3px); box-shadow: 0 6px 15px rgba(29,185,84,0.15); }
+    .spotify-label { font-size: 13px; font-weight: 600; color: var(--text-color) !important; opacity: 0.7; text-transform: uppercase; margin-bottom: 5px; }
+    .spotify-value { font-size: 26px; font-weight: 900; margin-bottom: 10px; color: var(--text-color) !important; }
+    .badge-green { background-color: rgba(29, 185, 84, 0.15) !important; color: #1DB954 !important; padding: 4px 8px; border-radius: 6px; font-size: 13px; font-weight: 800; border: 1px solid rgba(29, 185, 84, 0.3); }
+    .badge-red { background-color: rgba(226, 33, 52, 0.15) !important; color: #E22134 !important; padding: 4px 8px; border-radius: 6px; font-size: 13px; font-weight: 800; border: 1px solid rgba(226, 33, 52, 0.3); }
+    .text-success { color: #1DB954 !important; font-size: 18px; font-weight: bold; }
+    .text-danger { color: #E22134 !important; font-size: 18px; font-weight: bold; }
+    div.stButton > button[kind="primary"] { background-color: #1DB954 !important; color: white !important; border: none; border-radius: 20px; font-weight: bold; }
+    div.stButton > button[kind="primary"]:hover { background-color: #1ED760 !important; color: white !important; }
+    div.stButton > button * { color: white !important; }
 
-    /* MÀU CHỮ TUYỆT ĐỐI */
-    [data-theme='light'] * { color: #0C7A33 !important; }
-    [data-theme='dark'] * { color: #FAFAFA !important; }
-    
-    /* FIX MÀU CHO CÁC PHẦN TỬ ĐẶC BIỆT */
-    .badge-green { background-color: rgba(29, 185, 84, 0.15) !important; color: #1DB954 !important; }
-    .badge-red { background-color: rgba(226, 33, 52, 0.15) !important; color: #E22134 !important; }
 </style>
 """, unsafe_allow_html=True) 
 
-# ==========================================
-# 2. HÀM SCORE CARD (SỬA LẠI ĐỂ HIỂN THỊ ĐẸP)
-# ==========================================
-def make_card(label, value, pct=None):
-    badge = ""
-    if pct is not None:
-        color_class = 'badge-green' if pct >= 100 else 'badge-red'
-        badge = f"<div class='{color_class}' style='display:inline-block; margin-top:5px; padding:2px 8px; border-radius:6px; font-size:12px; font-weight:800;'>{pct:.1f}% KPI</div>"
-    
-    return f"""
-    <div class="spotify-card" style="padding: 20px; border-radius: 15px; margin-bottom: 10px;">
-        <div class="spotify-label" style="font-size: 12px; text-transform: uppercase; margin-bottom: 5px;">{label}</div>
-        <div class="spotify-value" style="font-size: 24px; font-weight: 800;">{value}</div>
-        {badge}
-    </div>
-    """
 
 # ==========================================
 # KHỞI TẠO DATA
