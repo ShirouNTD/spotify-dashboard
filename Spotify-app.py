@@ -29,7 +29,7 @@ st.markdown("""
         font-family: 'Lexend', sans-serif !important;
     }
 
-    /* Giao phó toàn bộ màu sắc cho biến mặc định của Streamlit */
+    /* 🟢 GIAO TOÀN QUYỀN MÀU NỀN CHO STREAMLIT ĐỂ KHÔNG BAO GIỜ LỖI THEME */
     [data-testid="stAppViewContainer"] { 
         background-color: var(--background-color) !important; 
         background-image: none !important;
@@ -45,14 +45,14 @@ st.markdown("""
         box-shadow: 0 4px 10px rgba(0,0,0,0.05); transition: transform 0.2s, box-shadow 0.2s;
     }
     
-    /* Chữ tự động đổi màu theo Theme */
+    /* 🟢 CHỮ TỰ ĐỘNG ĐỔI: TRẮNG TRONG DARK THEME, XÁM ĐEN TRONG LIGHT THEME */
     p, h1, h2, h3, h4, h5, h6, li, label, .stMarkdown, .stText, div[data-testid="stMarkdownContainer"] { 
         color: var(--text-color) !important; 
     }
     .spotify-label { color: var(--text-color) !important; opacity: 0.7; }
     .spotify-value { color: var(--text-color) !important; }
 
-    /* CSS Chung (Cố định, không ảnh hưởng bởi Theme) */
+    /* CSS Chung (Không bị ảnh hưởng bởi Theme) */
     [data-testid="stHeader"] { background-color: transparent !important; }
     .spotify-card:hover { transform: translateY(-3px); box-shadow: 0 6px 15px rgba(29,185,84,0.15) !important; }
     .spotify-label { font-size: 13px; font-weight: 600; text-transform: uppercase; margin-bottom: 5px; }
@@ -427,33 +427,34 @@ with tab_dashboard:
                 st.plotly_chart(fig_vs, use_container_width=True)
 
                 # --- 🏆 3. BẢNG XẾP HẠNG TOP KÊNH TĂNG TRƯỞNG (TUẦN) ---
-                st.markdown(f"### 🏆 3. Top Kênh Tăng Trưởng Theo {chiso_chon}")
+                st.markdown(f"### 🏆 3. Bảng Xếp Hạng Tăng Trưởng Theo {chiso_chon}")
                 
-                # Nhóm dữ liệu kết quả và KPI dựa theo chỉ số đang chọn ở biểu đồ trên
+                # Tính toán dữ liệu
                 df_top_w = df_final.groupby("Kênh_Spotify")[cot_kq].sum().reset_index()
                 df_kpi_w = df_kpi_filter.groupby("Kênh_Spotify")["Muc_Tieu_Tuan_Hien_Tai"].sum().reset_index()
-                
-                # Gộp và tính % Tăng trưởng (% Hoàn thành KPI Tuần)
                 df_top_w = df_top_w.merge(df_kpi_w, on="Kênh_Spotify", how="left")
                 df_top_w["% Tăng Trưởng"] = (df_top_w[cot_kq] / df_top_w["Muc_Tieu_Tuan_Hien_Tai"] * 100).fillna(0)
                 
-                # Lấy Top 10 Kênh (Sắp xếp tăng dần để vẽ bar ngang từ trên xuống)
-                df_top_w = df_top_w.sort_values(by="% Tăng Trưởng", ascending=True).tail(10)
+                # CHIA ĐÔI MÀN HÌNH (CỘT TRÁI - CỘT PHẢI)
+                col_top1_w, col_top2_w = st.columns(2)
                 
-                fig_top_w = px.bar(
-                    df_top_w, x="% Tăng Trưởng", y="Kênh_Spotify", orientation='h',
-                    color="% Tăng Trưởng", color_continuous_scale="Greens",
-                    text_auto='.1f'
-                )
-                
-                is_light = st.get_option("theme.base") == "light"
-                fig_top_w.update_layout(
-                    paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)',
-                    font=dict(color="#1B5E20" if is_light else "#E0E0E0"),
-                    xaxis_title=f"% Hoàn thành KPI {chiso_chon} Tuần", yaxis_title="",
-                    coloraxis_showscale=False, margin=dict(l=0, r=0, t=10, b=0)
-                )
-                st.plotly_chart(fig_top_w, use_container_width=True)
+                with col_top1_w:
+                    st.markdown("#### 🔥 Top 5 Hoàn Thành Tốt Nhất")
+                    df_high_w = df_top_w.sort_values(by="% Tăng Trưởng", ascending=False).head(5)
+                    df_high_w = df_high_w.sort_values(by="% Tăng Trưởng", ascending=True) # Đảo lại để cao nhất ở trên cùng
+                    
+                    fig_high_w = px.bar(df_high_w, x="% Tăng Trưởng", y="Kênh_Spotify", orientation='h', color="% Tăng Trưởng", color_continuous_scale="Greens", text_auto='.1f')
+                    fig_high_w.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', yaxis_title="", xaxis_title="% Hoàn thành", coloraxis_showscale=False, margin=dict(l=0, r=0, t=0, b=0), height=280)
+                    st.plotly_chart(fig_high_w, use_container_width=True)
+
+                with col_top2_w:
+                    st.markdown("#### ⚠️ Top 5 Cần Chú Ý Nhất")
+                    df_low_w = df_top_w.sort_values(by="% Tăng Trưởng", ascending=True).head(5)
+                    df_low_w = df_low_w.sort_values(by="% Tăng Trưởng", ascending=False) # Kẻ thấp nhất nằm trên cùng
+                    
+                    fig_low_w = px.bar(df_low_w, x="% Tăng Trưởng", y="Kênh_Spotify", orientation='h', color="% Tăng Trưởng", color_continuous_scale="Reds", text_auto='.1f')
+                    fig_low_w.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', yaxis_title="", xaxis_title="% Hoàn thành", coloraxis_showscale=False, margin=dict(l=0, r=0, t=0, b=0), height=280)
+                    st.plotly_chart(fig_low_w, use_container_width=True)
 
                 # --- 🍩 4. BIỂU ĐỒ DONUT (BÁO CÁO TUẦN) ---
                 st.markdown("### 🍩 4. Phân Tích Cơ Cấu & Tỷ Trọng (Tuần)")
@@ -547,36 +548,31 @@ with tab_dashboard:
                 fig_vs_m.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
                 st.plotly_chart(fig_vs_m, use_container_width=True)
 
-                # --- 🏆 3. BẢNG XẾP HẠNG DOANH THU (THÁNG) ---
+               # --- 🏆 3. BẢNG XẾP HẠNG DOANH THU (THÁNG FINAL) ---
                 st.markdown("### 🏆 3. Bảng Xếp Hạng Kênh Theo Doanh Thu (Tháng Final)")
-                
-                # Tùy chọn xem Top cao hay thấp bằng nút bấm
-                top_k_m = st.radio("Lọc xếp hạng:", ["🔥 Top Doanh Thu Cao Nhất", "⚠️ Top Doanh Thu Thấp Nhất"], horizontal=True, key="top_m")
                 
                 df_top_m = df_final_m.groupby("Kênh_Spotify")["Doanh_Thu_USD"].sum().reset_index()
                 
-                if top_k_m == "🔥 Top Doanh Thu Cao Nhất":
-                    df_top_m = df_top_m.sort_values(by="Doanh_Thu_USD", ascending=True).tail(10)
-                    c_scale = "Greens"
-                else:
-                    # Sort ngược lại để vẽ màu đỏ báo động
-                    df_top_m = df_top_m.sort_values(by="Doanh_Thu_USD", ascending=False).tail(10)
-                    c_scale = "Reds"
-                    
-                fig_top_m = px.bar(
-                    df_top_m, x="Doanh_Thu_USD", y="Kênh_Spotify", orientation='h',
-                    color="Doanh_Thu_USD", color_continuous_scale=c_scale,
-                    text_auto='.2s'
-                )
+                # CHIA ĐÔI MÀN HÌNH (CỘT TRÁI - CỘT PHẢI)
+                col_top1_m, col_top2_m = st.columns(2)
                 
-                is_light = st.get_option("theme.base") == "light"
-                fig_top_m.update_layout(
-                    paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)',
-                    font=dict(color="#1B5E20" if is_light else "#E0E0E0"),
-                    xaxis_title="Doanh Thu (USD)", yaxis_title="",
-                    coloraxis_showscale=False, margin=dict(l=0, r=0, t=10, b=0)
-                )
-                st.plotly_chart(fig_top_m, use_container_width=True)
+                with col_top1_m:
+                    st.markdown("#### 🔥 Top 5 Doanh Thu Cao Nhất")
+                    df_high_m = df_top_m.sort_values(by="Doanh_Thu_USD", ascending=False).head(5)
+                    df_high_m = df_high_m.sort_values(by="Doanh_Thu_USD", ascending=True)
+                    
+                    fig_high_m = px.bar(df_high_m, x="Doanh_Thu_USD", y="Kênh_Spotify", orientation='h', color="Doanh_Thu_USD", color_continuous_scale="Greens", text_auto='.2s')
+                    fig_high_m.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', yaxis_title="", xaxis_title="Doanh Thu (USD)", coloraxis_showscale=False, margin=dict(l=0, r=0, t=0, b=0), height=280)
+                    st.plotly_chart(fig_high_m, use_container_width=True)
+
+                with col_top2_m:
+                    st.markdown("#### ⚠️ Top 5 Doanh Thu Thấp Nhất")
+                    df_low_m = df_top_m.sort_values(by="Doanh_Thu_USD", ascending=True).head(5)
+                    df_low_m = df_low_m.sort_values(by="Doanh_Thu_USD", ascending=False)
+                    
+                    fig_low_m = px.bar(df_low_m, x="Doanh_Thu_USD", y="Kênh_Spotify", orientation='h', color="Doanh_Thu_USD", color_continuous_scale="Reds", text_auto='.2s')
+                    fig_low_m.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', yaxis_title="", xaxis_title="Doanh Thu (USD)", coloraxis_showscale=False, margin=dict(l=0, r=0, t=0, b=0), height=280)
+                    st.plotly_chart(fig_low_m, use_container_width=True)
 
                 # --- 🍩 4. BIỂU ĐỒ DONUT (BÁO CÁO THÁNG) ---
                 st.markdown("### 🍩 4. Phân Tích Cơ Cấu & Tỷ Trọng (Tháng Final)")
