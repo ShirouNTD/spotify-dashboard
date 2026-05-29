@@ -126,9 +126,9 @@ with tab_master:
     # Định dạng bảng với màu sắc (Style)
     st.dataframe(
         df_master.style.format({
-            "KPI_Doanh_Thu": "${:,.0f}".format,
-            "Doanh_Thu_USD": "${:,.0f}".format,
-            "%_Doanh_Thu": "{:.1f}%".format
+            "KPI_Doanh_Thu": lambda x: f"${x:,.0f}",
+            "Doanh_Thu_USD": lambda x: f"${x:,.0f}",
+            "%_Doanh_Thu": lambda x: f"{x:.1f}%"
         }).background_gradient(subset=["%_Doanh_Thu"], cmap="RdYlGn"),
         use_container_width=True
     )
