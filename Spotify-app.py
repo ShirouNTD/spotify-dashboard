@@ -508,35 +508,40 @@ with tab_dashboard:
             else:
                 df_plot = df_pie.groupby("Kênh_Spotify")[cot_tieu_chi].sum().reset_index()
                 
-                # --- VẼ DONUT VỚI DẢI MÀU TRẢI DÀI (GRADIENT) ---
+              # --- VẼ DONUT BẰNG CÁCH GÁN MÀU TỰ ĐỘNG ---
             df_plot = df_pie.groupby("Kênh_Spotify")[cot_tieu_chi].sum().sort_values(ascending=False).reset_index()
             
-            # Tạo dải màu gradient từ Xanh lá (#A8D08D) sang Cam (#FFB347)
-            # Dùng thư viện color-scale của plotly để tự chia màu theo số lượng kênh
-            fig_pie = px.pie(
-                df_plot, 
-                values=cot_tieu_chi, 
-                names="Kênh_Spotify", 
-                hole=0.4, 
-                title=f"Tỷ Trọng theo {tieu_chi_chon}",
-                # Dùng color_discrete_sequence tạo dải màu từ xanh sang cam
-                color_discrete_sequence=px.colors.sample_colorscale(
-                    "RdYlGn_r", # Dải màu xanh-vàng-đỏ (đã đảo ngược để Xanh là cao nhất)
-                    [i/(len(df_plot) if len(df_plot)>1 else 1) for i in range(len(df_plot))]
+            if df_plot.empty:
+                st.info("Không có dữ liệu để hiển thị biểu đồ.")
+            else:
+                # Tạo dải màu thủ công dựa trên số lượng kênh
+                # Nếu số kênh > bảng màu, nó sẽ tự lặp lại màu để tránh lỗi
+                palette = ['#A8D08D', '#BEE5A3', '#D5F9B9', '#FFE699', '#FFD966', '#FFC555', '#FFB347', '#FFA07A']
+                colors = (palette * (len(df_plot) // len(palette) + 1))[:len(df_plot)]
+
+                fig_pie = px.pie(
+                    df_plot, 
+                    values=cot_tieu_chi, 
+                    names="Kênh_Spotify", 
+                    hole=0.4, 
+                    title=f"Tỷ Trọng theo {tieu_chi_chon}",
+                    color_discrete_sequence=colors
                 )
-            )
-            
-            # Điều chỉnh layout cho chuyên nghiệp
-            fig_pie.update_layout(
-                paper_bgcolor='rgba(0,0,0,0)', 
-                plot_bgcolor='rgba(0,0,0,0)',
-                showlegend=True,
-                legend=dict(orientation="h", yanchor="top", y=-0.2, xanchor="center", x=0.5),
-                font=dict(color="#555555")
-            )
-           # Cấu hình text bên trong lát cắt: màu trắng, định dạng %
-            fig_pie.update_traces(
-                textinfo='percent', 
-                textfont_color="white",  # Ép chữ màu trắng
-                textfont_size=12         # Chỉnh kích thước chữ cho dễ đọc
-            )
+                
+                fig_pie.update_layout(
+                    paper_bgcolor='rgba(0,0,0,0)', 
+                    plot_bgcolor='rgba(0,0,0,0)',
+                    showlegend=True,
+                    legend=dict(orientation="h", yanchor="top", y=-0.2, xanchor="center", x=0.5),
+                    font=dict(color="#555555")
+                )
+                
+                # Chỉnh chữ trắng 100%
+                fig_pie.update_traces(
+                    textinfo='percent', 
+                    textfont_color="white", 
+                    textfont_size=12,
+                    textposition='inside' # Để chữ nằm trong lát cắt cho gọn
+                )
+                
+                st.plotly_chart(fig_pie, use_container_width=True)
