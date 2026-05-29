@@ -3,13 +3,14 @@ import pandas as pd
 import plotly.express as px
 import os
 from datetime import datetime
+import numpy as np
 
-# 1. CẤU HÌNH GIAO DIỆN
+# 1. CẤU HÌNH GIAO DIỆN CHUẨN
 st.set_page_config(page_title="Spotify Performance Hub", layout="wide", page_icon="🎧")
 
 FILE_DU_LIEU = "spotify_master_data.csv"
 
-# Hàm khởi tạo & nâng cấp file CSV (Chống mất dữ liệu cũ)
+# Hàm khởi tạo & nâng cấp file CSV
 def khoi_tao_db():
     if not os.path.exists(FILE_DU_LIEU):
         df_mau = pd.DataFrame(columns=[
@@ -18,22 +19,26 @@ def khoi_tao_db():
         ])
         df_mau.to_csv(FILE_DU_LIEU, index=False)
     else:
-        # Cập nhật tương thích ngược: Thêm cột Bat_Kiem_Tien nếu file cũ chưa có
         df_hien_tai = pd.read_csv(FILE_DU_LIEU)
         if "Bat_Kiem_Tien" not in df_hien_tai.columns:
             df_hien_tai["Bat_Kiem_Tien"] = False
             df_hien_tai.to_csv(FILE_DU_LIEU, index=False)
 
 khoi_tao_db()
-
-# Đọc dữ liệu tổng để sử dụng chung
 df = pd.read_csv(FILE_DU_LIEU)
+
+# Khởi tạo các biến lưu trữ trạng thái ô nhập liệu (để xóa về 0 sau khi lưu)
+if "val_kenh_moi" not in st.session_state: st.session_state.val_kenh_moi = ""
+if "val_doanh_thu" not in st.session_state: st.session_state.val_doanh_thu = 0.0
+if "val_luot_play" not in st.session_state: st.session_state.val_luot_play = 0
+if "val_so_gio" not in st.session_state: st.session_state.val_so_gio = 0.0
+if "val_so_tap" not in st.session_state: st.session_state.val_so_tap = 0
+if "val_lua_chon_kenh" not in st.session_state: st.session_state.val_lua_chon_kenh = "➕ Nhập kênh mới..."
 
 # ==========================================
 # KHU VỰC SIDEBAR: CÀI ĐẶT KPI
 # ==========================================
 st.sidebar.header("🎯 THIẾT LẬP KPI MỤC TIÊU")
-st.sidebar.markdown("*(Thay đổi thông số tại đây để đánh giá hiệu suất)*")
 kpi_doanh_thu = st.sidebar.number_input("KPI Doanh Thu ($):", value=5000.0, step=100.0)
 kpi_play = st.sidebar.number_input("KPI Lượt Play:", value=500000, step=10000)
 kpi_gio = st.sidebar.number_input("KPI Giờ Nghe:", value=20000.0, step=1000.0)
@@ -48,70 +53,92 @@ st.markdown("---")
 tab_dashboard, tab_nhap_lieu = st.tabs(["📊 Báo Cáo Dashboard", "📥 Cổng Nhập Liệu (Tự Động Gợi Ý)"])
 
 # ==========================================
-# KHU VỰC 1: CỔNG NHẬP LIỆU (UX MỚI)
+# KHU VỰC 1: CỔNG NHẬP LIỆU (ĐÃ TỐI ƯU HÓA UX RESET & CHỐNG TRÙNG)
 # ==========================================
 with tab_nhap_lieu:
     st.subheader("Nhập liệu Báo cáo Tuần")
-    st.info("💡 Bạn có thể chọn tên kênh cũ để hệ thống tự động điền trạng thái Kiếm tiền, hoặc gõ tên kênh mới.")
+    st.info("💡 Hệ thống áp dụng cơ chế tự động Ghi đè nếu nhập trùng Tuần và Kênh cũ. Nhập xong hệ thống sẽ tự reset số liệu về 0.")
     
     col1, col2, col3 = st.columns(3)
     
-    # Cột 1: Thông tin kênh (Có Autocomplete & Tự nhớ BKT)
     with col1:
         thang = st.selectbox("Tháng Báo Cáo:", [f"Tháng {i}" for i in range(1, 13)])
         tuan = st.selectbox("Tuần Báo Cáo:", [f"Tuần {i}" for i in range(1, 53)])
         
-        # Tạo list kênh đã từng nhập để làm Autocomplete
         danh_sach_kenh_cu = list(df["Kênh_Spotify"].unique()) if not df.empty else []
-        lua_chon_kenh = st.selectbox("Gõ để tìm kênh hoặc Thêm kênh mới:", ["➕ Nhập kênh mới..."] + danh_sach_kenh_cu)
         
-        # Xử lý logic hiển thị
+        # Đồng bộ selectbox kênh với bộ nhớ đệm
+        lua_chon_kenh = st.selectbox(
+            "Gõ để tìm kênh hoặc Thêm kênh mới:", 
+            options=["➕ Nhập kênh mới..."] + danh_sach_kenh_cu,
+            key="val_lua_chon_kenh"
+        )
+        
         if lua_chon_kenh == "➕ Nhập kênh mới...":
-            kenh = st.text_input("Gõ tên kênh mới vào đây:").strip()
+            kenh = st.text_input("Gõ tên kênh mới vào đây:", key="val_kenh_moi").strip()
             trang_thai_mac_dinh = False
         else:
             kenh = lua_chon_kenh
-            # Lục tìm trí nhớ: Lấy trạng thái Bật kiếm tiền ở lần nhập gần nhất của kênh này
             trang_thai_mac_dinh = bool(df[df["Kênh_Spotify"] == kenh].iloc[-1]["Bat_Kiem_Tien"])
             
         trang_thai_kt = st.checkbox("✅ Kênh đã bật kiếm tiền", value=trang_thai_mac_dinh)
 
-    # Cột 2 & 3: Các chỉ số thông thường
     with col2:
-        doanh_thu = st.number_input("Doanh thu tuần (USD):", min_value=0.0, step=1.0)
-        luot_play = st.number_input("Lượt Play tuần qua:", min_value=0, step=100)
+        doanh_thu = st.number_input("Doanh thu tuần (USD):", min_value=0.0, step=1.0, key="val_doanh_thu")
+        luot_play = st.number_input("Lượt Play tuần qua:", min_value=0, step=100, key="val_luot_play")
     with col3:
-        gio_nghe = st.number_input("Số giờ nghe tuần qua:", min_value=0.0, step=10.0)
-        so_tap = st.number_input("Số tập Upload tuần qua:", min_value=0, step=1)
+        gio_nghe = st.number_input("Số giờ nghe tuần qua:", min_value=0.0, step=10.0, key="val_so_gio")
+        so_tap = st.number_input("Số tập Upload tuần qua:", min_value=0, step=1, key="val_so_tap")
         
     st.markdown("<br>", unsafe_allow_html=True)
-    btn_luu = st.button("Lưu Dữ Liệu Lên Hệ Thống", type="primary", use_container_width=True)
-    
-    if btn_luu:
+    if st.button("Lưu Dữ Liệu Lên Hệ Thống", type="primary", use_container_width=True):
         if not kenh:
             st.error("⚠️ Vui lòng nhập hoặc chọn Tên Kênh Spotify!")
         else:
-            du_lieu_moi = pd.DataFrame([{
-                "Tháng": thang, "Tuần": tuan, "Kênh_Spotify": kenh,
-                "Doanh_Thu_USD": float(doanh_thu), "Luot_Play": int(luot_play),
-                "So_Gio_Nghe": float(gio_nghe), "So_Tap_Upload": int(so_tap),
-                "Bat_Kiem_Tien": trang_thai_kt, # Lưu lại trạng thái mới
-                "Thoi_Gian_Nhap": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            }])
-            df_cap_nhat = pd.concat([df, du_lieu_moi], ignore_index=True)
-            df_cap_nhat.to_csv(FILE_DU_LIEU, index=False)
-            st.success(f"✅ Đã ghi nhận dữ liệu cho kênh '{kenh}'! Trạng thái Kiếm tiền đã được lưu.")
-            # Nút refresh nhẹ để reload lại list Autocomplete
+            # --- THUẬT TOÁN CHỐNG TRÙNG LẶP DỮ LIỆU (UPSERT) ---
+            # Kiểm tra xem dòng dữ liệu trùng Tuần + Tên Kênh đã tồn tại chưa
+            dieu_kien_trung = (df["Tuần"] == tuan) & (df["Kênh_Spotify"] == kenh)
+            
+            if dieu_kien_trung.any():
+                # Nếu đã có, tiến hành ghi đè thông số mới lên dòng cũ
+                df.loc[dieu_kien_trung, ["Tháng", "Doanh_Thu_USD", "Luot_Play", "So_Gio_Nghe", "So_Tap_Upload", "Bat_Kiem_Tien", "Thoi_Gian_Nhap"]] = [
+                    thang, float(doanh_thu), int(luot_play), float(gio_nghe), int(so_tap), trang_thai_kt, datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                ]
+                st.toast(f"🔄 Đã ghi đè & cập nhật số liệu mới cho {kenh} ({tuan})!", icon="🔄")
+            else:
+                # Nếu chưa có, append dòng dữ liệu mới vào bảng như bình thường
+                du_lieu_moi = pd.DataFrame([{
+                    "Tháng": thang, "Tuần": tuan, "Kênh_Spotify": kenh,
+                    "Doanh_Thu_USD": float(doanh_thu), "Luot_Play": int(luot_play),
+                    "So_Gio_Nghe": float(gio_nghe), "So_Tap_Upload": int(so_tap),
+                    "Bat_Kiem_Tien": trang_thai_kt,
+                    "Thoi_Gian_Nhap": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                }])
+                df = pd.concat([df, du_lieu_moi], ignore_index=True)
+                st.toast(f"✅ Đã lưu thành công số liệu mới cho {kenh} ({tuan})!", icon="✅")
+            
+            # Lưu file CSV xuống máy chủ
+            df.to_csv(FILE_DU_LIEU, index=False)
+            
+            # --- CƠ CHẾ RESET TOÀN BỘ Ô CỦA FORM VỀ 0 ---
+            st.session_state.val_kenh_moi = ""
+            st.session_state.val_doanh_thu = 0.0
+            st.session_state.val_luot_play = 0
+            st.session_state.val_so_gio = 0.0
+            st.session_state.val_so_tap = 0
+            st.session_state.val_lua_chon_kenh = "➕ Nhập kênh mới..."
+            
+            # Kích hoạt lệnh nháy nhẹ giao diện để áp dụng reset
             st.rerun()
 
 # ==========================================
-# KHU VỰC 2: DASHBOARD TỔNG HỢP (KÈM BÁO CÁO KÊNH BKT)
+# KHU VỰC 2: DASHBOARD TỔNG HỢP
 # ==========================================
 with tab_dashboard:
     if df.empty:
         st.info("Hệ thống chưa có dữ liệu. Vui lòng sang tab 'Cổng Nhập Liệu' để bổ sung thông tin.")
     else:
-        st.markdown("### 🔍 BỘ LỌC DỮ LIỆU ĐỘNG")
+        # BỘ LỌC
         col_loc1, col_loc2 = st.columns(2)
         with col_loc1:
             thang_hien_co = list(df["Tháng"].unique())
@@ -130,47 +157,56 @@ with tab_dashboard:
         else:
             df_final = df_thang[df_thang["Kênh_Spotify"].isin(kenh_duoc_chon)]
             
-            # --- TỔNG KẾT SỐ LƯỢNG KÊNH & TRẠNG THÁI BKT ---
-            st.markdown("### 📺 TÌNH TRẠNG KÊNH SPOTIFY")
-            # Thuật toán lọc ra dòng cập nhật mới nhất của từng kênh
+            # 1. TÌNH TRẠNG KÊNH
             df_kenh_duy_nhat = df_final.sort_values("Thoi_Gian_Nhap").groupby("Kênh_Spotify").tail(1)
             tong_so_kenh = len(df_kenh_duy_nhat)
             kenh_da_bkt = int(df_kenh_duy_nhat["Bat_Kiem_Tien"].sum())
-            kenh_chua_bkt = tong_so_kenh - kenh_da_bkt
             
             c1, c2, c3 = st.columns(3)
             c1.metric("Tổng Số Kênh Đang Có", f"{tong_so_kenh} Kênh")
             c2.metric("Kênh Đã Bật Kiếm Tiền 💸", f"{kenh_da_bkt} Kênh")
-            c3.metric("Kênh Chưa Bật KT ⏳", f"{kenh_chua_bkt} Kênh")
+            c3.metric("Kênh Chưa Bật KT ⏳", f"{tong_so_kenh - kenh_da_bkt} Kênh")
             
-            st.markdown("---")
-            
-            # --- SCORECARDS HIỆU SUẤT VS KPI ---
+            # 2. SCORECARDS
             st.markdown("### 🏆 CHỈ SỐ THỰC TẾ vs KPI MỤC TIÊU")
-            tong_dt = df_final["Doanh_Thu_USD"].sum()
-            tong_play = df_final["Luot_Play"].sum()
-            tong_gio = df_final["So_Gio_Nghe"].sum()
-            tong_tap = df_final["So_Tap_Upload"].sum()
-            
             sc1, sc2, sc3, sc4 = st.columns(4)
-            sc1.metric("💰 Doanh Thu", f"${tong_dt:,.2f}", delta=f"${tong_dt - kpi_doanh_thu:,.2f} so với KPI")
-            sc2.metric("▶️ Lượt Play", f"{tong_play:,}", delta=f"{tong_play - kpi_play:,} so với KPI")
-            sc3.metric("⏱️ Giờ Nghe", f"{tong_gio:,.1f}h", delta=f"{tong_gio - kpi_gio:,.1f}h so với KPI")
-            sc4.metric("🎙️ Tập Upload", f"{tong_tap:,}", delta=f"{tong_tap - kpi_tap:,} so với KPI")
+            sc1.metric("💰 Doanh Thu", f"${df_final['Doanh_Thu_USD'].sum():,.2f}", delta=f"${df_final['Doanh_Thu_USD'].sum() - kpi_doanh_thu:,.2f}")
+            sc2.metric("▶️ Lượt Play", f"{df_final['Luot_Play'].sum():,}", delta=f"{df_final['Luot_Play'].sum() - kpi_play:,}")
+            sc3.metric("⏱️ Giờ Nghe", f"{df_final['So_Gio_Nghe'].sum():,.1f}h", delta=f"{df_final['So_Gio_Nghe'].sum() - kpi_gio:,.1f}h")
+            sc4.metric("🎙️ Tập Upload", f"{df_final['So_Tap_Upload'].sum():,}", delta=f"{df_final['So_Tap_Upload'].sum() - kpi_tap:,}")
             
             st.markdown("---")
             
-            # --- BẢNG PHONG THẦN & BIỂU ĐỒ ---
-            col_b1, col_b2 = st.columns(2)
-            with col_b1:
-                st.markdown("### 🎯 Bảng Phong Thần Doanh Thu")
-                df_ranking = df_final.groupby("Kênh_Spotify")["Doanh_Thu_USD"].sum().reset_index().sort_values(by="Doanh_Thu_USD", ascending=False)
-                if len(df_ranking) > 0:
-                    st.success(f"**🔥 KÊNH DẪN ĐẦU:** {df_ranking.iloc[0]['Kênh_Spotify']} (${df_ranking.iloc[0]['Doanh_Thu_USD']:,.2f})")
-                    st.error(f"**❄️ KÊNH ĐANG YẾU:** {df_ranking.iloc[-1]['Kênh_Spotify']} (${df_ranking.iloc[-1]['Doanh_Thu_USD']:,.2f})")
-                    
-            with col_b2:
-                st.markdown("### 📈 Biểu Đồ Tăng Trưởng Doanh Thu")
-                df_trend = df_final.groupby(["Tuần", "Kênh_Spotify"])["Doanh_Thu_USD"].sum().reset_index()
+            # 3. BIỂU ĐỒ XU HƯỚNG TĂNG TRƯỞNG
+            st.markdown("### 📈 Biểu Đồ Xu Hướng Theo Thời Gian")
+            tab_dt, tab_play, tab_gio = st.tabs(["💰 Xu Hướng Doanh Thu", "▶️ Xu Hướng Lượt Play", "⏱️ Xu Hướng Giờ Nghe"])
+            
+            df_trend = df_final.groupby(["Tuần", "Kênh_Spotify"])[["Doanh_Thu_USD", "Luot_Play", "So_Gio_Nghe"]].sum().reset_index()
+            
+            with tab_dt:
                 fig_dt = px.line(df_trend, x="Tuần", y="Doanh_Thu_USD", color="Kênh_Spotify", markers=True)
                 st.plotly_chart(fig_dt, use_container_width=True)
+            with tab_play:
+                fig_play = px.line(df_trend, x="Tuần", y="Luot_Play", color="Kênh_Spotify", markers=True)
+                st.plotly_chart(fig_play, use_container_width=True)
+            with tab_gio:
+                fig_gio = px.line(df_trend, x="Tuần", y="So_Gio_Nghe", color="Kênh_Spotify", markers=True)
+                st.plotly_chart(fig_gio, use_container_width=True)
+
+            st.markdown("---")
+
+            # 4. PHÂN TÍCH CHUYÊN SÂU
+            st.markdown("### 🥧 Phân Tích Cơ Cấu & Hiệu Suất")
+            col_pie, col_rpm = st.columns(2)
+            
+            with col_pie:
+                df_pie = df_final.groupby("Kênh_Spotify")["Doanh_Thu_USD"].sum().reset_index()
+                fig_pie = px.pie(df_pie, values="Doanh_Thu_USD", names="Kênh_Spotify", hole=0.4, title="Tỷ Trọng Doanh Thu Theo Kênh")
+                st.plotly_chart(fig_pie, use_container_width=True)
+                
+            with col_rpm:
+                df_rpm = df_final.groupby("Kênh_Spotify")[["Doanh_Thu_USD", "Luot_Play"]].sum().reset_index()
+                df_rpm["RPM_USD"] = np.where(df_rpm["Luot_Play"] > 0, (df_rpm["Doanh_Thu_USD"] / df_rpm["Luot_Play"]) * 1000, 0)
+                fig_rpm = px.bar(df_rpm, x="Kênh_Spotify", y="RPM_USD", title="Chỉ số RPM (Doanh thu trên 1.000 Lượt Play)", text_auto='.2f')
+                fig_rpm.update_traces(marker_color='#1DB954')
+                st.plotly_chart(fig_rpm, use_container_width=True)
