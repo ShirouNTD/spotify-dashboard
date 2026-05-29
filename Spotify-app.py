@@ -112,7 +112,7 @@ with tab_nhap_kpi:
             df_kpi_ghi.to_csv(FILE_KPI, index=False)
             st.toast(f"🎯 Đã lưu cấu hình & KPI cho kênh {kenh_kpi} vào {thang_kpi}!", icon="🎯")
             
-            for k in ["loc_thang", "loc_kenh", "loc_tuan_phan_tich"]:
+            for k in ["loc_thang", "loc_kenh", "loc_bkt", "loc_tuan_phan_tich"]:
                 if k in st.session_state: del st.session_state[k]
             st.session_state.rk_kpi += 1
             st.rerun()
@@ -164,7 +164,7 @@ with tab_nhap_kq:
                 df_ghi.to_csv(FILE_DU_LIEU, index=False)
                 st.toast(f"✅ Đã lưu kết quả cho {kenh_kq} ({tuan_kq})!", icon="✅")
                 
-                for k in ["loc_thang", "loc_kenh", "loc_tuan_phan_tich"]:
+                for k in ["loc_thang", "loc_kenh", "loc_bkt", "loc_tuan_phan_tich"]:
                     if k in st.session_state: del st.session_state[k]
                 st.session_state.rk_kq += 1
                 st.rerun()
@@ -187,7 +187,7 @@ with tab_xoa_data:
         if st.button("🗑️ Xác Nhận Xóa", type="primary"):
             df_con_lai = df[~((df["Kênh_Spotify"] == kenh_can_xoa) & (df["Tuần"] == tuan_can_xoa))]
             df_con_lai.to_csv(FILE_DU_LIEU, index=False)
-            for k in ["loc_thang", "loc_kenh", "loc_tuan_phan_tich"]:
+            for k in ["loc_thang", "loc_kenh", "loc_bkt", "loc_tuan_phan_tich"]:
                 if k in st.session_state: del st.session_state[k]
             st.toast("✅ Đã xóa thành công!")
             st.rerun()
@@ -199,8 +199,8 @@ with tab_dashboard:
     if df.empty:
         st.info("Hệ thống chưa có dữ liệu kết quả nào được ghi nhận. Vui lòng cập nhật.")
     else:
-        # BỘ LỌC TỔNG
-        col_loc1, col_loc2 = st.columns(2)
+        # BỘ LỌC TỔNG (THÊM BỘ LỌC BẬT KIẾM TIỀN)
+        col_loc1, col_loc2, col_loc3 = st.columns([1, 2, 1])
         with col_loc1:
             thang_hien_co = list(df["Tháng"].unique())
             thang_mac_dinh = thang_hien_co[-1] if thang_hien_co else "Tất cả các tháng"
@@ -212,16 +212,31 @@ with tab_dashboard:
         with col_loc2:
             kenh_duoc_chon = st.multiselect("🎧 Lọc theo Kênh:", options=danh_sach_kenh_hien_co, default=danh_sach_kenh_hien_co, key="loc_kenh")
             
+        with col_loc3:
+            loc_bkt = st.selectbox("🚦 Trạng thái Kiếm Tiền:", ["Tất cả", "Đã bật kiếm tiền", "Chưa bật kiếm tiền"], key="loc_bkt")
+            
         st.markdown("---")
         
-        if not kenh_duoc_chon:
-            st.warning("⚠️ Vui lòng tick chọn ít nhất 1 kênh!")
+        # XỬ LÝ LOGIC LỌC KENH THEO TRẠNG THÁI KIẾM TIỀN
+        kenh_hien_thi_cuoi_cung = []
+        for k in kenh_duoc_chon:
+            is_bkt = lay_trang_thai_kiem_tien(k)
+            if loc_bkt == "Tất cả":
+                kenh_hien_thi_cuoi_cung.append(k)
+            elif loc_bkt == "Đã bật kiếm tiền" and is_bkt:
+                kenh_hien_thi_cuoi_cung.append(k)
+            elif loc_bkt == "Chưa bật kiếm tiền" and not is_bkt:
+                kenh_hien_thi_cuoi_cung.append(k)
+
+        if not kenh_hien_thi_cuoi_cung:
+            st.warning(f"⚠️ Không có kênh nào thỏa mãn điều kiện '{loc_bkt}' trong danh sách đã chọn!")
         else:
-            df_final = df_thang[df_thang["Kênh_Spotify"].isin(kenh_duoc_chon)]
+            # Gán lại tập dữ liệu chuẩn để vẽ toàn bộ Dashboard
+            df_final = df_thang[df_thang["Kênh_Spotify"].isin(kenh_hien_thi_cuoi_cung)]
             
             # ĐỌC VÀ LỌC KPI
             df_kpi_read = pd.read_csv(FILE_KPI)
-            df_kpi_filter = df_kpi_read[df_kpi_read["Kênh_Spotify"].isin(kenh_duoc_chon)]
+            df_kpi_filter = df_kpi_read[df_kpi_read["Kênh_Spotify"].isin(kenh_hien_thi_cuoi_cung)]
             if thang_chon != "Tất cả các tháng":
                 df_kpi_filter = df_kpi_filter[df_kpi_filter["Tháng"] == thang_chon]
                 
@@ -230,17 +245,24 @@ with tab_dashboard:
             target_gio = df_kpi_filter["KPI_So_Gio"].sum()
             target_tap = df_kpi_filter["KPI_So_Tap"].sum()
 
-            # --- SCORECARDS ---
+            # --- SCORECARDS (ĐÃ THÊM TỔNG KÊNH & KÊNH BẬT KIẾM TIỀN) ---
             st.markdown("### 🏆 CHỈ SỐ KẾT QUẢ vs MỤC TIÊU")
-            sc1, sc2, sc3, sc4 = st.columns(4)
-            sc1.metric("💰 Doanh Thu", f"${df_final['Doanh_Thu_USD'].sum():,.2f}", delta=f"${df_final['Doanh_Thu_USD'].sum() - target_dt:,.2f} so vs KPI")
-            sc2.metric("▶️ Lượt Play", f"{df_final['Luot_Play'].sum():,}", delta=f"{df_final['Luot_Play'].sum() - target_play:,} so vs KPI")
-            sc3.metric("⏱️ Giờ Nghe", f"{df_final['So_Gio_Nghe'].sum():,.1f}h", delta=f"{df_final['So_Gio_Nghe'].sum() - target_gio:,.1f}h so vs KPI")
-            sc4.metric("🎙️ Tập Upload", f"{df_final['So_Tap_Upload'].sum():,}", delta=f"{df_final['So_Tap_Upload'].sum() - target_tap:,} so vs KPI")
+            
+            # Đếm số liệu kênh
+            tong_so_kenh = len(kenh_hien_thi_cuoi_cung)
+            so_kenh_bkt = sum([1 for k in kenh_hien_thi_cuoi_cung if lay_trang_thai_kiem_tien(k)])
+            
+            sc1, sc2, sc3, sc4, sc5, sc6 = st.columns(6)
+            sc1.metric("🏢 Tổng Kênh Đang Lọc", tong_so_kenh)
+            sc2.metric("💸 Kênh Bật Kiếm Tiền", so_kenh_bkt)
+            sc3.metric("💰 Doanh Thu", f"${df_final['Doanh_Thu_USD'].sum():,.0f}", delta=f"${df_final['Doanh_Thu_USD'].sum() - target_dt:,.0f} vs KPI")
+            sc4.metric("▶️ Lượt Play", f"{df_final['Luot_Play'].sum():,.0f}", delta=f"{df_final['Luot_Play'].sum() - target_play:,.0f} vs KPI")
+            sc5.metric("⏱️ Giờ Nghe", f"{df_final['So_Gio_Nghe'].sum():,.0f}h", delta=f"{df_final['So_Gio_Nghe'].sum() - target_gio:,.0f} vs KPI")
+            sc6.metric("🎙️ Tập Upload", f"{df_final['So_Tap_Upload'].sum():,.0f}", delta=f"{df_final['So_Tap_Upload'].sum() - target_tap:,.0f} vs KPI")
             
             st.markdown("---")
             
-            # --- CHỌN CHỈ SỐ CHO BIỂU ĐỒ ---
+            # --- CHỌN CHỈ SỐ CHO TOÀN BỘ BIỂU ĐỒ & RANKING ---
             st.markdown("### 🚀 Phân Tích Tiến Độ & Hiệu Suất Theo Chỉ Số")
             chiso_chon = st.radio("🛠️ Chọn chỉ số để xem phân tích:", 
                                   ["Doanh Thu", "Lượt Play", "Giờ Nghe"], horizontal=True)
@@ -254,7 +276,7 @@ with tab_dashboard:
             cot_kpi = map_chiso[chiso_chon]["kpi"]
             kieu_format = map_chiso[chiso_chon]["format"]
 
-            # --- LỌC TUẦN CHUNG CHO BIỂU ĐỒ VÀ BẢNG XẾP HẠNG ---
+            # --- 1. BIỂU ĐỒ LINE KÉP (TIẾN ĐỘ) ---
             df_kpi_filter["Muc_Tieu_Tuan_Hien_Tai"] = df_kpi_filter[cot_kpi].fillna(0) / df_kpi_filter["So_Tuan"].fillna(4)
             tong_muc_tieu_1_tuan = df_kpi_filter["Muc_Tieu_Tuan_Hien_Tai"].sum()
             
@@ -264,15 +286,14 @@ with tab_dashboard:
             danh_sach_tuan_full = list(set(tuan_tu_data + tuan_tu_kpi)) 
             danh_sach_tuan_full.sort(key=lambda x: int(x.replace("Tuần ", "")) if "Tuần " in x else 0)
             
-            tuan_hien_thi = st.multiselect("📅 Chọn các Tuần hiển thị (Cho cả Biểu đồ Line và Bảng xếp hạng):", 
+            tuan_hien_thi = st.multiselect("📅 Chọn các Tuần hiển thị trên Biểu đồ Line:", 
                                            options=danh_sach_tuan_full, 
                                            default=danh_sach_tuan_full)
             tuan_hien_thi.sort(key=lambda x: int(x.replace("Tuần ", "")) if "Tuần " in x else 0)
 
             if not tuan_hien_thi:
-                st.warning("⚠️ Vui lòng chọn ít nhất 1 tuần để hiển thị dữ liệu.")
+                st.warning("⚠️ Vui lòng chọn ít nhất 1 tuần để vẽ biểu đồ Line.")
             else:
-                # 1. BIỂU ĐỒ LINE KÉP
                 df_trend = pd.DataFrame({"Tuần": tuan_hien_thi})
                 df_trend["Đường_Mục_Tiêu"] = tong_muc_tieu_1_tuan
     
@@ -296,72 +317,22 @@ with tab_dashboard:
                 )
                 st.plotly_chart(fig_vs, use_container_width=True)
 
-                # 2. BẢNG XẾP HẠNG (LEADERBOARD) - TÍNH TOÁN THEO TUẦN ĐÃ CHỌN
-                st.markdown(f"### 🏅 Bảng Xếp Hạng Hiệu Suất Kênh ({chiso_chon})")
-                
-                # Tổng kết quả của các tuần đã chọn
-                df_kq_rank = df_final[df_final["Tuần"].isin(tuan_hien_thi)]
-                df_kq_group = df_kq_rank.groupby("Kênh_Spotify")[cot_kq].sum().reset_index()
-                
-                # Tính KPI cộng dồn cho số tuần đã chọn
-                df_kpi_rank = df_kpi_filter.groupby("Kênh_Spotify").first().reset_index()
-                df_kpi_rank["KPI_1_Tuan"] = df_kpi_rank[cot_kpi].fillna(0) / df_kpi_rank["So_Tuan"].fillna(4)
-                df_kpi_rank["KPI_Target_Tinh_Toan"] = df_kpi_rank["KPI_1_Tuan"] * len(tuan_hien_thi)
-                
-                # Ghép bảng thực tế và KPI
-                df_rank = pd.merge(df_kpi_rank[["Kênh_Spotify", "KPI_Target_Tinh_Toan"]], df_kq_group, on="Kênh_Spotify", how="left").fillna(0)
-                
-                # Tính tỷ lệ % hoàn thành
-                df_rank["Ty_Le"] = np.where(df_rank["KPI_Target_Tinh_Toan"] > 0, 
-                                            (df_rank[cot_kq] / df_rank["KPI_Target_Tinh_Toan"]) * 100, 
-                                            np.where(df_rank[cot_kq] > 0, 100, 0))
-                df_rank = df_rank.sort_values(by="Ty_Le", ascending=False).reset_index(drop=True)
-                
-                col_top, col_bot = st.columns(2)
-                
-                # Hàm định dạng số hiển thị cho đẹp
-                def fmt(val):
-                    if chiso_chon == "Doanh Thu": return f"${val:,.2f}"
-                    elif chiso_chon == "Giờ Nghe": return f"{val:,.1f}h"
-                    return f"{val:,.0f}"
-
-                with col_top:
-                    st.success("🌟 **TOP KÊNH XUẤT SẮC NHẤT**")
-                    top_df = df_rank.head(3)
-                    for idx, row in top_df.iterrows():
-                        st.markdown(f"**#{idx+1}. {row['Kênh_Spotify']}** ➔ <span style='color:#1DB954; font-size:18px; font-weight:bold;'>{row['Ty_Le']:.1f}%</span><br>*(Đạt {fmt(row[cot_kq])} / KPI {fmt(row['KPI_Target_Tinh_Toan'])})*", unsafe_allow_html=True)
-                        st.markdown("")
-                        
-                with col_bot:
-                    st.error("⚠️ **TOP KÊNH CẦN CẢI THIỆN**")
-                    bot_df = df_rank.tail(3).sort_values(by="Ty_Le", ascending=True).reset_index(drop=True)
-                    for idx, row in bot_df.iterrows():
-                        st.markdown(f"**🔻 {row['Kênh_Spotify']}** ➔ <span style='color:#FF5722; font-size:18px; font-weight:bold;'>{row['Ty_Le']:.1f}%</span><br>*(Đạt {fmt(row[cot_kq])} / KPI {fmt(row['KPI_Target_Tinh_Toan'])})*", unsafe_allow_html=True)
-                        st.markdown("")
-
             st.markdown("---")
 
-            # --- BIỂU ĐỒ PHÂN TÍCH ---
-            st.markdown("### 🥧 Phân Tích Cơ Cấu & Tỷ Trọng")
-            tuan_hien_co = list(df_final["Tuần"].unique())
-            tuan_hien_co.sort(key=lambda x: int(x.replace("Tuần ", "")) if "Tuần " in x else 0)
+            # --- 2. BẢNG XẾP HẠNG TOP 5: TĂNG TRƯỞNG WOW (WEEK-OVER-WEEK) ---
+            st.markdown(f"### 🏅 Top 5 Kênh Biến Động Hiệu Suất ({chiso_chon})")
             
-            tuan_chon = st.selectbox("📌 Phân tích Tỷ trọng theo thời gian:", ["Tất cả các tuần"] + tuan_hien_co, key="loc_tuan_phan_tich")
-            df_phan_tich = df_final if tuan_chon == "Tất cả các tuần" else df_final[df_final["Tuần"] == tuan_chon]
+            tuan_co_data = list(df_final["Tuần"].unique())
+            tuan_co_data.sort(key=lambda x: int(x.replace("Tuần ", "")) if "Tuần " in x else 0)
             
-            if df_phan_tich.empty:
-                st.info(f"Không có dữ liệu kết quả cho {tuan_chon}.")
+            if not tuan_co_data:
+                st.info("Chưa có dữ liệu tuần để so sánh biến động.")
             else:
-                col_pie, col_bar = st.columns(2)
-                with col_pie:
-                    df_pie = df_phan_tich.groupby("Kênh_Spotify")[cot_kq].sum().reset_index()
-                    fig_pie = px.pie(df_pie, values=cot_kq, names="Kênh_Spotify", hole=0.4, 
-                                     title=f"Tỷ Trọng {chiso_chon} ({tuan_chon})")
-                    st.plotly_chart(fig_pie, use_container_width=True)
-                    
-                with col_bar:
-                    df_bar = df_phan_tich.groupby("Kênh_Spotify")[cot_kq].sum().reset_index()
-                    fig_bar = px.bar(df_bar, x="Kênh_Spotify", y=cot_kq, 
-                                     title=f"So Sánh Lượng {chiso_chon} Giữa Các Kênh ({tuan_chon})", text_auto='.2s')
-                    fig_bar.update_traces(marker_color='#1DB954', textfont_size=12, textangle=0, textposition="outside")
-                    st.plotly_chart(fig_bar, use_container_width=True)
+                tuan_chon_rank = st.selectbox("📌 Chọn Tuần xem biến động (Hệ thống sẽ tự so sánh với Tuần liền trước):", tuan_co_data, key="loc_tuan_rank")
+                
+                tuan_num = int(tuan_chon_rank.replace("Tuần ", "")) if "Tuần " in tuan_chon_rank else 0
+                tuan_truoc_str = f"Tuần {tuan_num - 1}"
+                
+                if tuan_num == 1:
+                    st.info("💡 Đây là Tuần 1 nên chưa có dữ liệu Tuần trước đó để so sánh. Các kênh mặc định được xem là tăng trưởng mới.")
+                elif tuan_truoc_
