@@ -10,46 +10,54 @@ import numpy as np
 st.set_page_config(page_title="Spotify Performance Hub", layout="wide", page_icon="🎧")
 
 # ==========================================
-# GIAO DIỆN NATIVE ĐỒNG BỘ THEME STREAMLIT
+# GIAO DIỆN NATIVE - OVERLAY KÍNH XANH
 # ==========================================
 st.markdown("""
 <style>
-    /* Đồng nhất màu Nền chính và Sidebar: Lấy màu nền gốc của Streamlit pha thêm 12% Xanh Spotify */
-    [data-testid="stAppViewContainer"], [data-testid="stSidebar"] { 
-        background-color: color-mix(in srgb, var(--background-color) 88%, #1DB954) !important; 
+    /* KỸ THUẬT PHỦ KÍNH: Phủ 1 lớp màu xanh siêu mỏng lên trên nền mặc định của Theme */
+    [data-testid="stAppViewContainer"] { 
+        background-color: var(--background-color) !important; 
+        background-image: linear-gradient(rgba(29, 185, 84, 0.07), rgba(29, 185, 84, 0.07)) !important;
+    }
+    
+    [data-testid="stSidebar"] { 
+        background-color: var(--secondary-background-color) !important; 
+        background-image: linear-gradient(rgba(29, 185, 84, 0.12), rgba(29, 185, 84, 0.12)) !important;
     }
     
     [data-testid="stHeader"] { background-color: transparent !important; }
     
-    /* Chữ tự động tương phản: Gọi trực tiếp biến màu chữ động của Streamlit */
+    /* Chữ tự động lấy màu tương phản chuẩn của Streamlit */
     p, h1, h2, h3, h4, h5, h6, li, label, .stMarkdown, .stText, div[data-testid="stMarkdownContainer"] {
         color: var(--text-color) !important;
     }
     
-    /* Thẻ Scorecard nổi khối */
+    /* Thẻ Scorecard */
     .spotify-card {
         background-color: var(--secondary-background-color) !important; 
-        border: 1px solid color-mix(in srgb, var(--primary-color) 30%, transparent) !important; 
+        background-image: linear-gradient(rgba(29, 185, 84, 0.03), rgba(29, 185, 84, 0.03)) !important;
+        border: 1px solid rgba(29, 185, 84, 0.2) !important; 
         border-radius: 12px; padding: 15px; height: 100%; 
-        box-shadow: 0 4px 10px rgba(29,185,84,0.06);
+        box-shadow: 0 4px 10px rgba(0,0,0,0.05);
         transition: transform 0.2s, box-shadow 0.2s;
     }
-    .spotify-card:hover { transform: translateY(-3px); box-shadow: 0 6px 15px rgba(29,185,84,0.12); }
+    .spotify-card:hover { transform: translateY(-3px); box-shadow: 0 6px 15px rgba(29,185,84,0.15); }
     
     .spotify-label { 
         font-size: 13px; font-weight: 600; 
-        color: color-mix(in srgb, var(--text-color) 70%, transparent) !important; 
+        color: var(--text-color) !important; opacity: 0.7;
         text-transform: uppercase; margin-bottom: 5px; 
     }
     .spotify-value { font-size: 26px; font-weight: 900; margin-bottom: 10px; color: var(--text-color) !important; }
     
-    /* Nút và Huy hiệu (Đồng nhất hệ màu Spotify) */
-    .badge-green { background-color: color-mix(in srgb, #1DB954 15%, transparent) !important; color: #1DB954 !important; padding: 4px 8px; border-radius: 6px; font-size: 13px; font-weight: 800; border: 1px solid color-mix(in srgb, #1DB954 30%, transparent); }
-    .badge-red { background-color: color-mix(in srgb, #E22134 15%, transparent) !important; color: #E22134 !important; padding: 4px 8px; border-radius: 6px; font-size: 13px; font-weight: 800; border: 1px solid color-mix(in srgb, #E22134 30%, transparent); }
+    /* Huy hiệu (Badges) thích ứng tốt trên cả 2 nền */
+    .badge-green { background-color: rgba(29, 185, 84, 0.15) !important; color: #1DB954 !important; padding: 4px 8px; border-radius: 6px; font-size: 13px; font-weight: 800; border: 1px solid rgba(29, 185, 84, 0.3); }
+    .badge-red { background-color: rgba(226, 33, 52, 0.15) !important; color: #E22134 !important; padding: 4px 8px; border-radius: 6px; font-size: 13px; font-weight: 800; border: 1px solid rgba(226, 33, 52, 0.3); }
     
     .text-success { color: #1DB954 !important; font-size: 18px; font-weight: bold; }
     .text-danger { color: #E22134 !important; font-size: 18px; font-weight: bold; }
 
+    /* Nút Button */
     div.stButton > button[kind="primary"] { background-color: #1DB954 !important; color: white !important; border: none; border-radius: 20px; font-weight: bold; }
     div.stButton > button[kind="primary"]:hover { background-color: #1ED760 !important; color: white !important; }
     div.stButton > button * { color: white !important; }
@@ -252,7 +260,7 @@ with tab_dashboard:
 
         danh_sach_kenh_hien_co = list(df_thang["Kênh_Spotify"].unique())
         with col_loc2: kenh_duoc_chon = st.multiselect("🎧 Lọc theo Kênh:", options=danh_sach_kenh_hien_co, default=danh_sach_kenh_hien_co, key="loc_kenh")
-        with col_loc3: loc_bkt = st.selectbox("🚦 Tình Trạng BKT:", ["Tất cả", "Đã bật", "Chưa bật"], key="loc_bkt")
+        with col_loc3: loc_bkt = st.selectbox("🚦 Kiếm Tiền:", ["Tất cả", "Đã bật", "Chưa bật"], key="loc_bkt")
             
         st.markdown("---")
         kenh_hien_thi_cuoi_cung = [k for k in kenh_duoc_chon if (loc_bkt == "Tất cả") or (loc_bkt == "Đã bật" and lay_trang_thai_kiem_tien(k)) or (loc_bkt == "Chưa bật" and not lay_trang_thai_kiem_tien(k))]
@@ -299,7 +307,6 @@ with tab_dashboard:
             map_chiso = { "Doanh Thu": {"kq": "Doanh_Thu_USD", "kpi": "KPI_Doanh_Thu", "format": "$"}, "Lượt Play": {"kq": "Luot_Play", "kpi": "KPI_Luot_Play", "format": ""}, "Giờ Nghe": {"kq": "So_Gio_Nghe", "kpi": "KPI_So_Gio", "format": "h"} }
             cot_kq, cot_kpi, kieu_format = map_chiso[chiso_chon]["kq"], map_chiso[chiso_chon]["kpi"], map_chiso[chiso_chon]["format"]
 
-            # BIỂU ĐỒ LINE TỰ ĐỘNG LẮNG NGHE THEME MÀ KHÔNG CẦN ÉP FONT COLOR
             df_kpi_filter["Muc_Tieu_Tuan_Hien_Tai"] = df_kpi_filter[cot_kpi].fillna(0) / df_kpi_filter["So_Tuan"].fillna(4)
             
             max_tuan_kpi = int(df_kpi_filter["So_Tuan"].max()) if not df_kpi_filter.empty and pd.notna(df_kpi_filter["So_Tuan"].max()) else 4
