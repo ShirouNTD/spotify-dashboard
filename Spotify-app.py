@@ -138,6 +138,10 @@ def tao_sheet_tong_hop(thang_chon):
         
     return master
 
+tab_dashboard, tab_master, tab_nhap_kpi, tab_nhap_kq, tab_xoa_data = st.tabs([
+    "📊 Dashboard", "📑 Sheet Tổng Hợp", "🎯 Nhập Mục Tiêu", "📥 Nhập Kết Quả", "🛠️ Quản Lý"
+])
+
 # ==========================================
 # Thêm logic cho tab mới này
 # ==========================================
