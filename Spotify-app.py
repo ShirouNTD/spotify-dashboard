@@ -508,15 +508,23 @@ with tab_dashboard:
             else:
                 df_plot = df_pie.groupby("Kênh_Spotify")[cot_tieu_chi].sum().reset_index()
                 
-            # --- VẼ DONUT ĐÃ TÍCH HỢP THEME ---
+            # --- VẼ DONUT TỰ ĐỘNG THEO THEME ---
             df_plot = df_pie.groupby("Kênh_Spotify")[cot_tieu_chi].sum().sort_values(ascending=False).reset_index()
             
             if df_plot.empty:
                 st.info("Không có dữ liệu để hiển thị biểu đồ.")
             else:
-                # 1. Xác định Theme và Bảng màu
+                # 1. Xác định Theme để chọn Palette
                 is_light = st.get_option("theme.base") == "light"
-                palette = ['#E65100', '#F57F17', '#FBC02D', '#BF360C', '#FF8F00', '#FFD600'] if is_light else ['#A8D08D', '#BEE5A3', '#D5F9B9', '#FFE699', '#FFD966', '#FFC555', '#FFB347', '#FFA07A']
+                
+                # Light Mode: Tông Cam-Vàng đậm (Tương phản cao trên nền Xanh lá)
+                # Dark Mode: Tông Pastel dịu mắt
+                if is_light:
+                    palette = ['#E65100', '#F57F17', '#FBC02D', '#BF360C', '#FF8F00', '#FFD600']
+                else:
+                    palette = ['#A8D08D', '#BEE5A3', '#D5F9B9', '#FFE699', '#FFD966', '#FFC555', '#FFB347', '#FFA07A']
+                
+                # Tạo màu phù hợp với số lượng kênh
                 colors = (palette * (len(df_plot) // len(palette) + 1))[:len(df_plot)]
 
                 # 2. Vẽ biểu đồ
@@ -529,7 +537,7 @@ with tab_dashboard:
                     color_discrete_sequence=colors
                 )
                 
-                # 3. Cấu hình giao diện (tự động đổi màu chữ theo theme)
+                # 3. Layout chỉnh màu chữ theo Theme
                 fig_pie.update_layout(
                     paper_bgcolor='rgba(0,0,0,0)', 
                     plot_bgcolor='rgba(0,0,0,0)',
@@ -538,7 +546,7 @@ with tab_dashboard:
                     font=dict(color="#1B5E20" if is_light else "#555555")
                 )
                 
-                # 4. Chỉnh chữ bên trong
+                # 4. Chữ trắng trên lát cắt (vẫn để trắng để rõ chữ trên mọi nền)
                 fig_pie.update_traces(
                     textinfo='percent', 
                     textfont_color="white", 
