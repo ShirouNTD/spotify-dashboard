@@ -20,50 +20,45 @@ if "rk_kpi" not in st.session_state:
 # ==========================================
 st.set_page_config(page_title="Spotify Performance Hub", layout="wide", page_icon="🎧")
 
-st.markdown("""
+# DÙNG PYTHON ĐỂ BẮT CHUẨN THEME CỦA STREAMLIT, KHÔNG LO LỖI CSS
+is_light = st.get_option("theme.base") == "light"
+mau_chu = "#0C7A33" if is_light else "#FAFAFA" # Xanh lá rõ nét cho Light, Trắng sáng cho Dark
+
+st.markdown(f"""
 <style>
 /* Nhập Font Lexend từ Google Fonts */
     @import url('https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;600;800&display=swap');
     
-    html, body, [class*="css"], [class*="st-"], div, span, p, h1, h2, h3, h4, h5, h6 {
+    html, body, [class*="css"], [class*="st-"], div, span, p, h1, h2, h3, h4, h5, h6 {{
         font-family: 'Lexend', sans-serif !important;
-    }
+    }}
 
-    /* ĐỂ STREAMLIT TỰ QUẢN LÝ MÀU NỀN & MÀU CHỮ CƠ BẢN (TRÁNH LỖI CHỮ TRẮNG NỀN TRẮNG) */
-    [data-testid="stAppViewContainer"] { background-color: var(--background-color) !important; background-image: none !important; }
-    [data-testid="stSidebar"] { background-color: var(--secondary-background-color) !important; background-image: none !important; }
+    /* ĐỂ STREAMLIT TỰ QUẢN LÝ MÀU NỀN */
+    [data-testid="stAppViewContainer"] {{ background-color: var(--background-color) !important; background-image: none !important; }}
+    [data-testid="stSidebar"] {{ background-color: var(--secondary-background-color) !important; background-image: none !important; }}
     
-    .spotify-card {
+    .spotify-card {{
         background-color: var(--secondary-background-color) !important; 
-        border: 1px solid rgba(128, 128, 128, 0.2) !important; 
+        border: 1px solid rgba(29, 185, 84, 0.2) !important; 
         border-radius: 12px; padding: 15px; height: 100%; 
         box-shadow: 0 4px 10px rgba(0,0,0,0.05); transition: transform 0.2s, box-shadow 0.2s;
-    }
+    }}
     
-    /* TRẠNG THÁI MẶC ĐỊNH LÀ AN TOÀN: Chữ sẽ tự đổi Trắng (Dark) / Xám (Light) để không bao giờ bị tàng hình */
-    p, h1, h2, h3, h4, h5, h6, li, label, .stMarkdown, .stText, div[data-testid="stMarkdownContainer"] { 
-        color: var(--text-color) !important; 
-    }
-    .spotify-label { color: var(--text-color) !important; opacity: 0.7; }
-    .spotify-value { color: var(--text-color) !important; }
-
-    /* NẾU LÀ LIGHT MODE: Ép sang Xanh Lá Đậm đúng ý Boss */
-    @media (prefers-color-scheme: light) {
-        p, h1, h2, h3, h4, h5, h6, li, label, .stMarkdown, .stText, div[data-testid="stMarkdownContainer"] { 
-            color: #1B5E20 !important; 
-        }
-        .spotify-label { color: #1B5E20 !important; opacity: 0.8; }
-        .spotify-value { color: #1B5E20 !important; }
-    }
+    /* ÉP MÀU CHỮ BẰNG PYTHON (TRẮNG HOẶC XANH LÁ) */
+    p, h1, h2, h3, h4, h5, h6, li, label, .stMarkdown, .stText, div[data-testid="stMarkdownContainer"] {{ 
+        color: {mau_chu} !important; 
+    }}
+    .spotify-label {{ color: {mau_chu} !important; opacity: 0.8; }}
+    .spotify-value {{ color: {mau_chu} !important; }}
 
     /* CSS Chung */
-    [data-testid="stHeader"] { background-color: transparent !important; }
-    .spotify-card:hover { transform: translateY(-3px); box-shadow: 0 6px 15px rgba(29,185,84,0.15) !important; }
-    .spotify-label { font-size: 13px; font-weight: 600; text-transform: uppercase; margin-bottom: 5px; }
-    .spotify-value { font-size: 26px; font-weight: 900; margin-bottom: 10px; }
+    [data-testid="stHeader"] {{ background-color: transparent !important; }}
+    .spotify-card:hover {{ transform: translateY(-3px); box-shadow: 0 6px 15px rgba(29,185,84,0.15) !important; }}
+    .spotify-label {{ font-size: 13px; font-weight: 600; text-transform: uppercase; margin-bottom: 5px; }}
+    .spotify-value {{ font-size: 26px; font-weight: 900; margin-bottom: 10px; }}
     
-    .badge-green { background-color: rgba(29, 185, 84, 0.15) !important; color: #1DB954 !important; padding: 4px 8px; border-radius: 6px; font-size: 13px; font-weight: 800; border: 1px solid rgba(29, 185, 84, 0.3); }
-    .badge-red { background-color: rgba(226, 33, 52, 0.15) !important; color: #E22134 !important; padding: 4px 8px; border-radius: 6px; font-size: 13px; font-weight: 800; border: 1px solid rgba(226, 33, 52, 0.3); }
+    .badge-green {{ background-color: rgba(29, 185, 84, 0.15) !important; color: #1DB954 !important; padding: 4px 8px; border-radius: 6px; font-size: 13px; font-weight: 800; border: 1px solid rgba(29, 185, 84, 0.3); }}
+    .badge-red {{ background-color: rgba(226, 33, 52, 0.15) !important; color: #E22134 !important; padding: 4px 8px; border-radius: 6px; font-size: 13px; font-weight: 800; border: 1px solid rgba(226, 33, 52, 0.3); }}
 </style>
 """, unsafe_allow_html=True)
 
