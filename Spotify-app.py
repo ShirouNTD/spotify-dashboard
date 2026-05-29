@@ -10,7 +10,7 @@ st.set_page_config(page_title="Spotify Performance Hub", layout="wide", page_ico
 
 FILE_DU_LIEU = "spotify_master_data.csv"
 
-# Hàm khởi tạo & nâng cấp file
+# Hàm khởi tạo & nâng cấp file CSV
 def khoi_tao_db():
     if not os.path.exists(FILE_DU_LIEU):
         df_mau = pd.DataFrame(columns=[
@@ -27,13 +27,11 @@ def khoi_tao_db():
 khoi_tao_db()
 df = pd.read_csv(FILE_DU_LIEU)
 
-# KHỞI TẠO BỘ NHỚ ĐỆM CHO UX (Đưa số về 0 sau khi lưu)
-if "val_kenh_moi" not in st.session_state: st.session_state.val_kenh_moi = ""
-if "val_doanh_thu" not in st.session_state: st.session_state.val_doanh_thu = 0.0
-if "val_luot_play" not in st.session_state: st.session_state.val_luot_play = 0
-if "val_so_gio" not in st.session_state: st.session_state.val_so_gio = 0.0
-if "val_so_tap" not in st.session_state: st.session_state.val_so_tap = 0
-if "val_lua_chon_kenh" not in st.session_state: st.session_state.val_lua_chon_kenh = "➕ Nhập kênh mới..."
+# ==========================================
+# THUẬT TOÁN "CHÌA KHÓA TÁI SINH" ĐỂ RESET FORM
+# ==========================================
+if "form_reset_key" not in st.session_state: 
+    st.session_state.form_reset_key = 0
 
 # ==========================================
 # KHU VỰC SIDEBAR: CÀI ĐẶT KPI
@@ -50,45 +48,49 @@ st.markdown("---")
 tab_dashboard, tab_nhap_lieu = st.tabs(["📊 Báo Cáo Dashboard", "📥 Cổng Nhập Liệu (Tự Động Gợi Ý)"])
 
 # ==========================================
-# KHU VỰC 1: CỔNG NHẬP LIỆU (CƠ CHẾ UPSERT + FORCE RESET BỘ LỌC)
+# KHU VỰC 1: CỔNG NHẬP LIỆU (ĐÃ FIX LỖI INSTANTIATION)
 # ==========================================
 with tab_nhap_lieu:
     st.subheader("Nhập liệu Báo cáo Tuần")
+    st.info("💡 Hệ thống tự động Ghi đè dữ liệu trùng. Nhập thành công Form sẽ tự làm mới.")
+    
+    # Lấy chìa khóa reset hiện tại
+    rk = st.session_state.form_reset_key
     
     col1, col2, col3 = st.columns(3)
     with col1:
-        thang = st.selectbox("Tháng Báo Cáo:", [f"Tháng {i}" for i in range(1, 13)])
-        tuan = st.selectbox("Tuần Báo Cáo:", [f"Tuần {i}" for i in range(1, 53)])
+        thang = st.selectbox("Tháng Báo Cáo:", [f"Tháng {i}" for i in range(1, 13)], key=f"thang_{rk}")
+        tuan = st.selectbox("Tuần Báo Cáo:", [f"Tuần {i}" for i in range(1, 53)], key=f"tuan_{rk}")
         
         danh_sach_kenh_cu = list(df["Kênh_Spotify"].unique()) if not df.empty else []
         lua_chon_kenh = st.selectbox(
             "Gõ để tìm kênh hoặc Thêm kênh mới:", 
             options=["➕ Nhập kênh mới..."] + danh_sach_kenh_cu,
-            key="val_lua_chon_kenh"
+            key=f"chon_kenh_{rk}"
         )
         
         if lua_chon_kenh == "➕ Nhập kênh mới...":
-            kenh = st.text_input("Gõ tên kênh mới vào đây:", key="val_kenh_moi").strip()
+            kenh = st.text_input("Gõ tên kênh mới vào đây:", key=f"kenh_moi_{rk}").strip()
             trang_thai_mac_dinh = False
         else:
             kenh = lua_chon_kenh
             trang_thai_mac_dinh = bool(df[df["Kênh_Spotify"] == kenh].iloc[-1]["Bat_Kiem_Tien"])
             
-        trang_thai_kt = st.checkbox("✅ Kênh đã bật kiếm tiền", value=trang_thai_mac_dinh)
+        trang_thai_kt = st.checkbox("✅ Kênh đã bật kiếm tiền", value=trang_thai_mac_dinh, key=f"bkt_{rk}")
 
     with col2:
-        doanh_thu = st.number_input("Doanh thu tuần (USD):", min_value=0.0, step=1.0, key="val_doanh_thu")
-        luot_play = st.number_input("Lượt Play tuần qua:", min_value=0, step=100, key="val_luot_play")
+        doanh_thu = st.number_input("Doanh thu tuần (USD):", min_value=0.0, step=1.0, key=f"dt_{rk}")
+        luot_play = st.number_input("Lượt Play tuần qua:", min_value=0, step=100, key=f"play_{rk}")
     with col3:
-        gio_nghe = st.number_input("Số giờ nghe tuần qua:", min_value=0.0, step=10.0, key="val_so_gio")
-        so_tap = st.number_input("Số tập Upload tuần qua:", min_value=0, step=1, key="val_so_tap")
+        gio_nghe = st.number_input("Số giờ nghe tuần qua:", min_value=0.0, step=10.0, key=f"gio_{rk}")
+        so_tap = st.number_input("Số tập Upload tuần qua:", min_value=0, step=1, key=f"tap_{rk}")
         
     st.markdown("<br>", unsafe_allow_html=True)
     if st.button("Lưu Dữ Liệu Lên Hệ Thống", type="primary", use_container_width=True):
         if not kenh:
             st.error("⚠️ Vui lòng nhập hoặc chọn Tên Kênh Spotify!")
         else:
-            # 1. Cơ chế Upsert (Ghi đè nếu trùng, Thêm mới nếu chưa có)
+            # 1. Cơ chế Upsert (Ghi đè hoặc Thêm mới)
             dieu_kien_trung = (df["Tuần"] == tuan) & (df["Kênh_Spotify"] == kenh)
             if dieu_kien_trung.any():
                 df.loc[dieu_kien_trung, ["Tháng", "Doanh_Thu_USD", "Luot_Play", "So_Gio_Nghe", "So_Tap_Upload", "Bat_Kiem_Tien", "Thoi_Gian_Nhap"]] = [
@@ -108,18 +110,12 @@ with tab_nhap_lieu:
             
             df.to_csv(FILE_DU_LIEU, index=False)
             
-            # 2. XÓA BỘ NHỚ ĐỆM CỦA FORM ĐỂ ĐƯA VỀ 0
-            st.session_state.val_kenh_moi = ""
-            st.session_state.val_doanh_thu = 0.0
-            st.session_state.val_luot_play = 0
-            st.session_state.val_so_gio = 0.0
-            st.session_state.val_so_tap = 0
-            st.session_state.val_lua_chon_kenh = "➕ Nhập kênh mới..."
-            
-            # 3. ÉP XÓA TRÍ NHỚ BỘ LỌC ĐỂ DASHBOARD CHẮC CHẮN CẬP NHẬT BIỂU ĐỒ MỚI
+            # 2. Xóa trí nhớ bộ lọc Dashboard để biểu đồ tự vẽ lại
             if "loc_thang" in st.session_state: del st.session_state["loc_thang"]
             if "loc_kenh" in st.session_state: del st.session_state["loc_kenh"]
             
+            # 3. KÍCH HOẠT TÁI SINH FORM (Tự động đưa số về 0 mà không bị lỗi đỏ)
+            st.session_state.form_reset_key += 1
             st.rerun()
 
 # ==========================================
@@ -129,7 +125,6 @@ with tab_dashboard:
     if df.empty:
         st.info("Hệ thống chưa có dữ liệu. Vui lòng sang tab 'Cổng Nhập Liệu' để bổ sung thông tin.")
     else:
-        # BỘ LỌC (Đã được gắn Key để liên kết với cơ chế ép xóa trí nhớ)
         col_loc1, col_loc2 = st.columns(2)
         with col_loc1:
             thang_hien_co = list(df["Tháng"].unique())
