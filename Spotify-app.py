@@ -497,13 +497,34 @@ with tab_dashboard:
             with col_sl2:
                 kenh_chon = st.multiselect("Chọn kênh:", options=df_final["Kênh_Spotify"].unique(), default=df_final["Kênh_Spotify"].unique())
 
-            # Lọc dữ liệu theo kênh đã chọn
+            # --- CẬP NHẬT GIAO DIỆN BIỂU ĐỒ DONUT MỚI ---
+            st.markdown("### 🍩 3. Phân Tích Cơ Cấu & Tỷ Trọng")
+            
+            # Khởi tạo lại df_phan_tich để tránh lỗi NameError
+            # Giả sử df_final là dataframe tổng, ta dùng nó làm nguồn dữ liệu
+            if "df_final" in locals():
+                df_phan_tich = df_final
+            else:
+                # Nếu không tìm thấy df_final, dùng tạm df_master
+                df_phan_tich = df_master
+            
+            # Slicer tùy chỉnh
+            col_sl1, col_sl2 = st.columns(2)
+            with col_sl1:
+                tieu_chi_map = {"Doanh thu": "Doanh_Thu_USD", "Lượt Play": "Luot_Play", "Giờ nghe": "Gio_Nghe"}
+                tieu_chi_chon = st.selectbox("Tiêu chí so sánh:", list(tieu_chi_map.keys()))
+                cot_tieu_chi = tieu_chi_map[tieu_chi_chon]
+            with col_sl2:
+                # Dùng list các kênh duy nhất từ df_phan_tich
+                kenh_all = df_phan_tich["Kênh_Spotify"].unique()
+                kenh_chon = st.multiselect("Chọn kênh:", options=kenh_all, default=kenh_all)
+
+            # Lọc dữ liệu
             df_pie = df_phan_tich[df_phan_tich["Kênh_Spotify"].isin(kenh_chon)]
             
             if df_pie.empty: 
                 st.info("Vui lòng chọn kênh để hiển thị biểu đồ.")
             else:
-                # Vẽ biểu đồ với bảng màu Xanh lá - Vàng - Cam
                 df_plot = df_pie.groupby("Kênh_Spotify")[cot_tieu_chi].sum().reset_index()
                 fig_pie = px.pie(
                     df_plot, 
@@ -515,4 +536,3 @@ with tab_dashboard:
                 )
                 fig_pie.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
                 st.plotly_chart(fig_pie, use_container_width=True)
-
