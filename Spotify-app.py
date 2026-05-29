@@ -10,9 +10,12 @@ if "rk_kq" not in st.session_state:
 if "rk_kpi" not in st.session_state:
     st.session_state.rk_kpi = 0
 
+
 # 1. CẤU HÌNH GIAO DIỆN
 
 st.set_page_config(page_title="Spotify Performance Hub", layout="wide", page_icon="🎧")
+
+
 
 # ==========================================
 
@@ -23,57 +26,94 @@ st.set_page_config(page_title="Spotify Performance Hub", layout="wide", page_ico
 st.markdown("""
 
 <style>
-    /* Nhập Font Lexend */
+
+/* Nhập Font Lexend từ Google Fonts */
+
     @import url('https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;600;800&display=swap');
 
+
+
     /* Ép toàn bộ App dùng font Lexend */
+
     html, body, [class*="css"], [class*="st-"], div, span, p, h1, h2, h3, h4, h5, h6 {
+
         font-family: 'Lexend', sans-serif !important;
+
     }
 
-    /* 1. DARK MODE MẶC ĐỊNH (Không cần @media) */
+
+
     [data-testid="stAppViewContainer"] { 
+
         background-color: var(--background-color) !important; 
+
         background-image: linear-gradient(rgba(29, 185, 84, 0.07), rgba(29, 185, 84, 0.07)) !important;
+
     }
+
     [data-testid="stSidebar"] { 
+
         background-color: var(--secondary-background-color) !important; 
+
         background-image: linear-gradient(rgba(29, 185, 84, 0.12), rgba(29, 185, 84, 0.12)) !important;
-    }
-    .spotify-card {
-        background-color: var(--secondary-background-color) !important; 
-        background-image: linear-gradient(rgba(29, 185, 84, 0.03), rgba(29, 185, 84, 0.03)) !important;
-        border: 1px solid rgba(29, 185, 84, 0.2) !important; 
-        border-radius: 12px; padding: 15px; height: 100%; 
-        box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+
     }
 
-    /* 2. LIGHT MODE: Xanh lá pastel + Chữ xanh đậm */
-    @media (prefers-color-scheme: light) {
-        :root {
-            --background-color: #E8F5E9 !important;      /* Xanh lá siêu nhạt */
-            --secondary-background-color: #C8E6C9 !important; /* Xanh lá nhạt cho card */
-            --text-color: #1B5E20 !important;           /* Xanh lá đậm */
-        }
-        
-        /* Ép card và sidebar trong Light Mode */
-        [data-testid="stAppViewContainer"] { background-image: none !important; }
-        .spotify-card { border: 1px solid rgba(27, 94, 32, 0.2) !important; }
-    }
-
-    /* Cấu hình chung cho mọi theme */
     [data-testid="stHeader"] { background-color: transparent !important; }
-    p, h1, h2, h3, h4, h5, h6, li, label, .stMarkdown, .stText, div[data-testid="stMarkdownContainer"] { color: var(--text-color) !important; }
-    
-    .badge-green { background-color: rgba(29, 185, 84, 0.15) !important; color: #1DB954 !important; padding: 4px 8px; border-radius: 6px; font-weight: 800; }
-    .badge-red { background-color: rgba(226, 33, 52, 0.15) !important; color: #E22134 !important; padding: 4px 8px; border-radius: 6px; font-weight: 800; }
-    .text-success { color: #1DB954 !important; font-weight: bold; }
-    .text-danger { color: #E22134 !important; font-weight: bold; }
 
-    div.stButton > button[kind="primary"] { background-color: #1DB954 !important; color: white !important; border-radius: 20px; font-weight: bold; }
+    
+
+    p, h1, h2, h3, h4, h5, h6, li, label, .stMarkdown, .stText, div[data-testid="stMarkdownContainer"] { color: var(--text-color) !important; }
+
+    
+
+    .spotify-card {
+
+        background-color: var(--secondary-background-color) !important; 
+
+        background-image: linear-gradient(rgba(29, 185, 84, 0.03), rgba(29, 185, 84, 0.03)) !important;
+
+        border: 1px solid rgba(29, 185, 84, 0.2) !important; 
+
+        border-radius: 12px; padding: 15px; height: 100%; 
+
+        box-shadow: 0 4px 10px rgba(0,0,0,0.05); transition: transform 0.2s, box-shadow 0.2s;
+
+    }
+
+    .spotify-card:hover { transform: translateY(-3px); box-shadow: 0 6px 15px rgba(29,185,84,0.15); }
+
+    
+
+    .spotify-label { font-size: 13px; font-weight: 600; color: var(--text-color) !important; opacity: 0.7; text-transform: uppercase; margin-bottom: 5px; }
+
+    .spotify-value { font-size: 26px; font-weight: 900; margin-bottom: 10px; color: var(--text-color) !important; }
+
+    
+
+    .badge-green { background-color: rgba(29, 185, 84, 0.15) !important; color: #1DB954 !important; padding: 4px 8px; border-radius: 6px; font-size: 13px; font-weight: 800; border: 1px solid rgba(29, 185, 84, 0.3); }
+
+    .badge-red { background-color: rgba(226, 33, 52, 0.15) !important; color: #E22134 !important; padding: 4px 8px; border-radius: 6px; font-size: 13px; font-weight: 800; border: 1px solid rgba(226, 33, 52, 0.3); }
+
+    
+
+    .text-success { color: #1DB954 !important; font-size: 18px; font-weight: bold; }
+
+    .text-danger { color: #E22134 !important; font-size: 18px; font-weight: bold; }
+
+
+
+    div.stButton > button[kind="primary"] { background-color: #1DB954 !important; color: white !important; border: none; border-radius: 20px; font-weight: bold; }
+
+    div.stButton > button[kind="primary"]:hover { background-color: #1ED760 !important; color: white !important; }
+
+    div.stButton > button * { color: white !important; }
+
 </style>
 
 """, unsafe_allow_html=True)
+
+
 # ==========================================
 # KHỞI TẠO DATA
 # ==========================================
