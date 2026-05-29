@@ -22,40 +22,37 @@ st.set_page_config(page_title="Spotify Performance Hub", layout="wide", page_ico
 
 st.markdown("""
 <style>
-/* Nhập Font Lexend từ Google Fonts */
-    @import url('https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;600;800&display=swap');
-    
+/* 1. Ép Font chuẩn */
     html, body, [class*="css"], [class*="st-"], div, span, p, h1, h2, h3, h4, h5, h6 {
         font-family: 'Lexend', sans-serif !important;
     }
 
-    /* ÉP MÀU NỀN THEO STREAMLIT */
-    [data-testid="stAppViewContainer"] { background-color: var(--background-color) !important; background-image: none !important; }
-    [data-testid="stSidebar"] { background-color: var(--secondary-background-color) !important; background-image: none !important; }
+/* 2. ÉP MÀU CHỮ CỰC MẠNH (Dùng cho cả Light và Dark Mode) */
+    /* Khi ở Light Mode, Streamlit gán class 'stApp' có data-theme='light' */
+    [data-theme='light'] * {
+        color: #0C7A33 !important;
+    }
     
+    /* Khi ở Dark Mode, Streamlit gán class 'stApp' có data-theme='dark' */
+    [data-theme='dark'] * {
+        color: #FAFAFA !important;
+    }
+
+/* 3. Đảm bảo các thành phần đặc thù luôn theo màu Xanh lá khi ở Light Mode */
+    [data-theme='light'] .spotify-label, 
+    [data-theme='light'] .spotify-value, 
+    [data-theme='light'] p, 
+    [data-theme='light'] span {
+        color: #0C7A33 !important;
+    }
+
+/* 4. Định nghĩa lại background cho Card để tránh bị xung đột */
     .spotify-card {
-        background-color: var(--secondary-background-color) !important; 
-        border: 1px solid rgba(128, 128, 128, 0.2) !important; 
-        border-radius: 12px; padding: 15px; height: 100%; 
+        background-color: var(--secondary-background-color) !important;
+        border: 1px solid rgba(128, 128, 128, 0.2) !important;
+        border-radius: 12px;
+        padding: 15px;
     }
-    
-    /* XỬ LÝ MÀU CHỮ: 
-       - Mặc định cho Dark Mode là Trắng
-       - Dùng @media để ép cho Light Mode là Xanh Lá Đậm (#0C7A33) 
-    */
-    p, h1, h2, h3, h4, h5, h6, li, label, .stMarkdown, .stText, .spotify-label, .spotify-value { 
-        color: #FAFAFA !important; 
-    }
-
-    @media (prefers-color-scheme: light) {
-        p, h1, h2, h3, h4, h5, h6, li, label, .stMarkdown, .stText, .spotify-label, .spotify-value, div { 
-            color: #0C7A33 !important; 
-        }
-    }
-
-    /* ĐỊNH DẠNG RIÊNG CHO BẢNG XẾP HẠNG (Để đảm bảo nó không bị ảnh hưởng bởi theme) */
-    .text-success { color: #1DB954 !important; font-weight: bold; }
-    .text-danger { color: #E22134 !important; font-weight: bold; }
 </style>
 """, unsafe_allow_html=True)
 
