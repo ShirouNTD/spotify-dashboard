@@ -29,15 +29,10 @@ st.markdown("""
         font-family: 'Lexend', sans-serif !important;
     }
 
-    /* MẶC ĐỊNH MÀU NỀN TỰ ĐỘNG CHUẨN THEO STREAMLIT */
-    [data-testid="stAppViewContainer"] { 
-        background-color: var(--background-color) !important; 
-        background-image: none !important;
-    }
-    [data-testid="stSidebar"] { 
-        background-color: var(--secondary-background-color) !important;
-        background-image: none !important;
-    }
+    /* ĐỂ STREAMLIT TỰ QUẢN LÝ MÀU NỀN & MÀU CHỮ CƠ BẢN (TRÁNH LỖI CHỮ TRẮNG NỀN TRẮNG) */
+    [data-testid="stAppViewContainer"] { background-color: var(--background-color) !important; background-image: none !important; }
+    [data-testid="stSidebar"] { background-color: var(--secondary-background-color) !important; background-image: none !important; }
+    
     .spotify-card {
         background-color: var(--secondary-background-color) !important; 
         border: 1px solid rgba(128, 128, 128, 0.2) !important; 
@@ -45,23 +40,23 @@ st.markdown("""
         box-shadow: 0 4px 10px rgba(0,0,0,0.05); transition: transform 0.2s, box-shadow 0.2s;
     }
     
-    /* 🌑 DARK THEME: CHỮ MÀU TRẮNG SÁNG */
+    /* TRẠNG THÁI MẶC ĐỊNH LÀ AN TOÀN: Chữ sẽ tự đổi Trắng (Dark) / Xám (Light) để không bao giờ bị tàng hình */
     p, h1, h2, h3, h4, h5, h6, li, label, .stMarkdown, .stText, div[data-testid="stMarkdownContainer"] { 
-        color: #FAFAFA !important; 
+        color: var(--text-color) !important; 
     }
-    .spotify-label { color: #FAFAFA !important; opacity: 0.7; }
-    .spotify-value { color: #FAFAFA !important; }
+    .spotify-label { color: var(--text-color) !important; opacity: 0.7; }
+    .spotify-value { color: var(--text-color) !important; }
 
-    /* ☀️ LIGHT THEME: ÉP CHỮ MÀU XANH LÁ ĐẬM SANG TRỌNG */
+    /* NẾU LÀ LIGHT MODE: Ép sang Xanh Lá Đậm đúng ý Boss */
     @media (prefers-color-scheme: light) {
         p, h1, h2, h3, h4, h5, h6, li, label, .stMarkdown, .stText, div[data-testid="stMarkdownContainer"] { 
             color: #1B5E20 !important; 
         }
-        .spotify-label { color: #1B5E20 !important; opacity: 0.7; }
+        .spotify-label { color: #1B5E20 !important; opacity: 0.8; }
         .spotify-value { color: #1B5E20 !important; }
     }
 
-    /* CSS Chung (Không bị ảnh hưởng bởi Theme) */
+    /* CSS Chung */
     [data-testid="stHeader"] { background-color: transparent !important; }
     .spotify-card:hover { transform: translateY(-3px); box-shadow: 0 6px 15px rgba(29,185,84,0.15) !important; }
     .spotify-label { font-size: 13px; font-weight: 600; text-transform: uppercase; margin-bottom: 5px; }
@@ -69,12 +64,6 @@ st.markdown("""
     
     .badge-green { background-color: rgba(29, 185, 84, 0.15) !important; color: #1DB954 !important; padding: 4px 8px; border-radius: 6px; font-size: 13px; font-weight: 800; border: 1px solid rgba(29, 185, 84, 0.3); }
     .badge-red { background-color: rgba(226, 33, 52, 0.15) !important; color: #E22134 !important; padding: 4px 8px; border-radius: 6px; font-size: 13px; font-weight: 800; border: 1px solid rgba(226, 33, 52, 0.3); }
-    .text-success { color: #1DB954 !important; font-size: 18px; font-weight: bold; }
-    .text-danger { color: #E22134 !important; font-size: 18px; font-weight: bold; }
-    
-    div.stButton > button[kind="primary"] { background-color: #1DB954 !important; color: white !important; border: none; border-radius: 20px; font-weight: bold; }
-    div.stButton > button[kind="primary"]:hover { background-color: #1ED760 !important; color: white !important; }
-    div.stButton > button * { color: white !important; }
 </style>
 """, unsafe_allow_html=True)
 
