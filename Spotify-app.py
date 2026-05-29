@@ -29,7 +29,7 @@ st.markdown("""
         font-family: 'Lexend', sans-serif !important;
     }
 
-    /* 🟢 GIAO TOÀN QUYỀN MÀU NỀN CHO STREAMLIT ĐỂ KHÔNG BAO GIỜ LỖI THEME */
+    /* MẶC ĐỊNH MÀU NỀN TỰ ĐỘNG CHUẨN THEO STREAMLIT */
     [data-testid="stAppViewContainer"] { 
         background-color: var(--background-color) !important; 
         background-image: none !important;
@@ -45,12 +45,21 @@ st.markdown("""
         box-shadow: 0 4px 10px rgba(0,0,0,0.05); transition: transform 0.2s, box-shadow 0.2s;
     }
     
-    /* 🟢 CHỮ TỰ ĐỘNG ĐỔI: TRẮNG TRONG DARK THEME, XÁM ĐEN TRONG LIGHT THEME */
+    /* 🌑 DARK THEME: CHỮ MÀU TRẮNG SÁNG */
     p, h1, h2, h3, h4, h5, h6, li, label, .stMarkdown, .stText, div[data-testid="stMarkdownContainer"] { 
-        color: var(--text-color) !important; 
+        color: #FAFAFA !important; 
     }
-    .spotify-label { color: var(--text-color) !important; opacity: 0.7; }
-    .spotify-value { color: var(--text-color) !important; }
+    .spotify-label { color: #FAFAFA !important; opacity: 0.7; }
+    .spotify-value { color: #FAFAFA !important; }
+
+    /* ☀️ LIGHT THEME: ÉP CHỮ MÀU XANH LÁ ĐẬM SANG TRỌNG */
+    @media (prefers-color-scheme: light) {
+        p, h1, h2, h3, h4, h5, h6, li, label, .stMarkdown, .stText, div[data-testid="stMarkdownContainer"] { 
+            color: #1B5E20 !important; 
+        }
+        .spotify-label { color: #1B5E20 !important; opacity: 0.7; }
+        .spotify-value { color: #1B5E20 !important; }
+    }
 
     /* CSS Chung (Không bị ảnh hưởng bởi Theme) */
     [data-testid="stHeader"] { background-color: transparent !important; }
@@ -429,32 +438,29 @@ with tab_dashboard:
                 # --- 🏆 3. BẢNG XẾP HẠNG TOP KÊNH TĂNG TRƯỞNG (TUẦN) ---
                 st.markdown(f"### 🏆 3. Bảng Xếp Hạng Tăng Trưởng Theo {chiso_chon}")
                 
-                # Tính toán dữ liệu
                 df_top_w = df_final.groupby("Kênh_Spotify")[cot_kq].sum().reset_index()
                 df_kpi_w = df_kpi_filter.groupby("Kênh_Spotify")["Muc_Tieu_Tuan_Hien_Tai"].sum().reset_index()
                 df_top_w = df_top_w.merge(df_kpi_w, on="Kênh_Spotify", how="left")
                 df_top_w["% Tăng Trưởng"] = (df_top_w[cot_kq] / df_top_w["Muc_Tieu_Tuan_Hien_Tai"] * 100).fillna(0)
                 
-                # CHIA ĐÔI MÀN HÌNH (CỘT TRÁI - CỘT PHẢI)
+                # CHIA ĐÔI MÀN HÌNH VÀ VẼ LIST
                 col_top1_w, col_top2_w = st.columns(2)
                 
                 with col_top1_w:
                     st.markdown("#### 🔥 Top 5 Hoàn Thành Tốt Nhất")
-                    df_high_w = df_top_w.sort_values(by="% Tăng Trưởng", ascending=False).head(5)
-                    df_high_w = df_high_w.sort_values(by="% Tăng Trưởng", ascending=True) # Đảo lại để cao nhất ở trên cùng
-                    
-                    fig_high_w = px.bar(df_high_w, x="% Tăng Trưởng", y="Kênh_Spotify", orientation='h', color="% Tăng Trưởng", color_continuous_scale="Greens", text_auto='.1f')
-                    fig_high_w.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', yaxis_title="", xaxis_title="% Hoàn thành", coloraxis_showscale=False, margin=dict(l=0, r=0, t=0, b=0), height=280)
-                    st.plotly_chart(fig_high_w, use_container_width=True)
+                    df_high_w = df_top_w.sort_values(by="% Tăng Trưởng", ascending=False).head(5).reset_index(drop=True)
+                    html_high = ""
+                    for i, row in df_high_w.iterrows():
+                        html_high += f"<div style='display:flex; justify-content:space-between; padding:12px; margin-bottom:8px; border-radius:8px; background:var(--secondary-background-color); border:1px solid rgba(29, 185, 84, 0.4);'><span style='font-weight:600;'>#{i+1} &nbsp; {row['Kênh_Spotify']}</span><span style='color:#1DB954; font-weight:800; font-size: 16px;'>{row['% Tăng Trưởng']:,.1f}%</span></div>"
+                    st.markdown(html_high, unsafe_allow_html=True)
 
                 with col_top2_w:
                     st.markdown("#### ⚠️ Top 5 Cần Chú Ý Nhất")
-                    df_low_w = df_top_w.sort_values(by="% Tăng Trưởng", ascending=True).head(5)
-                    df_low_w = df_low_w.sort_values(by="% Tăng Trưởng", ascending=False) # Kẻ thấp nhất nằm trên cùng
-                    
-                    fig_low_w = px.bar(df_low_w, x="% Tăng Trưởng", y="Kênh_Spotify", orientation='h', color="% Tăng Trưởng", color_continuous_scale="Reds", text_auto='.1f')
-                    fig_low_w.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', yaxis_title="", xaxis_title="% Hoàn thành", coloraxis_showscale=False, margin=dict(l=0, r=0, t=0, b=0), height=280)
-                    st.plotly_chart(fig_low_w, use_container_width=True)
+                    df_low_w = df_top_w.sort_values(by="% Tăng Trưởng", ascending=True).head(5).reset_index(drop=True)
+                    html_low = ""
+                    for i, row in df_low_w.iterrows():
+                        html_low += f"<div style='display:flex; justify-content:space-between; padding:12px; margin-bottom:8px; border-radius:8px; background:var(--secondary-background-color); border:1px solid rgba(226, 33, 52, 0.4);'><span style='font-weight:600;'>#{i+1} &nbsp; {row['Kênh_Spotify']}</span><span style='color:#E22134; font-weight:800; font-size: 16px;'>{row['% Tăng Trưởng']:,.1f}%</span></div>"
+                    st.markdown(html_low, unsafe_allow_html=True)
 
                 # --- 🍩 4. BIỂU ĐỒ DONUT (BÁO CÁO TUẦN) ---
                 st.markdown("### 🍩 4. Phân Tích Cơ Cấu & Tỷ Trọng (Tuần)")
@@ -548,32 +554,30 @@ with tab_dashboard:
                 fig_vs_m.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
                 st.plotly_chart(fig_vs_m, use_container_width=True)
 
-               # --- 🏆 3. BẢNG XẾP HẠNG DOANH THU (THÁNG FINAL) ---
+             # --- 🏆 3. BẢNG XẾP HẠNG DOANH THU (THÁNG FINAL) ---
                 st.markdown("### 🏆 3. Bảng Xếp Hạng Kênh Theo Doanh Thu (Tháng Final)")
                 
                 df_top_m = df_final_m.groupby("Kênh_Spotify")["Doanh_Thu_USD"].sum().reset_index()
                 
-                # CHIA ĐÔI MÀN HÌNH (CỘT TRÁI - CỘT PHẢI)
+                # CHIA ĐÔI MÀN HÌNH VÀ VẼ LIST
                 col_top1_m, col_top2_m = st.columns(2)
                 
                 with col_top1_m:
                     st.markdown("#### 🔥 Top 5 Doanh Thu Cao Nhất")
-                    df_high_m = df_top_m.sort_values(by="Doanh_Thu_USD", ascending=False).head(5)
-                    df_high_m = df_high_m.sort_values(by="Doanh_Thu_USD", ascending=True)
-                    
-                    fig_high_m = px.bar(df_high_m, x="Doanh_Thu_USD", y="Kênh_Spotify", orientation='h', color="Doanh_Thu_USD", color_continuous_scale="Greens", text_auto='.2s')
-                    fig_high_m.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', yaxis_title="", xaxis_title="Doanh Thu (USD)", coloraxis_showscale=False, margin=dict(l=0, r=0, t=0, b=0), height=280)
-                    st.plotly_chart(fig_high_m, use_container_width=True)
+                    df_high_m = df_top_m.sort_values(by="Doanh_Thu_USD", ascending=False).head(5).reset_index(drop=True)
+                    html_high_m = ""
+                    for i, row in df_high_m.iterrows():
+                        html_high_m += f"<div style='display:flex; justify-content:space-between; padding:12px; margin-bottom:8px; border-radius:8px; background:var(--secondary-background-color); border:1px solid rgba(29, 185, 84, 0.4);'><span style='font-weight:600;'>#{i+1} &nbsp; {row['Kênh_Spotify']}</span><span style='color:#1DB954; font-weight:800; font-size: 16px;'>${row['Doanh_Thu_USD']:,.0f}</span></div>"
+                    st.markdown(html_high_m, unsafe_allow_html=True)
 
                 with col_top2_m:
                     st.markdown("#### ⚠️ Top 5 Doanh Thu Thấp Nhất")
-                    df_low_m = df_top_m.sort_values(by="Doanh_Thu_USD", ascending=True).head(5)
-                    df_low_m = df_low_m.sort_values(by="Doanh_Thu_USD", ascending=False)
+                    df_low_m = df_top_m.sort_values(by="Doanh_Thu_USD", ascending=True).head(5).reset_index(drop=True)
+                    html_low_m = ""
+                    for i, row in df_low_m.iterrows():
+                        html_low_m += f"<div style='display:flex; justify-content:space-between; padding:12px; margin-bottom:8px; border-radius:8px; background:var(--secondary-background-color); border:1px solid rgba(226, 33, 52, 0.4);'><span style='font-weight:600;'>#{i+1} &nbsp; {row['Kênh_Spotify']}</span><span style='color:#E22134; font-weight:800; font-size: 16px;'>${row['Doanh_Thu_USD']:,.0f}</span></div>"
+                    st.markdown(html_low_m, unsafe_allow_html=True)
                     
-                    fig_low_m = px.bar(df_low_m, x="Doanh_Thu_USD", y="Kênh_Spotify", orientation='h', color="Doanh_Thu_USD", color_continuous_scale="Reds", text_auto='.2s')
-                    fig_low_m.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', yaxis_title="", xaxis_title="Doanh Thu (USD)", coloraxis_showscale=False, margin=dict(l=0, r=0, t=0, b=0), height=280)
-                    st.plotly_chart(fig_low_m, use_container_width=True)
-
                 # --- 🍩 4. BIỂU ĐỒ DONUT (BÁO CÁO THÁNG) ---
                 st.markdown("### 🍩 4. Phân Tích Cơ Cấu & Tỷ Trọng (Tháng Final)")
                 
