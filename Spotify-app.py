@@ -14,7 +14,6 @@ FILE_KPI = "spotify_channel_kpi.csv"
 
 # Hàm khởi tạo & nâng cấp file CSV tự động
 def khoi_tao_he_thong_db():
-    # DB Kết Quả
     if not os.path.exists(FILE_DU_LIEU):
         df_mau = pd.DataFrame(columns=[
             "Tháng", "Tuần", "Kênh_Spotify", "Doanh_Thu_USD", 
@@ -27,7 +26,6 @@ def khoi_tao_he_thong_db():
             df_hien_tai["Bat_Kiem_Tien"] = False
             df_hien_tai.to_csv(FILE_DU_LIEU, index=False)
             
-    # DB KPI (Nâng cấp thêm cột Bật Kiếm Tiền)
     if not os.path.exists(FILE_KPI):
         df_kpi_mau = pd.DataFrame(columns=["Tháng", "Kênh_Spotify", "KPI_Doanh_Thu", "KPI_Luot_Play", "KPI_So_Gio", "KPI_So_Tap", "So_Tuan", "Bat_Kiem_Tien"])
         df_kpi_mau.to_csv(FILE_KPI, index=False)
@@ -41,13 +39,11 @@ khoi_tao_he_thong_db()
 df = pd.read_csv(FILE_DU_LIEU)
 df_kpi = pd.read_csv(FILE_KPI)
 
-# TẠO DANH SÁCH KÊNH MASTER (Gộp từ cả DB Kết quả cũ và DB KPI mới)
+# TẠO DANH SÁCH KÊNH MASTER 
 danh_sach_kenh_master = list(set(df["Kênh_Spotify"].dropna().unique()) | set(df_kpi["Kênh_Spotify"].dropna().unique()))
 danh_sach_kenh_master.sort()
 
-# Hàm lấy trạng thái Bật Kiếm Tiền ngầm định
 def lay_trang_thai_kiem_tien(ten_kenh):
-    # Ưu tiên lấy từ DB KPI trước, nếu không có mới sang DB Kết quả
     kpi_match = df_kpi[df_kpi["Kênh_Spotify"] == ten_kenh]
     if not kpi_match.empty:
         return bool(kpi_match.iloc[-1]["Bat_Kiem_Tien"])
@@ -56,20 +52,18 @@ def lay_trang_thai_kiem_tien(ten_kenh):
         return bool(df_match.iloc[-1]["Bat_Kiem_Tien"])
     return False
 
-# THUẬT TOÁN CHÌA KHÓA TÁI SINH FORM
 if "rk_kq" not in st.session_state: st.session_state.rk_kq = 0
 if "rk_kpi" not in st.session_state: st.session_state.rk_kpi = 0
 
 st.title("🎧 TRUNG TÂM QUẢN TRỊ HIỆU SUẤT SPOTIFY")
 st.markdown("---")
 
-# TẠO 4 TAB CHỨC NĂNG RIÊNG BIỆT (ĐÃ ĐẢO VỊ TRÍ)
 tab_dashboard, tab_nhap_kpi, tab_nhap_kq, tab_xoa_data = st.tabs([
     "📊 Báo Cáo Dashboard", "🎯 Nhập Mục Tiêu Kênh", "📥 Nhập Kết Quả Kênh", "🗑️ Quản Lý Dữ Liệu"
 ])
 
 # ==========================================
-# TAB 2 (MỚI): NHẬP MỤC TIÊU KÊNH (THIẾT LẬP KÊNH & KPI)
+# TAB 2: NHẬP MỤC TIÊU KÊNH 
 # ==========================================
 with tab_nhap_kpi:
     st.subheader("Thiết Lập Kênh & Mục Tiêu (KPI) Tháng")
@@ -80,8 +74,6 @@ with tab_nhap_kpi:
     col_kpi1, col_kpi2, col_kpi3 = st.columns(3)
     with col_kpi1:
         thang_kpi = st.selectbox("Chọn Tháng thiết lập:", [f"Tháng {i}" for i in range(1, 13)], key=f"t_kpi_{rk_kpi}")
-        
-        # CHUYỂN TÍNH NĂNG TẠO KÊNH VÀO ĐÂY
         lua_chon_kenh_kpi = st.selectbox("Chọn Kênh / Thêm Kênh mới:", ["➕ Nhập kênh mới..."] + danh_sach_kenh_master, key=f"c_kpi_{rk_kpi}")
         
         if lua_chon_kenh_kpi == "➕ Nhập kênh mới...":
@@ -106,7 +98,6 @@ with tab_nhap_kpi:
         if not kenh_kpi:
             st.error("⚠️ Vui lòng nhập Tên Kênh!")
         else:
-            # Ghi đè KPI cũ của tháng đó
             dieu_kien_kpi = (df_kpi["Tháng"] == thang_kpi) & (df_kpi["Kênh_Spotify"] == kenh_kpi)
             df_kpi_filtered = df_kpi[~dieu_kien_kpi]
             
@@ -127,7 +118,7 @@ with tab_nhap_kpi:
             st.rerun()
 
 # ==========================================
-# TAB 3 (MỚI): NHẬP KẾT QUẢ KÊNH (ĐÃ TINH GỌN)
+# TAB 3: NHẬP KẾT QUẢ KÊNH 
 # ==========================================
 with tab_nhap_kq:
     st.subheader("Cập Nhật Kết Quả Vận Hành Tuần")
@@ -138,14 +129,11 @@ with tab_nhap_kq:
         thang_kq = st.selectbox("Tháng Báo Cáo:", [f"Tháng {i}" for i in range(1, 13)], key=f"t_kq_{rk}")
         tuan_kq = st.selectbox("Tuần Báo Cáo:", [f"Tuần {i}" for i in range(1, 53)], key=f"w_kq_{rk}")
         
-        # CHỈ CHO CHỌN TỪ DANH SÁCH ĐÃ CÓ
         if not danh_sach_kenh_master:
             st.warning("⚠️ Chưa có kênh nào! Hãy sang tab 'Nhập Mục Tiêu Kênh' để tạo kênh trước.")
             kenh_kq = ""
         else:
             kenh_kq = st.selectbox("Chọn Kênh Báo Cáo:", danh_sach_kenh_master, key=f"c_kq_{rk}")
-            
-            # Hiển thị trạng thái BKT (chỉ để người dùng xem, không chỉnh sửa ở đây)
             trang_thai_bkt_kq = lay_trang_thai_kiem_tien(kenh_kq)
             text_bkt = "✅ Đã bật kiếm tiền" if trang_thai_bkt_kq else "⏳ Chưa bật kiếm tiền"
             st.caption(f"Trạng thái kênh: {text_bkt}")
@@ -253,8 +241,8 @@ with tab_dashboard:
             st.markdown("---")
             
             # --- CHỌN CHỈ SỐ CHO BIỂU ĐỒ ---
-            st.markdown("### 🚀 Phân Tích Tiến Độ Theo Chỉ Số")
-            chiso_chon = st.radio("🛠️ Chọn chỉ số để hiển thị trên các Biểu đồ bên dưới:", 
+            st.markdown("### 🚀 Phân Tích Tiến Độ & Hiệu Suất Theo Chỉ Số")
+            chiso_chon = st.radio("🛠️ Chọn chỉ số để xem phân tích:", 
                                   ["Doanh Thu", "Lượt Play", "Giờ Nghe"], horizontal=True)
             
             map_chiso = {
@@ -266,7 +254,7 @@ with tab_dashboard:
             cot_kpi = map_chiso[chiso_chon]["kpi"]
             kieu_format = map_chiso[chiso_chon]["format"]
 
-            # --- BIỂU ĐỒ KÉP (LINE) THÔNG MINH ---
+            # --- LỌC TUẦN CHUNG CHO BIỂU ĐỒ VÀ BẢNG XẾP HẠNG ---
             df_kpi_filter["Muc_Tieu_Tuan_Hien_Tai"] = df_kpi_filter[cot_kpi].fillna(0) / df_kpi_filter["So_Tuan"].fillna(4)
             tong_muc_tieu_1_tuan = df_kpi_filter["Muc_Tieu_Tuan_Hien_Tai"].sum()
             
@@ -276,19 +264,20 @@ with tab_dashboard:
             danh_sach_tuan_full = list(set(tuan_tu_data + tuan_tu_kpi)) 
             danh_sach_tuan_full.sort(key=lambda x: int(x.replace("Tuần ", "")) if "Tuần " in x else 0)
             
-            tuan_hien_thi = st.multiselect("📅 Chọn các Tuần hiển thị trên Biểu đồ Line:", 
+            tuan_hien_thi = st.multiselect("📅 Chọn các Tuần hiển thị (Cho cả Biểu đồ Line và Bảng xếp hạng):", 
                                            options=danh_sach_tuan_full, 
                                            default=danh_sach_tuan_full)
             tuan_hien_thi.sort(key=lambda x: int(x.replace("Tuần ", "")) if "Tuần " in x else 0)
 
             if not tuan_hien_thi:
-                st.warning("⚠️ Vui lòng chọn ít nhất 1 tuần để vẽ biểu đồ.")
+                st.warning("⚠️ Vui lòng chọn ít nhất 1 tuần để hiển thị dữ liệu.")
             else:
+                # 1. BIỂU ĐỒ LINE KÉP
                 df_trend = pd.DataFrame({"Tuần": tuan_hien_thi})
                 df_trend["Đường_Mục_Tiêu"] = tong_muc_tieu_1_tuan
     
-                df_kq_group = df_final.groupby("Tuần")[cot_kq].sum().reset_index()
-                df_trend = pd.merge(df_trend, df_kq_group, on="Tuần", how="left")
+                df_kq_group_line = df_final.groupby("Tuần")[cot_kq].sum().reset_index()
+                df_trend = pd.merge(df_trend, df_kq_group_line, on="Tuần", how="left")
                 
                 fig_vs = go.Figure()
                 fig_vs.add_trace(go.Scatter(x=df_trend["Tuần"], y=df_trend[cot_kq], mode='lines+markers+text', 
@@ -300,12 +289,55 @@ with tab_dashboard:
                                             line=dict(color='#FF5722', width=3, dash='dash')))
                 
                 fig_vs.update_layout(
-                    title=f"Tiến độ {chiso_chon} các Tuần so với KPI", 
+                    title=f"📈 Tiến độ {chiso_chon} các Tuần so với KPI", 
                     hovermode="x unified", 
                     legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
                     yaxis=dict(rangemode='tozero', title=f"Giá trị ({kieu_format})")
                 )
                 st.plotly_chart(fig_vs, use_container_width=True)
+
+                # 2. BẢNG XẾP HẠNG (LEADERBOARD) - TÍNH TOÁN THEO TUẦN ĐÃ CHỌN
+                st.markdown(f"### 🏅 Bảng Xếp Hạng Hiệu Suất Kênh ({chiso_chon})")
+                
+                # Tổng kết quả của các tuần đã chọn
+                df_kq_rank = df_final[df_final["Tuần"].isin(tuan_hien_thi)]
+                df_kq_group = df_kq_rank.groupby("Kênh_Spotify")[cot_kq].sum().reset_index()
+                
+                # Tính KPI cộng dồn cho số tuần đã chọn
+                df_kpi_rank = df_kpi_filter.groupby("Kênh_Spotify").first().reset_index()
+                df_kpi_rank["KPI_1_Tuan"] = df_kpi_rank[cot_kpi].fillna(0) / df_kpi_rank["So_Tuan"].fillna(4)
+                df_kpi_rank["KPI_Target_Tinh_Toan"] = df_kpi_rank["KPI_1_Tuan"] * len(tuan_hien_thi)
+                
+                # Ghép bảng thực tế và KPI
+                df_rank = pd.merge(df_kpi_rank[["Kênh_Spotify", "KPI_Target_Tinh_Toan"]], df_kq_group, on="Kênh_Spotify", how="left").fillna(0)
+                
+                # Tính tỷ lệ % hoàn thành
+                df_rank["Ty_Le"] = np.where(df_rank["KPI_Target_Tinh_Toan"] > 0, 
+                                            (df_rank[cot_kq] / df_rank["KPI_Target_Tinh_Toan"]) * 100, 
+                                            np.where(df_rank[cot_kq] > 0, 100, 0))
+                df_rank = df_rank.sort_values(by="Ty_Le", ascending=False).reset_index(drop=True)
+                
+                col_top, col_bot = st.columns(2)
+                
+                # Hàm định dạng số hiển thị cho đẹp
+                def fmt(val):
+                    if chiso_chon == "Doanh Thu": return f"${val:,.2f}"
+                    elif chiso_chon == "Giờ Nghe": return f"{val:,.1f}h"
+                    return f"{val:,.0f}"
+
+                with col_top:
+                    st.success("🌟 **TOP KÊNH XUẤT SẮC NHẤT**")
+                    top_df = df_rank.head(3)
+                    for idx, row in top_df.iterrows():
+                        st.markdown(f"**#{idx+1}. {row['Kênh_Spotify']}** ➔ <span style='color:#1DB954; font-size:18px; font-weight:bold;'>{row['Ty_Le']:.1f}%</span><br>*(Đạt {fmt(row[cot_kq])} / KPI {fmt(row['KPI_Target_Tinh_Toan'])})*", unsafe_allow_html=True)
+                        st.markdown("")
+                        
+                with col_bot:
+                    st.error("⚠️ **TOP KÊNH CẦN CẢI THIỆN**")
+                    bot_df = df_rank.tail(3).sort_values(by="Ty_Le", ascending=True).reset_index(drop=True)
+                    for idx, row in bot_df.iterrows():
+                        st.markdown(f"**🔻 {row['Kênh_Spotify']}** ➔ <span style='color:#FF5722; font-size:18px; font-weight:bold;'>{row['Ty_Le']:.1f}%</span><br>*(Đạt {fmt(row[cot_kq])} / KPI {fmt(row['KPI_Target_Tinh_Toan'])})*", unsafe_allow_html=True)
+                        st.markdown("")
 
             st.markdown("---")
 
