@@ -6,35 +6,57 @@ import os
 from datetime import datetime
 import numpy as np
 
-# 1. CẤU HÌNH GIAO DIỆN & CSS
+# 1. CẤU HÌNH GIAO DIỆN & CSS (LIGHT MINT PASTEL & DARK FOREST GREEN)
 st.set_page_config(page_title="Spotify Performance Hub", layout="wide", page_icon="🎧")
 
 st.markdown("""
 <style>
+    /* ----- CHẾ ĐỘ LIGHT MODE (MINT PASTEL) ----- */
+    [data-testid="stAppViewContainer"] { background-color: #F2FBF2; }
+    [data-testid="stHeader"] { background-color: rgba(242, 251, 242, 0.8); }
+    [data-testid="stSidebar"] { background-color: #E8F5E9; }
+
     div.stButton > button[kind="primary"] {
         background-color: #1DB954; color: white; border: none; border-radius: 20px; font-weight: bold;
     }
     div.stButton > button[kind="primary"]:hover { background-color: #1ED760; color: white; }
     
     .spotify-card {
-        background-color: #ffffff; border: 1px solid #e6e6e6; border-radius: 8px;
-        padding: 15px; color: #121212; height: 100%; box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        background-color: #ffffff; border: 1px solid #D8EAD8; border-radius: 12px;
+        padding: 15px; color: #112611; height: 100%; box-shadow: 0 4px 10px rgba(29,185,84,0.06);
+        transition: transform 0.2s, box-shadow 0.2s;
     }
-    .spotify-label { font-size: 13px; font-weight: 600; color: #535353; text-transform: uppercase; margin-bottom: 5px; }
-    .spotify-value { font-size: 26px; font-weight: 900; margin-bottom: 10px; }
-    .badge-green { background-color: #1DB954; color: #fff; padding: 4px 8px; border-radius: 4px; font-size: 13px; font-weight: bold; }
-    .badge-red { background-color: #E22134; color: #fff; padding: 4px 8px; border-radius: 4px; font-size: 13px; font-weight: bold; }
+    .spotify-card:hover { transform: translateY(-3px); box-shadow: 0 6px 15px rgba(29,185,84,0.12); }
+    .spotify-label { font-size: 13px; font-weight: 600; color: #4A634A; text-transform: uppercase; margin-bottom: 5px; }
+    .spotify-value { font-size: 26px; font-weight: 900; margin-bottom: 10px; color: #0C1A0C; }
+    
+    .badge-green { background-color: #E8F5E9; color: #179343; padding: 4px 8px; border-radius: 6px; font-size: 13px; font-weight: 800; border: 1px solid #C8E6C9;}
+    .badge-red { background-color: #FFEBEE; color: #D32F2F; padding: 4px 8px; border-radius: 6px; font-size: 13px; font-weight: 800; border: 1px solid #FFCDD2; }
 
-    .text-success { color: #1DB954; font-size: 18px; font-weight: bold; }
-    .text-danger { color: #E22134; font-size: 18px; font-weight: bold; }
+    .text-success { color: #179343; font-size: 18px; font-weight: bold; }
+    .text-danger { color: #D32F2F; font-size: 18px; font-weight: bold; }
 
+    /* ----- CHẾ ĐỘ DARK MODE (DEEP FOREST GREEN) ----- */
     @media (prefers-color-scheme: dark) {
-        .spotify-card { background-color: #181818; border: 1px solid #282828; color: #ffffff; box-shadow: 0 2px 4px rgba(255,255,255,0.02); }
-        .spotify-label { color: #b3b3b3; }
-        .badge-green { background-color: #1ED760; color: #000; } 
-        .badge-red { background-color: #FF5722; color: #fff; } 
+        [data-testid="stAppViewContainer"] { background-color: #081208; } /* Xanh lục bảo rất tối */
+        [data-testid="stHeader"] { background-color: rgba(8, 18, 8, 0.8); }
+        [data-testid="stSidebar"] { background-color: #040904; } /* Gần như đen ánh xanh */
+        
+        .spotify-card { 
+            background-color: #0D1C0D; border: 1px solid #163016; 
+            color: #E8F5E9; box-shadow: 0 2px 4px rgba(29,185,84,0.05); 
+        }
+        .spotify-card:hover { transform: translateY(-3px); box-shadow: 0 6px 15px rgba(29,185,84,0.15); }
+        
+        .spotify-label { color: #81C784; } /* Xanh trà sáng nhẹ */
+        .spotify-value { color: #FFFFFF; }
+        
+        /* Chỉnh màu Huy hiệu KPI rực rỡ trên nền tối */
+        .badge-green { background-color: rgba(29,185,84,0.15); color: #1ED760; border: 1px solid rgba(29,185,84,0.4); } 
+        .badge-red { background-color: rgba(255,82,82,0.15); color: #FF5252; border: 1px solid rgba(255,82,82,0.4); } 
+        
         .text-success { color: #1ED760; }
-        .text-danger { color: #FF5722; }
+        .text-danger { color: #FF5252; }
     }
 </style>
 """, unsafe_allow_html=True)
@@ -269,7 +291,7 @@ with tab_dashboard:
     if df.empty:
         st.info("Hệ thống chưa có dữ liệu kết quả nào được ghi nhận. Vui lòng cập nhật.")
     else:
-        # BỘ LỌC TỔNG (LỌC TUẦN DẠNG MULTISELECT)
+        # BỘ LỌC TỔNG CÓ LỌC ĐA TUẦN
         col_loc1, col_loc_tuan, col_loc2, col_loc3 = st.columns([1.2, 1.2, 2, 1.2])
         with col_loc1:
             thang_hien_co = list(df["Tháng"].unique())
@@ -280,7 +302,6 @@ with tab_dashboard:
         with col_loc_tuan:
             tuan_hien_co = list(df_thang["Tuần"].unique())
             tuan_hien_co.sort(key=lambda x: int(x.replace("Tuần ", "")) if "Tuần " in x else 0)
-            # Cải tiến: Multiselect cho Tuần
             tuan_chon = st.multiselect("📅 Lọc theo Tuần:", options=tuan_hien_co, default=tuan_hien_co, key="loc_tuan")
 
         danh_sach_kenh_hien_co = list(df_thang["Kênh_Spotify"].unique())
@@ -304,7 +325,6 @@ with tab_dashboard:
             st.warning(f"⚠️ Vui lòng chọn ít nhất 1 Kênh và 1 Tuần để hiển thị dữ liệu!")
         else:
             df_final = df_thang[df_thang["Kênh_Spotify"].isin(kenh_hien_thi_cuoi_cung)]
-            # Áp dụng bộ lọc đa Tuần
             df_final = df_final[df_final["Tuần"].isin(tuan_chon)]
             
             # ĐỌC & TÍNH TOÁN KPI ĐỘNG ĐA TUẦN
@@ -313,7 +333,6 @@ with tab_dashboard:
             if thang_chon != "Tất cả các tháng":
                 df_kpi_filter = df_kpi_filter[df_kpi_filter["Tháng"] == thang_chon]
                 
-            # Nội suy KPI: Nếu không chọn đủ tất cả các tuần, nhân KPI tuần với số lượng tuần được chọn
             if len(tuan_chon) < len(tuan_hien_co):
                 so_tuan_chon = len(tuan_chon)
                 target_dt = (df_kpi_filter["KPI_Doanh_Thu"] / df_kpi_filter["So_Tuan"].fillna(4)).sum() * so_tuan_chon
@@ -403,11 +422,13 @@ with tab_dashboard:
                                             name=f'Mục Tiêu {chiso_chon} (Tổng)', 
                                             line=dict(color='#E22134', width=3, dash='dash')))
                 
+                # Cập nhật font chữ tiêu đề trên đồ thị cho sắc nét
                 fig_vs.update_layout(
                     title=f"📈 Tiến độ {chiso_chon} các Tuần so với KPI", 
                     hovermode="x unified", 
                     legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
-                    yaxis=dict(rangemode='tozero', title=f"Giá trị ({kieu_format})")
+                    yaxis=dict(rangemode='tozero', title=f"Giá trị ({kieu_format})"),
+                    paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)'
                 )
                 st.plotly_chart(fig_vs, use_container_width=True)
 
@@ -479,6 +500,7 @@ with tab_dashboard:
                     df_pie = df_phan_tich.groupby("Kênh_Spotify")[cot_kq].sum().reset_index()
                     df_pie[cot_kq] = df_pie[cot_kq].round(2)
                     fig_pie = px.pie(df_pie, values=cot_kq, names="Kênh_Spotify", hole=0.4, title=f"Tỷ Trọng {chiso_chon} ({tuan_chon_pie})")
+                    fig_pie.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
                     st.plotly_chart(fig_pie, use_container_width=True)
                     
                 with col_bar:
@@ -486,4 +508,5 @@ with tab_dashboard:
                     df_bar[cot_kq] = df_bar[cot_kq].round(2)
                     fig_bar = px.bar(df_bar, x="Kênh_Spotify", y=cot_kq, title=f"So Sánh Lượng {chiso_chon} Giữa Các Kênh ({tuan_chon_pie})", text_auto='.2s')
                     fig_bar.update_traces(marker_color='#1DB954', textfont_size=12, textangle=0, textposition="outside")
+                    fig_bar.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
                     st.plotly_chart(fig_bar, use_container_width=True)
