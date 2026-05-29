@@ -116,7 +116,7 @@ def tao_sheet_tong_hop(thang_chon):
     # Lấy thông tin KPI và Số tuần
     kpi_thang = df_kpi[df_kpi["Tháng"] == thang_chon]
     master = pd.DataFrame(danh_sach_kenh_master, columns=["Kênh_Spotify"])
-    master = master.merge(kpi_thang[["Kênh_Spotify", "KPI_Doanh_Thu", "So_Tuan"]], on="Kênh_Spotify", how="left")
+    master = master.merge(kpi_thang[["Kênh_Spotify", "KPI_Doanh_Thu", "Số_Tuần"]], on="Kênh_Spotify", how="left")
     
     # 1. Cột Tháng tổng
     thang_kq_sum = df_kq[df_kq["Tháng"] == thang_chon].groupby("Kênh_Spotify")["Doanh_Thu_USD"].sum().reset_index()
@@ -127,7 +127,7 @@ def tao_sheet_tong_hop(thang_chon):
     tuan_trong_thang = sorted([t for t in df_kq[df_kq["Tháng"] == thang_chon]["Tuần"].unique()])
     for tuan in tuan_trong_thang:
         # Target tuần = KPI tháng / Số tuần
-        master[f"{tuan}_Target"] = (master["KPI_Doanh_Thu"] / master["So_Tuan"]).fillna(0)
+        master[f"{tuan}_Target"] = (master["KPI_Doanh_Thu"] / master["Số_Tuần"]).fillna(0)
         
         # Actual tuần
         kq_tuan = df_kq[(df_kq["Tháng"] == thang_chon) & (df_kq["Tuần"] == tuan)][["Kênh_Spotify", "Doanh_Thu_USD"]]
@@ -154,9 +154,13 @@ with tab_master:
     # 2. Truyền tham số chon_thang vào hàm
     df_master = tao_sheet_tong_hop(chon_thang) 
     
-    # 3. Hiển thị bảng
+# Reset index để biến index 0,1,2... thành 1,2,3...
+    df_master_display = df_master.copy()
+    df_master_display.index = range(1, len(df_master_display) + 1)
+    
+    # Hiển thị bảng
     st.dataframe(
-        df_master.style.format(lambda x: f"${x:,.0f}" if isinstance(x, float) and x > 100 else f"{x:.1f}%" if isinstance(x, float) else x),
+        df_master_display.style.format(lambda x: f"${x:,.0f}" if isinstance(x, float) and x > 100 else f"{x:.1f}%" if isinstance(x, float) else x),
         use_container_width=True
     )
 
