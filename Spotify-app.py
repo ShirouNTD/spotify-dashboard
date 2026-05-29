@@ -149,28 +149,40 @@ with tab_master:
     st.header("📑 Sheet Tổng Hợp Hiệu Suất")
     chon_thang = st.selectbox("Chọn tháng:", [f"Tháng {i}" for i in range(1, 13)])
     
-    # 1. Tính toán dữ liệu từ hàm
+    # 1. Lấy dữ liệu thô từ hàm
     df_raw = tao_sheet_tong_hop(chon_thang)
     
-    # 2. Tạo bản copy để hiển thị và làm sạch
+    # 2. Tạo bản copy để hiển thị
     df_display = df_raw.copy()
     
-    # 3. Tạo cột STT (1, 2, 3...)
-    df_display.insert(0, "STT", range(1, len(df_display) + 1))
+    # 3. Rename các cột theo đúng yêu cầu của Boss
+    rename_map = {
+        "Kênh_Spotify": "Kênh",
+        "KPI_Doanh_Thu": "KPI Doanh Thu",
+        "Doanh_Thu_USD": "Kết quả tháng",
+        "%_Tháng": "% Hoàn thành",
+    }
+    # Tự động map cho các cột tuần (Tuần 1_Target -> KPI Tuần 1, v.v.)
+    for col in df_display.columns:
+        if "Tuần" in col:
+            if "_Target" in col:
+                rename_map[col] = col.replace("_Target", "").replace("Tuần", "KPI Tuần")
+            elif "_Actual" in col:
+                rename_map[col] = col.replace("_Actual", "").replace("Tuần", "Kết quả Tuần")
+            elif "_%" in col:
+                rename_map[col] = "% Hoàn thành" # Gộp chung tên cho các cột % tuần
     
-    # 4. Đổi tên cột hiển thị (Nếu cột So_Tuan tồn tại)
-    if "So_Tuan" in df_display.columns:
-        df_display = df_display.rename(columns={"So_Tuan": "Số Tuần"})
-        
-    # 5. Định dạng (Format)
+    df_display = df_display.rename(columns=rename_map)
+    df_display.insert(0, "STT", range(1, len(df_display) + 1))
+
+    # 4. Format dữ liệu
     def formatter_func(val):
         if isinstance(val, (int, float)):
-            if abs(val) > 100:
-                return f"${val:,.0f}"
-            return f"{val:.1f}%"
+            if abs(val) > 100: return f"${val:,.0f}"
+            if val != 0: return f"{val:.1f}%"
         return val
 
-    # 6. Hiển thị bảng
+    # 5. Hiển thị
     st.dataframe(
         df_display.style.format(formatter_func).hide(axis="index"), 
         use_container_width=True
