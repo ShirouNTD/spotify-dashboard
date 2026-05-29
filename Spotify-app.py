@@ -458,7 +458,7 @@ with tab_dashboard:
                 target_gio = df_kpi_filter["KPI_So_Gio"].sum()
                 target_tap = df_kpi_filter["KPI_So_Tap"].sum()
 
-            st.markdown("### 🏆 1. Chỉ Số Kết Qủa Tổng Quan")
+            st.markdown("### 🏆 1. Chỉ Số Kết Quả Tổng Quan")
             dt_pct = (df_final['Doanh_Thu_USD'].sum() / target_dt * 100) if target_dt > 0 else 0
             play_pct = (df_final['Luot_Play'].sum() / target_play * 100) if target_play > 0 else 0
             gio_pct = (df_final['So_Gio_Nghe'].sum() / target_gio * 100) if target_gio > 0 else 0
