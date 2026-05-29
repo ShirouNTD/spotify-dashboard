@@ -534,7 +534,9 @@ with tab_dashboard:
                 legend=dict(orientation="h", yanchor="top", y=-0.2, xanchor="center", x=0.5),
                 font=dict(color="#555555")
             )
-            # Text bên trong để màu trắng hoặc đen tùy độ sáng của lát cắt
-            fig_pie.update_traces(textinfo='percent', textfont_color="#333333")
-            
-            st.plotly_chart(fig_pie, use_container_width=True)
+           # Cấu hình text bên trong lát cắt: màu trắng, định dạng %
+            fig_pie.update_traces(
+                textinfo='percent', 
+                textfont_color="white",  # Ép chữ màu trắng
+                textfont_size=12         # Chỉnh kích thước chữ cho dễ đọc
+            )
