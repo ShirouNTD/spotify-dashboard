@@ -157,6 +157,9 @@ with tab_master:
 # Reset index để biến index 0,1,2... thành 1,2,3...
     df_master_display = df_master.copy()
     df_master_display.index = range(1, len(df_master_display) + 1)
+
+# Đổi tên cột chỉ khi hiển thị, không đổi tên cột trong dữ liệu gốc
+    df_master_display = df_master.rename(columns={"So_Tuan": "Số Tuần"})
     
 # 1. Tách các cột để định dạng riêng biệt
     def formatter_func(val):
