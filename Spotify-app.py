@@ -508,13 +508,17 @@ with tab_dashboard:
                 # Nếu không tìm thấy df_final, dùng tạm df_master
                 df_phan_tich = df_master
             
-            # Slicer tùy chỉnh
+            # Slicer tùy chỉnh với 'key' độc nhất
             col_sl1, col_sl2 = st.columns(2)
             with col_sl1:
                 tieu_chi_map = {"Doanh thu": "Doanh_Thu_USD", "Lượt Play": "Luot_Play", "Giờ nghe": "Gio_Nghe"}
-                tieu_chi_chon = st.selectbox("Tiêu chí so sánh:", list(tieu_chi_map.keys()))
+                # Thêm key='tieu_chi_chart'
+                tieu_chi_chon = st.selectbox("Tiêu chí so sánh:", list(tieu_chi_map.keys()), key="tieu_chi_chart")
                 cot_tieu_chi = tieu_chi_map[tieu_chi_chon]
             with col_sl2:
+                kenh_all = df_phan_tich["Kênh_Spotify"].unique()
+                # Thêm key='kenh_chart'
+                kenh_chon = st.multiselect("Chọn kênh:", options=kenh_all, default=kenh_all, key="kenh_chart")
                 # Dùng list các kênh duy nhất từ df_phan_tich
                 kenh_all = df_phan_tich["Kênh_Spotify"].unique()
                 kenh_chon = st.multiselect("Chọn kênh:", options=kenh_all, default=kenh_all)
