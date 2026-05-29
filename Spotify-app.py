@@ -149,17 +149,20 @@ with tab_master:
     st.header("📑 Sheet Tổng Hợp Hiệu Suất")
     chon_thang = st.selectbox("Chọn tháng:", [f"Tháng {i}" for i in range(1, 13)])
     
-    # Tính toán bảng
+    # 1. Tính toán dữ liệu từ hàm
     df_raw = tao_sheet_tong_hop(chon_thang)
     
-    # TẠO BẢNG HIỂN THỊ: Gán STT bắt đầu từ 1 tại đây
+    # 2. Tạo bản copy để hiển thị và làm sạch
     df_display = df_raw.copy()
-    df_display.insert(0, "STT", range(1, len(df_display) + 1))
-
-    # Đổi tên cột chỉ khi hiển thị, không đổi tên cột trong dữ liệu gốc
-    df_master_display = df_master.rename(columns={"So_Tuan": "Số Tuần"})
     
-    # Định dạng
+    # 3. Tạo cột STT (1, 2, 3...)
+    df_display.insert(0, "STT", range(1, len(df_display) + 1))
+    
+    # 4. Đổi tên cột hiển thị (Nếu cột So_Tuan tồn tại)
+    if "So_Tuan" in df_display.columns:
+        df_display = df_display.rename(columns={"So_Tuan": "Số Tuần"})
+        
+    # 5. Định dạng (Format)
     def formatter_func(val):
         if isinstance(val, (int, float)):
             if abs(val) > 100:
@@ -167,12 +170,11 @@ with tab_master:
             return f"{val:.1f}%"
         return val
 
-    # HIỂN THỊ df_display (ĐÃ CÓ CỘT STT)
+    # 6. Hiển thị bảng
     st.dataframe(
-        df_display.style.format(formatter_func).hide(axis="index"), # hide(axis="index") để ẩn index mặc định của Pandas đi
+        df_display.style.format(formatter_func).hide(axis="index"), 
         use_container_width=True
     )
-
 
 # ==========================================
 # TAB 2: NHẬP MỤC TIÊU 
