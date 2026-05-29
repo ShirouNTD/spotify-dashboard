@@ -16,7 +16,7 @@ if "rk_kpi" not in st.session_state:
     st.session_state.rk_kpi = 0
 
 # ==========================================
-# CẤU HÌNH GIAO DIỆN CHÍNH
+# 1. CẤU HÌNH GIAO DIỆN CHÍNH
 # ==========================================
 st.set_page_config(page_title="Spotify Performance Hub", layout="wide", page_icon="🎧")
 
@@ -29,41 +29,35 @@ st.markdown("""
         font-family: 'Lexend', sans-serif !important;
     }
 
-    /* ĐỂ STREAMLIT TỰ QUẢN LÝ MÀU NỀN THEO THEME */
-    [data-testid="stAppViewContainer"] { background-image: none !important; }
-    [data-testid="stSidebar"] { background-image: none !important; }
-    [data-testid="stHeader"] { background-color: transparent !important; }
+    /* ÉP MÀU NỀN THEO STREAMLIT */
+    [data-testid="stAppViewContainer"] { background-color: var(--background-color) !important; background-image: none !important; }
+    [data-testid="stSidebar"] { background-color: var(--secondary-background-color) !important; background-image: none !important; }
     
-    /* THIẾT KẾ THẺ KPI */
     .spotify-card {
         background-color: var(--secondary-background-color) !important; 
         border: 1px solid rgba(128, 128, 128, 0.2) !important; 
         border-radius: 12px; padding: 15px; height: 100%; 
-        box-shadow: 0 4px 10px rgba(0,0,0,0.05); transition: transform 0.2s, box-shadow 0.2s;
     }
-    .spotify-card:hover { transform: translateY(-3px); box-shadow: 0 6px 15px rgba(29,185,84,0.15) !important; }
-    .spotify-label { font-size: 13px; font-weight: 600; text-transform: uppercase; margin-bottom: 5px; opacity: 0.8; }
-    .spotify-value { font-size: 26px; font-weight: 900; margin-bottom: 10px; }
     
-    /* UTILITY CLASSES CHO BẢNG XẾP HẠNG V30 */
-    .text-success { color: #1DB954 !important; font-size: 18px; font-weight: bold; }
-    .text-danger { color: #E22134 !important; font-size: 18px; font-weight: bold; }
-    .badge-green { background-color: rgba(29, 185, 84, 0.15) !important; color: #1DB954 !important; padding: 4px 8px; border-radius: 6px; font-size: 13px; font-weight: 800; border: 1px solid rgba(29, 185, 84, 0.3); }
-    .badge-red { background-color: rgba(226, 33, 52, 0.15) !important; color: #E22134 !important; padding: 4px 8px; border-radius: 6px; font-size: 13px; font-weight: 800; border: 1px solid rgba(226, 33, 52, 0.3); }
-
-    /* XỬ LÝ MÀU CHỮ: MẶC ĐỊNH LÀ TRẮNG CHO DARK MODE */
+    /* XỬ LÝ MÀU CHỮ: 
+       - Mặc định cho Dark Mode là Trắng
+       - Dùng @media để ép cho Light Mode là Xanh Lá Đậm (#0C7A33) 
+    */
     p, h1, h2, h3, h4, h5, h6, li, label, .stMarkdown, .stText, .spotify-label, .spotify-value { 
         color: #FAFAFA !important; 
     }
 
-    /* XỬ LÝ MÀU CHỮ: NẾU Ở LIGHT MODE THÌ ÉP CHỮ THÀNH XANH LÁ ĐẬM */
     @media (prefers-color-scheme: light) {
-        p, h1, h2, h3, h4, h5, h6, li, label, .stMarkdown, .stText, .spotify-label, .spotify-value { 
+        p, h1, h2, h3, h4, h5, h6, li, label, .stMarkdown, .stText, .spotify-label, .spotify-value, div { 
             color: #0C7A33 !important; 
         }
     }
+
+    /* ĐỊNH DẠNG RIÊNG CHO BẢNG XẾP HẠNG (Để đảm bảo nó không bị ảnh hưởng bởi theme) */
+    .text-success { color: #1DB954 !important; font-weight: bold; }
+    .text-danger { color: #E22134 !important; font-weight: bold; }
 </style>
-""", unsafe_allow_html=True) 
+""", unsafe_allow_html=True)
 
 # ==========================================
 # KHỞI TẠO DATA
