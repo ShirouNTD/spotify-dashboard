@@ -149,46 +149,54 @@ with tab_master:
     st.header("📑 Sheet Tổng Hợp Hiệu Suất")
     chon_thang = st.selectbox("Chọn tháng:", [f"Tháng {i}" for i in range(1, 13)])
     
-    # 1. Lấy dữ liệu thô từ hàm
+    # 1. Lấy dữ liệu thô
     df_raw = tao_sheet_tong_hop(chon_thang)
-    
-    # 2. Tạo bản copy để hiển thị
     df_display = df_raw.copy()
     
-    # 3. Rename các cột thông minh
+    # 2. Rename cột thông minh
     rename_map = {
         "Kênh_Spotify": "Kênh",
         "KPI_Doanh_Thu": "KPI Doanh Thu",
         "Doanh_Thu_USD": "Kết quả tháng",
         "%_Tháng": "% Hoàn thành tháng",
     }
-    
-    # Tự động map cho các cột tuần với tên duy nhất
     for col in df_display.columns:
         if "Tuần" in col:
             if "_Target" in col:
-                # Ví dụ: KPI Tuần 1
                 rename_map[col] = col.replace("Tuần ", "KPI Tuần ").replace("_Target", "")
             elif "_Actual" in col:
-                # Ví dụ: Kết quả Tuần 1
                 rename_map[col] = col.replace("Tuần ", "Kết quả Tuần ").replace("_Actual", "")
             elif "_%" in col:
-                # Ví dụ: % Tuần 1
                 rename_map[col] = col.replace("Tuần ", "% Tuần ").replace("_%", "")
     
     df_display = df_display.rename(columns=rename_map)
     df_display.insert(0, "STT", range(1, len(df_display) + 1))
 
-    # 4. Format dữ liệu
-    def formatter_func(val):
-        if isinstance(val, (int, float)):
-            if abs(val) > 100: return f"${val:,.0f}"
-            if val != 0: return f"{val:.1f}%"
-        return val
+    # 3. Format dữ liệu thông minh (loại trừ STT)
+    def formatter_func(col_name):
+        def format_val(val):
+            # Nếu là cột STT, trả về số nguyên thuần túy
+            if col_name == "STT":
+                return f"{int(val)}"
+            # Nếu là số
+            if isinstance(val, (int, float)):
+                # Nếu là cột có chữ "KPI" hoặc "Kết quả" hoặc "Doanh Thu" -> format tiền
+                if any(x in col_name for x in ["KPI", "Kết quả", "Doanh Thu"]) and abs(val) >= 1:
+                    return f"${val:,.0f}"
+                # Nếu là cột có dấu "%" -> format %
+                if "%" in col_name:
+                    return f"{val:.1f}%"
+            return val
+        return format_val
 
-    # 5. Hiển thị
+    # 4. Hiển thị bảng
+    # Dùng cách apply định dạng theo từng cột
+    styler = df_display.style
+    for col in df_display.columns:
+        styler = styler.format({col: formatter_func(col)})
+
     st.dataframe(
-        df_display.style.format(formatter_func).hide(axis="index"), 
+        styler.hide(axis="index"), 
         use_container_width=True
     )
 
