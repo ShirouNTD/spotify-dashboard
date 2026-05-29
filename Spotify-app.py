@@ -498,30 +498,20 @@ with tab_dashboard:
                 kenh_chon = st.multiselect("Chọn kênh:", options=df_final["Kênh_Spotify"].unique(), default=df_final["Kênh_Spotify"].unique())
 
             # --- CẬP NHẬT GIAO DIỆN BIỂU ĐỒ DONUT MỚI ---
-            st.markdown("### 🍩 3. Phân Tích Cơ Cấu & Tỷ Trọng")
+            st.markdown("### 🍩 Phân Tích Cơ Cấu & Tỷ Trọng")
             
-            # Khởi tạo lại df_phan_tich để tránh lỗi NameError
-            # Giả sử df_final là dataframe tổng, ta dùng nó làm nguồn dữ liệu
-            if "df_final" in locals():
-                df_phan_tich = df_final
-            else:
-                # Nếu không tìm thấy df_final, dùng tạm df_master
-                df_phan_tich = df_master
+            # Khởi tạo dữ liệu nguồn (đảm bảo không bao giờ lỗi biến)
+            df_phan_tich = df_final if "df_final" in locals() else df_master
             
-            # Slicer tùy chỉnh với 'key' độc nhất
+            # Slicer tùy chỉnh với 'key' riêng biệt để không bao giờ bị Duplicate
             col_sl1, col_sl2 = st.columns(2)
             with col_sl1:
                 tieu_chi_map = {"Doanh thu": "Doanh_Thu_USD", "Lượt Play": "Luot_Play", "Giờ nghe": "Gio_Nghe"}
-                # Thêm key='tieu_chi_chart'
-                tieu_chi_chon = st.selectbox("Tiêu chí so sánh:", list(tieu_chi_map.keys()), key="tieu_chi_chart")
+                tieu_chi_chon = st.selectbox("Tiêu chí so sánh:", list(tieu_chi_map.keys()), key="tieu_chi_chart_final")
                 cot_tieu_chi = tieu_chi_map[tieu_chi_chon]
             with col_sl2:
                 kenh_all = df_phan_tich["Kênh_Spotify"].unique()
-                # Thêm key='kenh_chart'
-                kenh_chon = st.multiselect("Chọn kênh:", options=kenh_all, default=kenh_all, key="kenh_chart")
-                # Dùng list các kênh duy nhất từ df_phan_tich
-                kenh_all = df_phan_tich["Kênh_Spotify"].unique()
-                kenh_chon = st.multiselect("Chọn kênh:", options=kenh_all, default=kenh_all)
+                kenh_chon = st.multiselect("Chọn kênh:", options=kenh_all, default=kenh_all, key="kenh_chart_final")
 
             # Lọc dữ liệu
             df_pie = df_phan_tich[df_phan_tich["Kênh_Spotify"].isin(kenh_chon)]
@@ -530,6 +520,8 @@ with tab_dashboard:
                 st.info("Vui lòng chọn kênh để hiển thị biểu đồ.")
             else:
                 df_plot = df_pie.groupby("Kênh_Spotify")[cot_tieu_chi].sum().reset_index()
+                
+                # Vẽ biểu đồ với bảng màu Xanh lá - Vàng - Cam
                 fig_pie = px.pie(
                     df_plot, 
                     values=cot_tieu_chi, 
@@ -538,5 +530,11 @@ with tab_dashboard:
                     title=f"Tỷ Trọng theo {tieu_chi_chon}",
                     color_discrete_sequence=['#2E7D32', '#FBC02D', '#EF6C00', '#81C784', '#FFF176', '#FFB74D']
                 )
-                fig_pie.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
+                
+                # Cấu hình layout sạch sẽ
+                fig_pie.update_layout(
+                    paper_bgcolor='rgba(0,0,0,0)', 
+                    plot_bgcolor='rgba(0,0,0,0)',
+                    showlegend=True
+                )
                 st.plotly_chart(fig_pie, use_container_width=True)
