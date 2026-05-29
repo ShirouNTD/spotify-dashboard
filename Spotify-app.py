@@ -154,9 +154,9 @@ with tab_master:
     # 2. Truyền tham số chon_thang vào hàm
     df_master = tao_sheet_tong_hop(chon_thang) 
     
-# Reset index để biến index 0,1,2... thành 1,2,3...
-    df_master_display = df_master.copy()
-    df_master_display.index = range(1, len(df_master_display) + 1)
+# 1. Reset index và tạo cột STT chuẩn bắt đầu từ 1
+    df_display = df_master.reset_index(drop=True)
+    df_display.index = df_display.index + 1
 
 # Đổi tên cột chỉ khi hiển thị, không đổi tên cột trong dữ liệu gốc
     df_master_display = df_master.rename(columns={"So_Tuan": "Số Tuần"})
