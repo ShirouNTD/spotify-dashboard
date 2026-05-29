@@ -16,7 +16,7 @@ if "rk_kpi" not in st.session_state:
     st.session_state.rk_kpi = 0
 
 # ==========================================
-# 1. CẤU HÌNH GIAO DIỆN CHÍNH
+# CẤU HÌNH GIAO DIỆN CHÍNH
 # ==========================================
 st.set_page_config(page_title="Spotify Performance Hub", layout="wide", page_icon="🎧")
 
@@ -29,43 +29,41 @@ st.markdown("""
         font-family: 'Lexend', sans-serif !important;
     }
 
-    /* ĐỂ STREAMLIT TỰ QUẢN LÝ MÀU NỀN & MÀU CHỮ CƠ BẢN (TRÁNH LỖI CHỮ TRẮNG NỀN TRẮNG) */
-    [data-testid="stAppViewContainer"] { background-color: var(--background-color) !important; background-image: none !important; }
-    [data-testid="stSidebar"] { background-color: var(--secondary-background-color) !important; background-image: none !important; }
+    /* ĐỂ STREAMLIT TỰ QUẢN LÝ MÀU NỀN THEO THEME */
+    [data-testid="stAppViewContainer"] { background-image: none !important; }
+    [data-testid="stSidebar"] { background-image: none !important; }
+    [data-testid="stHeader"] { background-color: transparent !important; }
     
+    /* THIẾT KẾ THẺ KPI */
     .spotify-card {
         background-color: var(--secondary-background-color) !important; 
         border: 1px solid rgba(128, 128, 128, 0.2) !important; 
         border-radius: 12px; padding: 15px; height: 100%; 
         box-shadow: 0 4px 10px rgba(0,0,0,0.05); transition: transform 0.2s, box-shadow 0.2s;
     }
-    
-    /* TRẠNG THÁI MẶC ĐỊNH LÀ AN TOÀN: Chữ sẽ tự đổi Trắng (Dark) / Xám (Light) để không bao giờ bị tàng hình */
-    p, h1, h2, h3, h4, h5, h6, li, label, .stMarkdown, .stText, div[data-testid="stMarkdownContainer"] { 
-        color: var(--text-color) !important; 
-    }
-    .spotify-label { color: var(--text-color) !important; opacity: 0.7; }
-    .spotify-value { color: var(--text-color) !important; }
-
-    /* NẾU LÀ LIGHT MODE: Ép sang Xanh Lá Đậm đúng ý Boss */
-    @media (prefers-color-scheme: light) {
-        p, h1, h2, h3, h4, h5, h6, li, label, .stMarkdown, .stText, div[data-testid="stMarkdownContainer"] { 
-            color: #1B5E20 !important; 
-        }
-        .spotify-label { color: #1B5E20 !important; opacity: 0.8; }
-        .spotify-value { color: #1B5E20 !important; }
-    }
-
-    /* CSS Chung */
-    [data-testid="stHeader"] { background-color: transparent !important; }
     .spotify-card:hover { transform: translateY(-3px); box-shadow: 0 6px 15px rgba(29,185,84,0.15) !important; }
-    .spotify-label { font-size: 13px; font-weight: 600; text-transform: uppercase; margin-bottom: 5px; }
+    .spotify-label { font-size: 13px; font-weight: 600; text-transform: uppercase; margin-bottom: 5px; opacity: 0.8; }
     .spotify-value { font-size: 26px; font-weight: 900; margin-bottom: 10px; }
     
+    /* UTILITY CLASSES CHO BẢNG XẾP HẠNG V30 */
+    .text-success { color: #1DB954 !important; font-size: 18px; font-weight: bold; }
+    .text-danger { color: #E22134 !important; font-size: 18px; font-weight: bold; }
     .badge-green { background-color: rgba(29, 185, 84, 0.15) !important; color: #1DB954 !important; padding: 4px 8px; border-radius: 6px; font-size: 13px; font-weight: 800; border: 1px solid rgba(29, 185, 84, 0.3); }
     .badge-red { background-color: rgba(226, 33, 52, 0.15) !important; color: #E22134 !important; padding: 4px 8px; border-radius: 6px; font-size: 13px; font-weight: 800; border: 1px solid rgba(226, 33, 52, 0.3); }
+
+    /* XỬ LÝ MÀU CHỮ: MẶC ĐỊNH LÀ TRẮNG CHO DARK MODE */
+    p, h1, h2, h3, h4, h5, h6, li, label, .stMarkdown, .stText, .spotify-label, .spotify-value { 
+        color: #FAFAFA !important; 
+    }
+
+    /* XỬ LÝ MÀU CHỮ: NẾU Ở LIGHT MODE THÌ ÉP CHỮ THÀNH XANH LÁ ĐẬM */
+    @media (prefers-color-scheme: light) {
+        p, h1, h2, h3, h4, h5, h6, li, label, .stMarkdown, .stText, .spotify-label, .spotify-value { 
+            color: #0C7A33 !important; 
+        }
+    }
 </style>
-""", unsafe_allow_html=True)
+""", unsafe_allow_html=True) 
 
 # ==========================================
 # KHỞI TẠO DATA
@@ -163,28 +161,20 @@ with tab_master:
     df_raw = tao_sheet_tong_hop(chon_thang)
     df_display = df_raw.copy()
     
-    rename_map = {
-        "Kênh_Spotify": "Kênh",
-        "KPI_Doanh_Thu": "KPI Doanh Thu",
-    }
+    rename_map = { "Kênh_Spotify": "Kênh", "KPI_Doanh_Thu": "KPI Doanh Thu" }
     for col in df_display.columns:
         if "Tuần" in col:
-            if "_Target" in col:
-                rename_map[col] = col.replace("Tuần ", "KPI Tuần ").replace("_Target", "")
-            elif "_Actual" in col:
-                rename_map[col] = col.replace("Tuần ", "Kết quả Tuần ").replace("_Actual", "")
-            elif "_%" in col:
-                rename_map[col] = col.replace("Tuần ", "% Tuần ").replace("_%", "")
+            if "_Target" in col: rename_map[col] = col.replace("Tuần ", "KPI Tuần ").replace("_Target", "")
+            elif "_Actual" in col: rename_map[col] = col.replace("Tuần ", "Kết quả Tuần ").replace("_Actual", "")
+            elif "_%" in col: rename_map[col] = col.replace("Tuần ", "% Tuần ").replace("_%", "")
     
     df_display = df_display.rename(columns=rename_map)
     
     cols = ["Kênh", "KPI Doanh Thu", "Kết quả tổng", "% Hoàn thành", "Kết quả tháng", "% Hoàn thành tháng"]
     tuan_cols = [c for c in df_display.columns if "Tuần" in c]
     df_display = df_display[cols + tuan_cols]
-    
     df_display.insert(0, "STT", range(1, len(df_display) + 1))
 
-    # Xóa sạch các cột thừa để chuẩn bị hiển thị
     df_clean = df_display.copy()
     cols_to_drop = ["So_Tuan", "index"]
     for col in cols_to_drop:
@@ -193,16 +183,12 @@ with tab_master:
     st.dataframe(
         df_clean.style
         .format({
-            "KPI Doanh Thu": "${:,.0f}",
-            "Kết quả tổng": "${:,.0f}",
-            "% Hoàn thành": "{:.0f}%",
-            "Kết quả tháng": "${:,.0f}",
-            "% Hoàn thành tháng": "{:.0f}%",
+            "KPI Doanh Thu": "${:,.0f}", "Kết quả tổng": "${:,.0f}", "% Hoàn thành": "{:.0f}%",
+            "Kết quả tháng": "${:,.0f}", "% Hoàn thành tháng": "{:.0f}%",
             **{col: "${:,.0f}" for col in df_clean.columns if "KPI Tuần" in col},
             **{col: "${:,.0f}" for col in df_clean.columns if "Kết quả Tuần" in col},
             **{col: "{:.0f}%" for col in df_clean.columns if "% Tuần" in col}
-        })
-        .hide(axis="index"), 
+        }).hide(axis="index"), 
         use_container_width=True
     )
 
@@ -424,20 +410,20 @@ with tab_dashboard:
                 fig_vs.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
                 st.plotly_chart(fig_vs, use_container_width=True)
 
-                # --- 🏅 3. BẢNG XẾP HẠNG TOP KÊNH (TUẦN) ---
+                # --- 🏅 3. BẢNG XẾP HẠNG TOP KÊNH (TUẦN - FORMAT V30) ---
                 st.markdown("---")
                 st.markdown(f"### 🏅 3. Bảng Xếp Hạng Kênh Theo {chiso_chon}")
                 tuan_co_data = list(df_final["Tuần"].unique()); tuan_co_data.sort(key=lambda x: int(x.replace("Tuần ", "")) if "Tuần " in x else 0)
-                
+
                 if not tuan_co_data: st.info("Chưa có dữ liệu tuần để xếp hạng.")
                 else:
                     tuan_chon_rank = st.selectbox("📌 Chọn thời gian để xếp hạng:", ["Tất cả các tuần"] + tuan_co_data, key="loc_tuan_rank")
                     df_rank = df_final.groupby("Kênh_Spotify")[cot_kq].sum().reset_index() if tuan_chon_rank == "Tất cả các tuần" else df_final[df_final["Tuần"] == tuan_chon_rank].groupby("Kênh_Spotify")[cot_kq].sum().reset_index()
                     df_rank = df_rank.sort_values(by=cot_kq, ascending=False).reset_index(drop=True); df_rank[cot_kq] = df_rank[cot_kq].round(2)
-                    
+
                     top_5 = df_rank.head(5)
                     bot_5 = pd.DataFrame(columns=["Kênh_Spotify", cot_kq]) if len(df_rank) <= 5 else df_rank[~df_rank["Kênh_Spotify"].isin(top_5["Kênh_Spotify"])].tail(5).sort_values(by=cot_kq, ascending=True)
-                    
+
                     def fmt(val): return f"${val:,.2f}" if chiso_chon == "Doanh Thu" else (f"{val:,.1f}h" if chiso_chon == "Giờ Nghe" else f"{val:,.0f}")
                     col_top, col_bot = st.columns(2)
                     with col_top:
@@ -449,7 +435,6 @@ with tab_dashboard:
 
                 # --- 🍩 4. BIỂU ĐỒ DONUT (BÁO CÁO TUẦN) ---
                 st.markdown("### 🍩 4. Phân Tích Cơ Cấu & Tỷ Trọng (Tuần)")
-                
                 col_sl1_w, col_sl2_w = st.columns(2)
                 with col_sl1_w:
                     tieu_chi_map_w = {"Doanh thu": "Doanh_Thu_USD", "Lượt Play": "Luot_Play", "Giờ nghe": "So_Gio_Nghe"}
@@ -461,27 +446,16 @@ with tab_dashboard:
 
                 df_pie_w = df_final[df_final["Kênh_Spotify"].isin(kenh_chon_w)]
                 
-                if df_pie_w.empty: 
-                    st.info("Vui lòng chọn kênh để hiển thị biểu đồ.")
+                if df_pie_w.empty: st.info("Vui lòng chọn kênh để hiển thị biểu đồ.")
                 else:
                     df_plot_w = df_pie_w.groupby("Kênh_Spotify")[cot_tieu_chi_w].sum().sort_values(ascending=False).reset_index()
-                    
                     palette = ['#2E7D32', '#4CAF50', '#81C784', '#A5D6A7', '#DCE775', '#E8F5E9']
                     colors = (palette * (len(df_plot_w) // len(palette) + 1))[:len(df_plot_w)]
 
-                    fig_pie_w = px.pie(
-                        df_plot_w, values=cot_tieu_chi_w, names="Kênh_Spotify", 
-                        hole=0.4, title=f"Tỷ Trọng theo {tieu_chi_chon_w}", color_discrete_sequence=colors
-                    )
-                    
+                    fig_pie_w = px.pie(df_plot_w, values=cot_tieu_chi_w, names="Kênh_Spotify", hole=0.4, title=f"Tỷ Trọng theo {tieu_chi_chon_w}", color_discrete_sequence=colors)
                     is_light = st.get_option("theme.base") == "light"
-                    fig_pie_w.update_layout(
-                        paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', showlegend=True,
-                        legend=dict(orientation="h", yanchor="top", y=-0.2, xanchor="center", x=0.5),
-                        font=dict(color="#1B5E20" if is_light else "#E0E0E0") 
-                    )
+                    fig_pie_w.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', showlegend=True, legend=dict(orientation="h", yanchor="top", y=-0.2, xanchor="center", x=0.5), font=dict(color="#1B5E20" if is_light else "#E0E0E0") )
                     fig_pie_w.update_traces(textinfo='percent', textfont_color="white", textfont_size=12, textposition='inside')
-                    
                     st.plotly_chart(fig_pie_w, use_container_width=True)
 
     else:
@@ -539,20 +513,20 @@ with tab_dashboard:
                 fig_vs_m.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
                 st.plotly_chart(fig_vs_m, use_container_width=True)
 
-             # --- 🏅 3. BẢNG XẾP HẠNG TOP KÊNH (THÁNG FINAL) ---
+                # --- 🏅 3. BẢNG XẾP HẠNG TOP KÊNH (THÁNG FINAL - FORMAT V30) ---
                 st.markdown("---")
-                st.markdown(f"### 🏅 3. Bảng Xếp Hạng Kênh Theo {chiso_chon_m}")
+                st.markdown(f"### 🏅 3. Bảng Xếp Hạng Kênh Theo {chiso_chon_m} (Tháng Final)")
                 thang_co_data = list(df_final_m["Tháng"].unique()); thang_co_data.sort(key=lambda x: int(x.replace("Tháng ", "")) if "Tháng " in x else 0)
-                
+
                 if not thang_co_data: st.info("Chưa có dữ liệu tháng để xếp hạng.")
                 else:
-                    thang_chon_rank = st.selectbox("📌 Chọn thời gian để xếp hạng:", ["Tất cả các tháng"] + thang_co_data, key="loc_thang_rank_m")
-                    df_rank_m = df_final_m.groupby("Kênh_Spotify")[cot_kq_m].sum().reset_index() if thang_chon_rank == "Tất cả các tháng" else df_final_m[df_final_m["Tháng"] == thang_chon_rank].groupby("Kênh_Spotify")[cot_kq_m].sum().reset_index()
+                    thang_chon_rank_m = st.selectbox("📌 Chọn thời gian để xếp hạng:", ["Tất cả các tháng"] + thang_co_data, key="loc_thang_rank_m")
+                    df_rank_m = df_final_m.groupby("Kênh_Spotify")[cot_kq_m].sum().reset_index() if thang_chon_rank_m == "Tất cả các tháng" else df_final_m[df_final_m["Tháng"] == thang_chon_rank_m].groupby("Kênh_Spotify")[cot_kq_m].sum().reset_index()
                     df_rank_m = df_rank_m.sort_values(by=cot_kq_m, ascending=False).reset_index(drop=True); df_rank_m[cot_kq_m] = df_rank_m[cot_kq_m].round(2)
-                    
+
                     top_5_m = df_rank_m.head(5)
                     bot_5_m = pd.DataFrame(columns=["Kênh_Spotify", cot_kq_m]) if len(df_rank_m) <= 5 else df_rank_m[~df_rank_m["Kênh_Spotify"].isin(top_5_m["Kênh_Spotify"])].tail(5).sort_values(by=cot_kq_m, ascending=True)
-                    
+
                     def fmt_m(val): return f"${val:,.2f}" if chiso_chon_m == "Doanh Thu" else (f"{val:,.1f}h" if chiso_chon_m == "Giờ Nghe" else f"{val:,.0f}")
                     col_top_m, col_bot_m = st.columns(2)
                     with col_top_m:
@@ -561,10 +535,9 @@ with tab_dashboard:
                     with col_bot_m:
                         st.error(f"⚠️ **TOP 5 THẤP NHẤT**")
                         for idx, row in bot_5_m.iterrows(): st.markdown(f"**🔻 {row['Kênh_Spotify']}** ➔ <span class='text-danger'>{fmt_m(row[cot_kq_m])}</span>", unsafe_allow_html=True); st.markdown("")
-                    
+
                 # --- 🍩 4. BIỂU ĐỒ DONUT (BÁO CÁO THÁNG) ---
                 st.markdown("### 🍩 4. Phân Tích Cơ Cấu & Tỷ Trọng (Tháng Final)")
-                
                 col_sl1_m, col_sl2_m = st.columns(2)
                 with col_sl1_m:
                     tieu_chi_map_m = {"Doanh thu": "Doanh_Thu_USD", "Lượt Play": "Luot_Play", "Giờ nghe": "So_Gio_Nghe"}
@@ -576,25 +549,14 @@ with tab_dashboard:
 
                 df_pie_m = df_final_m[df_final_m["Kênh_Spotify"].isin(kenh_chon_m)]
                 
-                if df_pie_m.empty: 
-                    st.info("Vui lòng chọn kênh để hiển thị biểu đồ.")
+                if df_pie_m.empty: st.info("Vui lòng chọn kênh để hiển thị biểu đồ.")
                 else:
                     df_plot_m = df_pie_m.groupby("Kênh_Spotify")[cot_tieu_chi_m].sum().sort_values(ascending=False).reset_index()
-                    
                     palette = ['#2E7D32', '#4CAF50', '#81C784', '#A5D6A7', '#DCE775', '#E8F5E9']
                     colors = (palette * (len(df_plot_m) // len(palette) + 1))[:len(df_plot_m)]
 
-                    fig_pie_m = px.pie(
-                        df_plot_m, values=cot_tieu_chi_m, names="Kênh_Spotify", 
-                        hole=0.4, title=f"Tỷ Trọng theo {tieu_chi_chon_m}", color_discrete_sequence=colors
-                    )
-                    
+                    fig_pie_m = px.pie(df_plot_m, values=cot_tieu_chi_m, names="Kênh_Spotify", hole=0.4, title=f"Tỷ Trọng theo {tieu_chi_chon_m}", color_discrete_sequence=colors)
                     is_light = st.get_option("theme.base") == "light"
-                    fig_pie_m.update_layout(
-                        paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', showlegend=True,
-                        legend=dict(orientation="h", yanchor="top", y=-0.2, xanchor="center", x=0.5),
-                        font=dict(color="#1B5E20" if is_light else "#E0E0E0") 
-                    )
+                    fig_pie_m.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', showlegend=True, legend=dict(orientation="h", yanchor="top", y=-0.2, xanchor="center", x=0.5), font=dict(color="#1B5E20" if is_light else "#E0E0E0") )
                     fig_pie_m.update_traces(textinfo='percent', textfont_color="white", textfont_size=12, textposition='inside')
-                    
                     st.plotly_chart(fig_pie_m, use_container_width=True)
