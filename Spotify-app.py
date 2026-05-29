@@ -14,6 +14,14 @@ st.set_page_config(page_title="Spotify Performance Hub", layout="wide", page_ico
 # ==========================================
 st.markdown("""
 <style>
+/* Nhập Font Lexend từ Google Fonts */
+    @import url('https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;600;800&display=swap');
+
+    /* Ép toàn bộ App dùng font Lexend */
+    html, body, [class*="css"], [class*="st-"], div, span, p, h1, h2, h3, h4, h5, h6 {
+        font-family: 'Lexend', sans-serif !important;
+    }
+
     [data-testid="stAppViewContainer"] { 
         background-color: var(--background-color) !important; 
         background-image: linear-gradient(rgba(29, 185, 84, 0.07), rgba(29, 185, 84, 0.07)) !important;
@@ -411,3 +419,4 @@ with tab_dashboard:
                     fig_pie2 = px.pie(df_pie2, values="Luot_Play", names="Kênh_Spotify", hole=0.4, title=f"Tỷ Trọng Tổng Lượt Play")
                     fig_pie2.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
                     st.plotly_chart(fig_pie2, use_container_width=True)
+
