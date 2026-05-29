@@ -90,13 +90,20 @@ def lay_trang_thai_kiem_tien(ten_kenh):
     return False
 
 def make_card(label, value, pct=None):
-    badge = f"<span class='{'badge-green' if pct >= 100 else 'badge-red'}'>{pct:.1f}% KPI</span>" if pct is not None else ""
+    # Tính toán badge bên ngoài để code sạch và không bị lỗi f-string lồng nhau
+    if pct is not None:
+        badge_html = f"<span class='{'badge-green' if pct >= 100 else 'badge-red'}'>{pct:.1f}% KPI</span>"
+    else:
+        badge_html = ""
+        
+    # Trả về chuỗi HTML (không cần dùng f-string lồng nhau ở đây nữa)
     return f"""
     <div class="spotify-card">
         <div class="spotify-label">{label}</div>
         <div class="spotify-value">{value}</div>
-        {f'<div>{badge}</div>' if badge else ''}
+        <div>{badge_html}</div>
     </div>
+    """
 
 def tao_sheet_tong_hop():
     df_kq = pd.read_csv(FILE_DU_LIEU)
