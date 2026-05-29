@@ -10,11 +10,10 @@ import numpy as np
 st.set_page_config(page_title="Spotify Performance Hub", layout="wide", page_icon="🎧")
 
 FILE_DU_LIEU = "spotify_master_data.csv"
-FILE_KPI = "spotify_channel_kpi.csv" # Đổi thành KPI cấp độ Kênh
+FILE_KPI = "spotify_channel_kpi.csv" 
 
 # Hàm khởi tạo & nâng cấp file CSV
 def khoi_tao_he_thong_db():
-    # DB Kết quả
     if not os.path.exists(FILE_DU_LIEU):
         df_mau = pd.DataFrame(columns=[
             "Tháng", "Tuần", "Kênh_Spotify", "Doanh_Thu_USD", 
@@ -27,7 +26,6 @@ def khoi_tao_he_thong_db():
             df_hien_tai["Bat_Kiem_Tien"] = False
             df_hien_tai.to_csv(FILE_DU_LIEU, index=False)
             
-    # DB Mục tiêu Kênh
     if not os.path.exists(FILE_KPI):
         df_kpi_mau = pd.DataFrame(columns=["Tháng", "Kênh_Spotify", "KPI_Doanh_Thu", "KPI_Luot_Play", "KPI_So_Gio", "KPI_So_Tap", "So_Tuan"])
         df_kpi_mau.to_csv(FILE_KPI, index=False)
@@ -49,7 +47,7 @@ tab_dashboard, tab_nhap_kq, tab_nhap_kpi, tab_xoa_data = st.tabs([
 ])
 
 # ==========================================
-# TAB 2: NHẬP KẾT QUẢ KÊNH (THỰC TẾ)
+# TAB 2: NHẬP KẾT QUẢ KÊNH
 # ==========================================
 with tab_nhap_kq:
     st.subheader("Cập Nhật Kết Quả Vận Hành Tuần")
@@ -73,14 +71,14 @@ with tab_nhap_kq:
         bkt_kq = st.checkbox("✅ Kênh đã bật kiếm tiền", value=trang_thai_mac_dinh, key=f"bkt_{lua_chon_kenh}_{rk}")
 
     with col2:
-        dt_kq = st.number_input("Thực tế Doanh thu (USD):", min_value=0.0, step=1.0, key=f"dt_kq_{rk}")
-        play_kq = st.number_input("Thực tế Lượt Play:", min_value=0, step=100, key=f"p_kq_{rk}")
+        dt_kq = st.number_input("Kết quả Doanh thu (USD):", min_value=0.0, step=1.0, key=f"dt_kq_{rk}")
+        play_kq = st.number_input("Kết quả Lượt Play:", min_value=0, step=100, key=f"p_kq_{rk}")
     with col3:
-        gio_kq = st.number_input("Thực tế Giờ nghe (h):", min_value=0.0, step=10.0, key=f"g_kq_{rk}")
-        tap_kq = st.number_input("Thực tế Số tập Upload:", min_value=0, step=1, key=f"tap_kq_{rk}")
+        gio_kq = st.number_input("Kết quả Giờ nghe (h):", min_value=0.0, step=10.0, key=f"g_kq_{rk}")
+        tap_kq = st.number_input("Kết quả Số tập Upload:", min_value=0, step=1, key=f"tap_kq_{rk}")
         
     st.markdown("<br>", unsafe_allow_html=True)
-    if st.button("Lưu Kết Quả Thực Tế", type="primary", use_container_width=True):
+    if st.button("Lưu Kết Quả", type="primary", use_container_width=True):
         if not kenh_kq:
             st.error("⚠️ Vui lòng nhập Tên Kênh!")
         else:
@@ -98,7 +96,6 @@ with tab_nhap_kq:
                 df_ghi.to_csv(FILE_DU_LIEU, index=False)
                 st.toast(f"✅ Đã lưu kết quả cho {kenh_kq} ({tuan_kq})!", icon="✅")
                 
-                # Ép xóa cache Dashboard
                 for k in ["loc_thang", "loc_kenh", "loc_tuan_phan_tich"]:
                     if k in st.session_state: del st.session_state[k]
                 st.session_state.rk_kq += 1
@@ -135,7 +132,6 @@ with tab_nhap_kpi:
     st.markdown("<br>", unsafe_allow_html=True)
     if st.button("Lưu Mục Tiêu (Ghi Đè Nêu Trùng)", type="primary", use_container_width=True):
         if kenh_kpi:
-            # Xóa KPI cũ của kênh đó trong tháng đó nếu có
             dieu_kien_kpi = (df_kpi["Tháng"] == thang_kpi) & (df_kpi["Kênh_Spotify"] == kenh_kpi)
             df_kpi_filtered = df_kpi[~dieu_kien_kpi]
             
@@ -158,7 +154,7 @@ with tab_nhap_kpi:
 # TAB 4: XÓA DỮ LIỆU
 # ==========================================
 with tab_xoa_data:
-    st.subheader("Dọn Dẹp Dữ Liệu Sai")
+    st.subheader("Dọn Dẹp Dữ thực tế bị sai")
     if df.empty:
         st.info("Kho dữ liệu trống.")
     else:
@@ -184,10 +180,13 @@ with tab_dashboard:
     if df.empty:
         st.info("Hệ thống chưa có dữ liệu. Vui lòng sang tab 'Nhập Kết Quả Kênh'.")
     else:
+        # BỘ LỌC TỔNG
         col_loc1, col_loc2 = st.columns(2)
         with col_loc1:
             thang_hien_co = list(df["Tháng"].unique())
-            thang_chon = st.selectbox("📅 Lọc Dashboard theo Tháng:", ["Tất cả các tháng"] + thang_hien_co, key="loc_thang")
+            # Đưa Tháng gần nhất làm mặc định thay vì "Tất cả" để Line Chart hiển thị tuần chuẩn nhất
+            thang_mac_dinh = thang_hien_co[-1] if thang_hien_co else "Tất cả các tháng"
+            thang_chon = st.selectbox("📅 Lọc Dashboard theo Tháng:", ["Tất cả các tháng"] + thang_hien_co, index=(len(thang_hien_co)), key="loc_thang")
             
         df_thang = df if thang_chon == "Tất cả các tháng" else df[df["Tháng"] == thang_chon]
         danh_sach_kenh_hien_co = list(df_thang["Kênh_Spotify"].unique())
@@ -202,13 +201,9 @@ with tab_dashboard:
         else:
             df_final = df_thang[df_thang["Kênh_Spotify"].isin(kenh_duoc_chon)]
             
-            # --- TÍNH TỔNG KPI ĐỘNG ---
+            # ĐỌC VÀ LỌC KPI
             df_kpi_read = pd.read_csv(FILE_KPI)
-            target_dt = target_play = target_gio = target_tap = 0
-            
-            # Lọc KPI dựa trên các Kênh đang được chọn trên Dashboard
             df_kpi_filter = df_kpi_read[df_kpi_read["Kênh_Spotify"].isin(kenh_duoc_chon)]
-            
             if thang_chon != "Tất cả các tháng":
                 df_kpi_filter = df_kpi_filter[df_kpi_filter["Tháng"] == thang_chon]
                 
@@ -218,61 +213,90 @@ with tab_dashboard:
             target_tap = df_kpi_filter["KPI_So_Tap"].sum()
 
             # --- SCORECARDS ---
-            st.markdown("### 🏆 CHỈ SỐ THỰC TẾ vs MỤC TIÊU")
+            st.markdown("### 🏆 CHỈ SỐ KẾT QUẢ vs MỤC TIÊU")
             sc1, sc2, sc3, sc4 = st.columns(4)
-            sc1.metric("💰 Doanh Thu", f"${df_final['Doanh_Thu_USD'].sum():,.2f}", delta=f"${df_final['Doanh_Thu_USD'].sum() - target_dt:,.2f} so với KPI")
-            sc2.metric("▶️ Lượt Play", f"{df_final['Luot_Play'].sum():,}", delta=f"{df_final['Luot_Play'].sum() - target_play:,} so với KPI")
-            sc3.metric("⏱️ Giờ Nghe", f"{df_final['So_Gio_Nghe'].sum():,.1f}h", delta=f"{df_final['So_Gio_Nghe'].sum() - target_gio:,.1f}h so với KPI")
-            sc4.metric("🎙️ Tập Upload", f"{df_final['So_Tap_Upload'].sum():,}", delta=f"{df_final['So_Tap_Upload'].sum() - target_tap:,} so với KPI")
+            sc1.metric("💰 Doanh Thu", f"${df_final['Doanh_Thu_USD'].sum():,.2f}", delta=f"${df_final['Doanh_Thu_USD'].sum() - target_dt:,.2f} so vs KPI")
+            sc2.metric("▶️ Lượt Play", f"{df_final['Luot_Play'].sum():,}", delta=f"{df_final['Luot_Play'].sum() - target_play:,} so vs KPI")
+            sc3.metric("⏱️ Giờ Nghe", f"{df_final['So_Gio_Nghe'].sum():,.1f}h", delta=f"{df_final['So_Gio_Nghe'].sum() - target_gio:,.1f}h so vs KPI")
+            sc4.metric("🎙️ Tập Upload", f"{df_final['So_Tap_Upload'].sum():,}", delta=f"{df_final['So_Tap_Upload'].sum() - target_tap:,} so vs KPI")
             
             st.markdown("---")
             
-            # --- BIỂU ĐỒ KÉP: THỰC TẾ VS MỤC TIÊU ---
-            st.markdown("### 🚀 Tiến Độ Chạy Đua KPI (Thực Tế vs Mục Tiêu Tuần)")
+            # --- CHỌN CHỈ SỐ CHO BIỂU ĐỒ ---
+            st.markdown("### 🚀 Phân Tích Tiến Độ Theo Chỉ Số")
+            chiso_chon = st.radio("🛠️ Chọn chỉ số để hiển thị trên các Biểu đồ bên dưới:", 
+                                  ["Doanh Thu", "Lượt Play", "Giờ Nghe"], horizontal=True)
             
-            # Tiền xử lý dữ liệu để vẽ biểu đồ kép
-            df_chart_actual = df_final.groupby(["Tháng", "Tuần", "Kênh_Spotify"])["Doanh_Thu_USD"].sum().reset_index()
-            # Ghép nối với DB KPI để lấy Số Tuần
-            df_chart_merged = pd.merge(df_chart_actual, df_kpi_read, on=["Tháng", "Kênh_Spotify"], how="left")
-            # Nếu chưa có KPI thì mặc định mục tiêu tuần = 0
-            df_chart_merged["So_Tuan"] = df_chart_merged["So_Tuan"].fillna(4) 
-            df_chart_merged["Mục_Tiêu_Tuần_USD"] = (df_chart_merged["KPI_Doanh_Thu"].fillna(0) / df_chart_merged["So_Tuan"])
+            # Ánh xạ lựa chọn vào tên cột
+            map_chiso = {
+                "Doanh Thu": {"kq": "Doanh_Thu_USD", "kpi": "KPI_Doanh_Thu", "format": "$"},
+                "Lượt Play": {"kq": "Luot_Play", "kpi": "KPI_Luot_Play", "format": ""},
+                "Giờ Nghe": {"kq": "So_Gio_Nghe", "kpi": "KPI_So_Gio", "format": "h"}
+            }
+            cot_kq = map_chiso[chiso_chon]["kq"]
+            cot_kpi = map_chiso[chiso_chon]["kpi"]
+            kieu_format = map_chiso[chiso_chon]["format"]
+
+            # --- BIỂU ĐỒ KÉP (LINE) THÔNG MINH ---
+            # 1. Tính toán trước đường mục tiêu hoàn chỉnh
+            df_kpi_filter["Muc_Tieu_Tuan_Hien_Tai"] = df_kpi_filter[cot_kpi].fillna(0) / df_kpi_filter["So_Tuan"].fillna(4)
+            tong_muc_tieu_1_tuan = df_kpi_filter["Muc_Tieu_Tuan_Hien_Tai"].sum()
             
-            # Gom nhóm lại theo Tuần (để lỡ Boss chọn xem nhiều kênh 1 lúc)
-            df_chart_final = df_chart_merged.groupby("Tuần")[["Doanh_Thu_USD", "Mục_Tiêu_Tuần_USD"]].sum().reset_index()
-            df_chart_final["Tuan_Num"] = df_chart_final["Tuần"].apply(lambda x: int(x.replace("Tuần ", "")) if "Tuần " in x else 0)
-            df_chart_final = df_chart_final.sort_values("Tuan_Num")
+            # Xác định số tuần tối đa để vẽ trục X
+            max_tuan_kpi = int(df_kpi_filter["So_Tuan"].max()) if not df_kpi_filter.empty and pd.notna(df_kpi_filter["So_Tuan"].max()) else 4
             
-            # Vẽ biểu đồ kép bằng Graph Objects
+            col_slider, col_space = st.columns([1, 2])
+            with col_slider:
+                so_tuan_hien_thi = st.slider("📅 Số tuần muốn vẽ trên biểu đồ (Trục X):", min_value=1, max_value=max_tuan_kpi + 1, value=max_tuan_kpi)
+
+            # 2. Tạo khung thời gian ảo để vẽ đường line KPI xuyên suốt
+            danh_sach_tuan = [f"Tuần {i}" for i in range(1, so_tuan_hien_thi + 1)]
+            df_trend = pd.DataFrame({"Tuần": danh_sach_tuan})
+            df_trend["Đường_Mục_Tiêu"] = tong_muc_tieu_1_tuan
+
+            # 3. Gắn dữ liệu Kết quả thực tế vào khung thời gian ảo
+            df_kq_group = df_final.groupby("Tuần")[cot_kq].sum().reset_index()
+            df_trend = pd.merge(df_trend, df_kq_group, on="Tuần", how="left")
+            
             fig_vs = go.Figure()
-            fig_vs.add_trace(go.Scatter(x=df_chart_final["Tuần"], y=df_chart_final["Doanh_Thu_USD"], mode='lines+markers', name='Thực Tế Đạt Được', line=dict(color='#1DB954', width=3)))
-            fig_vs.add_trace(go.Scatter(x=df_chart_final["Tuần"], y=df_chart_final["Mục_Tiêu_Tuần_USD"], mode='lines+markers', name='Mục Tiêu Đề Ra', line=dict(color='#FF5722', width=3, dash='dash')))
-            fig_vs.update_layout(title="So Sánh Doanh Thu Thực Tế và KPI Hàng Tuần", hovermode="x unified", legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1))
+            # Vẽ đường Kết quả (chỉ hiện các điểm có dữ liệu)
+            fig_vs.add_trace(go.Scatter(x=df_trend["Tuần"], y=df_trend[cot_kq], mode='lines+markers+text', 
+                                        name=f'Kết Quả {chiso_chon}', text=df_trend[cot_kq], textposition="top center",
+                                        line=dict(color='#1DB954', width=3), marker=dict(size=8)))
+            # Vẽ đường KPI (kéo dài xuyên suốt các tuần)
+            fig_vs.add_trace(go.Scatter(x=df_trend["Tuần"], y=df_trend["Đường_Mục_Tiêu"], mode='lines+markers', 
+                                        name=f'Mục Tiêu {chiso_chon} (Tổng)', 
+                                        line=dict(color='#FF5722', width=3, dash='dash')))
             
+            fig_vs.update_layout(title=f"Tiến độ {chiso_chon} các Tuần so với KPI", hovermode="x unified", 
+                                 legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1))
             st.plotly_chart(fig_vs, use_container_width=True)
 
             st.markdown("---")
 
             # --- BIỂU ĐỒ PHÂN TÍCH ---
-            st.markdown("### 🥧 Phân Tích Cơ Cấu & Hiệu Suất Cục Bộ")
+            st.markdown("### 🥧 Phân Tích Cơ Cấu & Tỷ Trọng")
             tuan_hien_co = list(df_final["Tuần"].unique())
             tuan_hien_co.sort(key=lambda x: int(x.replace("Tuần ", "")) if "Tuần " in x else 0)
             
-            tuan_chon = st.selectbox("📌 Tách lớp dữ liệu Phân tích theo:", ["Tất cả các tuần"] + tuan_hien_co, key="loc_tuan_phan_tich")
+            tuan_chon = st.selectbox("📌 Phân tích Tỷ trọng theo thời gian:", ["Tất cả các tuần"] + tuan_hien_co, key="loc_tuan_phan_tich")
             df_phan_tich = df_final if tuan_chon == "Tất cả các tuần" else df_final[df_final["Tuần"] == tuan_chon]
             
             if df_phan_tich.empty:
-                st.info(f"Không có dữ liệu cho {tuan_chon}.")
+                st.info(f"Không có dữ liệu kết quả cho {tuan_chon}.")
             else:
-                col_pie, col_rpm = st.columns(2)
+                col_pie, col_bar = st.columns(2)
                 with col_pie:
-                    df_pie = df_phan_tich.groupby("Kênh_Spotify")["Doanh_Thu_USD"].sum().reset_index()
-                    fig_pie = px.pie(df_pie, values="Doanh_Thu_USD", names="Kênh_Spotify", hole=0.4, title=f"Tỷ Trọng Doanh Thu ({tuan_chon})")
+                    # Đổi linh hoạt biểu đồ Tròn theo chỉ số
+                    df_pie = df_phan_tich.groupby("Kênh_Spotify")[cot_kq].sum().reset_index()
+                    fig_pie = px.pie(df_pie, values=cot_kq, names="Kênh_Spotify", hole=0.4, 
+                                     title=f"Tỷ Trọng {chiso_chon} ({tuan_chon})")
                     st.plotly_chart(fig_pie, use_container_width=True)
                     
-                with col_rpm:
-                    df_rpm = df_phan_tich.groupby("Kênh_Spotify")[["Doanh_Thu_USD", "Luot_Play"]].sum().reset_index()
-                    df_rpm["RPM_USD"] = np.where(df_rpm["Luot_Play"] > 0, (df_rpm["Doanh_Thu_USD"] / df_rpm["Luot_Play"]) * 1000, 0)
-                    fig_rpm = px.bar(df_rpm, x="Kênh_Spotify", y="RPM_USD", title=f"Chỉ số RPM ({tuan_chon})", text_auto='.2f')
-                    fig_rpm.update_traces(marker_color='#1DB954')
-                    st.plotly_chart(fig_rpm, use_container_width=True)
+                with col_bar:
+                    # Đổi biểu đồ cột để so sánh chi tiết số liệu tuyệt đối của chỉ số được chọn
+                    df_bar = df_phan_tich.groupby("Kênh_Spotify")[cot_kq].sum().reset_index()
+                    fig_bar = px.bar(df_bar, x="Kênh_Spotify", y=cot_kq, 
+                                     title=f"So Sánh Lượng {chiso_chon} Giữa Các Kênh ({tuan_chon})", text_auto='.2s')
+                    fig_bar.update_traces(marker_color='#1DB954', textfont_size=12, textangle=0, textposition="outside")
+                    st.plotly_chart(fig_bar, use_container_width=True)
