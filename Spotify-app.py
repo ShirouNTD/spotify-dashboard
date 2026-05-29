@@ -484,28 +484,35 @@ with tab_dashboard:
                     st.error(f"⚠️ **TOP 5 THẤP NHẤT**")
                     for idx, row in bot_5.iterrows(): st.markdown(f"**🔻 {row['Kênh_Spotify']}** ➔ <span class='text-danger'>{fmt(row[cot_kq])}</span>", unsafe_allow_html=True); st.markdown("")
 
-            st.markdown("---")
-            # --- CẬP NHẬT GIAO DIỆN BIỂU ĐỒ DONUT THEO YÊU CẦU ---
-            st.markdown("### 🥧 Phân Tích Cơ Cấu & Tỷ Trọng")
-            tuan_chon_pie = st.selectbox("📌 Phân tích Tỷ trọng theo thời gian:", ["Tất cả các tuần"] + tuan_co_data, key="loc_tuan_phan_tich")
-            df_phan_tich = df_final if tuan_chon_pie == "Tất cả các tuần" else df_final[df_final["Tuần"] == tuan_chon_pie]
+            # --- CẬP NHẬT GIAO DIỆN BIỂU ĐỒ DONUT MỚI ---
+            st.markdown("### 🍩 3. Phân Tích Cơ Cấu & Tỷ Trọng")
             
-            if df_phan_tich.empty: st.info(f"Không có dữ liệu kết quả cho {tuan_chon_pie}.")
+            # Slicer tùy chỉnh mới
+            col_sl1, col_sl2 = st.columns(2)
+            with col_sl1:
+                # Map tên hiển thị với tên cột thực tế
+                tieu_chi_map = {"Doanh thu": "Doanh_Thu_USD", "Lượt Play": "Luot_Play", "Giờ nghe": "Gio_Nghe"}
+                tieu_chi_chon = st.selectbox("Tiêu chí so sánh:", list(tieu_chi_map.keys()))
+                cot_tieu_chi = tieu_chi_map[tieu_chi_chon]
+            with col_sl2:
+                kenh_chon = st.multiselect("Chọn kênh:", options=df_final["Kênh_Spotify"].unique(), default=df_final["Kênh_Spotify"].unique())
+
+            # Lọc dữ liệu theo kênh đã chọn
+            df_pie = df_phan_tich[df_phan_tich["Kênh_Spotify"].isin(kenh_chon)]
+            
+            if df_pie.empty: 
+                st.info("Vui lòng chọn kênh để hiển thị biểu đồ.")
             else:
-                col_pie1, col_pie2 = st.columns(2)
-                
-                # Bảng 1: Donut linh hoạt theo tùy chọn (Doanh thu / Lượt Play / Giờ nghe)
-                with col_pie1:
-                    df_pie1 = df_phan_tich.groupby("Kênh_Spotify")[cot_kq].sum().reset_index()
-                    df_pie1[cot_kq] = df_pie1[cot_kq].round(2)
-                    fig_pie1 = px.pie(df_pie1, values=cot_kq, names="Kênh_Spotify", hole=0.4, title=f"Tỷ Trọng {chiso_chon}")
-                    fig_pie1.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
-                    st.plotly_chart(fig_pie1, use_container_width=True)
-                    
-                # Bảng 2: Donut cố định hiển thị Tổng Lượt Play
-                with col_pie2:
-                    df_pie2 = df_phan_tich.groupby("Kênh_Spotify")["Luot_Play"].sum().reset_index()
-                    fig_pie2 = px.pie(df_pie2, values="Luot_Play", names="Kênh_Spotify", hole=0.4, title=f"Tỷ Trọng Tổng Lượt Play")
-                    fig_pie2.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
-                    st.plotly_chart(fig_pie2, use_container_width=True)
+                # Vẽ biểu đồ với bảng màu Xanh lá - Vàng - Cam
+                df_plot = df_pie.groupby("Kênh_Spotify")[cot_tieu_chi].sum().reset_index()
+                fig_pie = px.pie(
+                    df_plot, 
+                    values=cot_tieu_chi, 
+                    names="Kênh_Spotify", 
+                    hole=0.4, 
+                    title=f"Tỷ Trọng theo {tieu_chi_chon}",
+                    color_discrete_sequence=['#2E7D32', '#FBC02D', '#EF6C00', '#81C784', '#FFF176', '#FFB74D']
+                )
+                fig_pie.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
+                st.plotly_chart(fig_pie, use_container_width=True)
 
