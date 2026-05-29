@@ -147,15 +147,16 @@ tab_dashboard, tab_master, tab_nhap_kpi, tab_nhap_kq, tab_xoa_data = st.tabs([
 # ==========================================
 with tab_master:
     st.header("📑 Sheet Tổng Hợp Hiệu Suất")
-    df_master = tao_sheet_tong_hop() # Dòng này chính là nơi gọi cái hàm ở Bước A
-    st.dataframe(df_master, use_container_width=True)
-    # Định dạng bảng với màu sắc (Style)
+    
+    # 1. Chọn tháng trước
+    chon_thang = st.selectbox("Chọn tháng để xem ma trận:", [f"Tháng {i}" for i in range(1, 13)])
+    
+    # 2. Truyền tham số chon_thang vào hàm
+    df_master = tao_sheet_tong_hop(chon_thang) 
+    
+    # 3. Hiển thị bảng
     st.dataframe(
-        df_master.style.format({
-            "KPI_Doanh_Thu": lambda x: f"${x:,.0f}",
-            "Doanh_Thu_USD": lambda x: f"${x:,.0f}",
-            "%_Doanh_Thu": lambda x: f"{x:.1f}%"
-        }).background_gradient(subset=["%_Doanh_Thu"], cmap="RdYlGn"),
+        df_master.style.format(lambda x: f"${x:,.0f}" if isinstance(x, float) and x > 100 else f"{x:.1f}%" if isinstance(x, float) else x),
         use_container_width=True
     )
 
