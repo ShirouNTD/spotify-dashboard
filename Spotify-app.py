@@ -199,7 +199,7 @@ with tab_dashboard:
     if df.empty:
         st.info("Hệ thống chưa có dữ liệu kết quả nào được ghi nhận. Vui lòng cập nhật.")
     else:
-        # BỘ LỌC TỔNG (THÊM BỘ LỌC BẬT KIẾM TIỀN)
+        # BỘ LỌC TỔNG
         col_loc1, col_loc2, col_loc3 = st.columns([1, 2, 1])
         with col_loc1:
             thang_hien_co = list(df["Tháng"].unique())
@@ -245,10 +245,9 @@ with tab_dashboard:
             target_gio = df_kpi_filter["KPI_So_Gio"].sum()
             target_tap = df_kpi_filter["KPI_So_Tap"].sum()
 
-            # --- SCORECARDS (ĐÃ THÊM TỔNG KÊNH & KÊNH BẬT KIẾM TIỀN) ---
+            # --- SCORECARDS ---
             st.markdown("### 🏆 CHỈ SỐ KẾT QUẢ vs MỤC TIÊU")
             
-            # Đếm số liệu kênh
             tong_so_kenh = len(kenh_hien_thi_cuoi_cung)
             so_kenh_bkt = sum([1 for k in kenh_hien_thi_cuoi_cung if lay_trang_thai_kiem_tien(k)])
             
@@ -328,11 +327,100 @@ with tab_dashboard:
             if not tuan_co_data:
                 st.info("Chưa có dữ liệu tuần để so sánh biến động.")
             else:
-                tuan_chon_rank = st.selectbox("📌 Chọn Tuần xem biến động (Hệ thống sẽ tự so sánh với Tuần liền trước):", tuan_co_data, key="loc_tuan_rank")
+                tuan_chon_rank = st.selectbox("📌 Chọn Tuần xem biến động (Hệ thống sẽ tự động so sánh với Tuần liền trước):", tuan_co_data, key="loc_tuan_rank")
                 
-                tuan_num = int(tuan_chon_rank.replace("Tuần ", "")) if "Tuần " in tuan_chon_rank else 0
-                tuan_truoc_str = f"Tuần {tuan_num - 1}"
+                # --- THUẬT TOÁN TÌM TUẦN TRƯỚC XUYÊN THÁNG ---
+                # Quét trên toàn bộ Data (không bị chặn bởi bộ lọc Tháng hiện tại)
+                df_all_months = df[df["Kênh_Spotify"].isin(kenh_hien_thi_cuoi_cung)]
+                all_weeks = list(df_all_months["Tuần"].unique())
+                all_weeks.sort(key=lambda x: int(x.replace("Tuần ", "")) if "Tuần " in x else 0)
                 
-                if tuan_num == 1:
-                    st.info("💡 Đây là Tuần 1 nên chưa có dữ liệu Tuần trước đó để so sánh. Các kênh mặc định được xem là tăng trưởng mới.")
-                elif tuan_truoc_
+                tuan_truoc_str = None
+                if tuan_chon_rank in all_weeks:
+                    curr_idx = all_weeks.index(tuan_chon_rank)
+                    if curr_idx > 0:
+                        tuan_truoc_str = all_weeks[curr_idx - 1]
+                
+                # Hiển thị thông báo minh bạch cho sếp
+                if tuan_truoc_str is None:
+                    st.info(f"💡 **{tuan_chon_rank}** là tuần đầu tiên được ghi nhận của nhóm kênh này. Không có dữ liệu tuần trước đó để so sánh (Tính là tăng trưởng mới 100%).")
+                else:
+                    st.success(f"✅ Đang đối chiếu hiệu suất của **{tuan_chon_rank}** với tuần liền trước là **{tuan_truoc_str}** (Bao gồm cả dữ liệu tháng trước nếu giao tháng).")
+                
+                # Tính toán
+                df_curr = df_final[df_final["Tuần"] == tuan_chon_rank].groupby("Kênh_Spotify")[cot_kq].sum().reset_index()
+                
+                if tuan_truoc_str:
+                    # Lấy dữ liệu Tuần trước từ bộ Data toàn thời gian (Xuyên tháng)
+                    df_prev = df_all_months[df_all_months["Tuần"] == tuan_truoc_str].groupby("Kênh_Spotify")[cot_kq].sum().reset_index()
+                else:
+                    df_prev = pd.DataFrame(columns=["Kênh_Spotify", cot_kq])
+                
+                df_wow = pd.merge(df_curr, df_prev, on="Kênh_Spotify", how="outer", suffixes=('_curr', '_prev')).fillna(0)
+                
+                def calc_growth(curr, prev):
+                    if prev == 0 and curr == 0: return 0.0
+                    if prev == 0 and curr > 0: return 100.0  
+                    return ((curr - prev) / prev) * 100.0
+                    
+                df_wow["Growth"] = df_wow.apply(lambda row: calc_growth(row[f"{cot_kq}_curr"], row[f"{cot_kq}_prev"]), axis=1)
+                df_wow = df_wow.sort_values(by="Growth", ascending=False).reset_index(drop=True)
+                
+                top_5 = df_wow.head(5)
+                bot_5 = df_wow[~df_wow["Kênh_Spotify"].isin(top_5["Kênh_Spotify"])].tail(5).sort_values(by="Growth", ascending=True)
+                
+                col_top, col_bot = st.columns(2)
+                
+                def fmt(val):
+                    if chiso_chon == "Doanh Thu": return f"${val:,.2f}"
+                    elif chiso_chon == "Giờ Nghe": return f"{val:,.1f}h"
+                    return f"{val:,.0f}"
+
+                with col_top:
+                    st.success("🚀 **TOP 5 KÊNH TĂNG TRƯỞNG MẠNH NHẤT (WoW)**")
+                    if top_5.empty:
+                        st.write("Không có dữ liệu.")
+                    else:
+                        for idx, row in top_5.iterrows():
+                            g = row['Growth']
+                            color = "#1DB954" if g > 0 else ("#FF5722" if g < 0 else "#888888")
+                            icon = "📈" if g > 0 else ("📉" if g < 0 else "➖")
+                            st.markdown(f"**#{idx+1}. {row['Kênh_Spotify']}** ➔ <span style='color:{color}; font-size:18px; font-weight:bold;'>{g:+.1f}% {icon}</span><br>*(Tuần này: {fmt(row[f'{cot_kq}_curr'])} | Tuần trước: {fmt(row[f'{cot_kq}_prev'])})*", unsafe_allow_html=True)
+                            st.markdown("")
+                            
+                with col_bot:
+                    st.error("⚠️ **TOP 5 KÊNH SUY GIẢM / CHẬM LẠI (WoW)**")
+                    if bot_5.empty:
+                        st.write("Không có kênh nào trong danh sách này (Tất cả kênh đã lọt vào bảng Top 5 Tốt).")
+                    else:
+                        for idx, row in bot_5.iterrows():
+                            g = row['Growth']
+                            color = "#1DB954" if g > 0 else ("#FF5722" if g < 0 else "#888888")
+                            icon = "📈" if g > 0 else ("📉" if g < 0 else "➖")
+                            st.markdown(f"**🔻 {row['Kênh_Spotify']}** ➔ <span style='color:{color}; font-size:18px; font-weight:bold;'>{g:+.1f}% {icon}</span><br>*(Tuần này: {fmt(row[f'{cot_kq}_curr'])} | Tuần trước: {fmt(row[f'{cot_kq}_prev'])})*", unsafe_allow_html=True)
+                            st.markdown("")
+
+            st.markdown("---")
+
+            # --- 3. BIỂU ĐỒ PHÂN TÍCH CƠ CẤU ---
+            st.markdown("### 🥧 Phân Tích Cơ Cấu & Tỷ Trọng")
+            
+            tuan_chon_pie = st.selectbox("📌 Phân tích Tỷ trọng theo thời gian:", ["Tất cả các tuần"] + tuan_co_data, key="loc_tuan_phan_tich")
+            df_phan_tich = df_final if tuan_chon_pie == "Tất cả các tuần" else df_final[df_final["Tuần"] == tuan_chon_pie]
+            
+            if df_phan_tich.empty:
+                st.info(f"Không có dữ liệu kết quả cho {tuan_chon_pie}.")
+            else:
+                col_pie, col_bar = st.columns(2)
+                with col_pie:
+                    df_pie = df_phan_tich.groupby("Kênh_Spotify")[cot_kq].sum().reset_index()
+                    fig_pie = px.pie(df_pie, values=cot_kq, names="Kênh_Spotify", hole=0.4, 
+                                     title=f"Tỷ Trọng {chiso_chon} ({tuan_chon_pie})")
+                    st.plotly_chart(fig_pie, use_container_width=True)
+                    
+                with col_bar:
+                    df_bar = df_phan_tich.groupby("Kênh_Spotify")[cot_kq].sum().reset_index()
+                    fig_bar = px.bar(df_bar, x="Kênh_Spotify", y=cot_kq, 
+                                     title=f"So Sánh Lượng {chiso_chon} Giữa Các Kênh ({tuan_chon_pie})", text_auto='.2s')
+                    fig_bar.update_traces(marker_color='#1DB954', textfont_size=12, textangle=0, textposition="outside")
+                    st.plotly_chart(fig_bar, use_container_width=True)
