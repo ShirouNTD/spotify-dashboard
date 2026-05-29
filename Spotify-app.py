@@ -14,23 +14,6 @@ if "rk_kpi" not in st.session_state:
 
 st.set_page_config(page_title="Spotify Performance Hub", layout="wide", page_icon="🎧")
 
-# Xác định theme hiện tại
-is_light = st.get_option("theme.base") == "light"
-
-# Định nghĩa màu dựa trên theme
-bg_color = "#E8F5E9" if is_light else "#0E1117"
-card_bg = "#C8E6C9" if is_light else "#262730"
-text_color = "#1B5E20" if is_light else "#FAFAFA"
-
-# Inject CSS động
-st.markdown(f"""
-<style>
-    [data-testid="stAppViewContainer"] {{ background-color: {bg_color} !important; }}
-    .spotify-card {{ background-color: {card_bg} !important; color: {text_color} !important; }}
-    p, h1, h2, h3, h4, h5, h6, li, label, .stMarkdown, .stText {{ color: {text_color} !important; }}
-</style>
-""", unsafe_allow_html=True)
-
 # ==========================================
 
 # GIAO DIỆN NATIVE - OVERLAY KÍNH XANH
