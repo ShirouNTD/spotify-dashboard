@@ -147,35 +147,32 @@ tab_dashboard, tab_master, tab_nhap_kpi, tab_nhap_kq, tab_xoa_data = st.tabs([
 # ==========================================
 with tab_master:
     st.header("📑 Sheet Tổng Hợp Hiệu Suất")
+    chon_thang = st.selectbox("Chọn tháng:", [f"Tháng {i}" for i in range(1, 13)])
     
-    # 1. Chọn tháng trước
-    chon_thang = st.selectbox("Chọn tháng để xem ma trận:", [f"Tháng {i}" for i in range(1, 13)])
+    # Tính toán bảng
+    df_raw = tao_sheet_tong_hop(chon_thang)
     
-    # 2. Truyền tham số chon_thang vào hàm
-    df_master = tao_sheet_tong_hop(chon_thang) 
-    
-# 1. Reset index và tạo cột STT chuẩn bắt đầu từ 1
-    df_display = df_master.reset_index(drop=True)
-    df_display.index = df_display.index + 1
+    # TẠO BẢNG HIỂN THỊ: Gán STT bắt đầu từ 1 tại đây
+    df_display = df_raw.copy()
+    df_display.insert(0, "STT", range(1, len(df_display) + 1))
 
-# Đổi tên cột chỉ khi hiển thị, không đổi tên cột trong dữ liệu gốc
+    # Đổi tên cột chỉ khi hiển thị, không đổi tên cột trong dữ liệu gốc
     df_master_display = df_master.rename(columns={"So_Tuan": "Số Tuần"})
     
-# 1. Tách các cột để định dạng riêng biệt
+    # Định dạng
     def formatter_func(val):
-        if isinstance(val, float):
-            # Nếu là tiền (lớn hơn 100) thì format kiểu tiền
+        if isinstance(val, (int, float)):
             if abs(val) > 100:
                 return f"${val:,.0f}"
-            # Nếu là % thì format kiểu %
             return f"{val:.1f}%"
         return val
 
-    # 2. Hiển thị bảng với hàm định dạng đã định nghĩa
+    # HIỂN THỊ df_display (ĐÃ CÓ CỘT STT)
     st.dataframe(
-        df_master_display.style.format(formatter_func),
+        df_display.style.format(formatter_func).hide(axis="index"), # hide(axis="index") để ẩn index mặc định của Pandas đi
         use_container_width=True
     )
+
 
 # ==========================================
 # TAB 2: NHẬP MỤC TIÊU 
