@@ -97,6 +97,26 @@ def make_card(label, value, pct=None):
         <div class="spotify-value">{value}</div>
         {f'<div>{badge}</div>' if badge else ''}
     </div>
+
+def tao_sheet_tong_hop():
+    df_kq = pd.read_csv(FILE_DU_LIEU)
+    df_kpi = pd.read_csv(FILE_KPI)
+    
+    # Tạo khung bảng dựa trên danh sách kênh
+    df_master = pd.DataFrame(danh_sach_kenh_master, columns=["Kênh_Spotify"])
+    
+    # Gộp dữ liệu: Mục tiêu + Kết quả
+    # Lấy KPI (Giả sử lấy theo Tháng 1 để demo, Boss có thể loop qua list tháng)
+    kpi_cols = df_kpi[["Kênh_Spotify", "KPI_Doanh_Thu", "KPI_Luot_Play"]]
+    kq_cols = df_kq.groupby("Kênh_Spotify")[["Doanh_Thu_USD", "Luot_Play"]].sum().reset_index()
+    
+    df_master = df_master.merge(kpi_cols, on="Kênh_Spotify", how="left") \
+                         .merge(kq_cols, on="Kênh_Spotify", how="left")
+    
+    # Tính % hoàn thành
+    df_master["%_Doanh_Thu"] = (df_master["Doanh_Thu_USD"] / df_master["KPI_Doanh_Thu"] * 100).fillna(0)
+    return df_master
+
     """
 
 if "rk_kq" not in st.session_state: st.session_state.rk_kq = 0
@@ -111,9 +131,26 @@ if "toast_msg" in st.session_state:
 
 cac_key_can_xoa = ["loc_thang", "loc_tuan", "loc_kenh", "loc_bkt", "loc_tuan_phan_tich", "loc_tuan_rank"]
 
-tab_dashboard, tab_nhap_kpi, tab_nhap_kq, tab_xoa_data = st.tabs([
-    "📊 Báo Cáo Dashboard", "🎯 Nhập Mục Tiêu Kênh", "📥 Nhập Kết Quả Kênh", "🛠️ Quản Lý Dữ Liệu"
-])
+tab_dashboard, tab_master, tab_nhap_kpi, tab_nhap_kq, tab_xoa_data = st.tabs([ "📊 Dashboard", "📑 Sheet Tổng Hợp", "🎯 Nhập Mục Tiêu", "📥 Nhập Kết Quả", "🛠️ Quản Lý" ]) 
+
+# ==========================================
+# Thêm logic cho tab mới này
+# ==========================================
+with tab_master:
+    st.header("📑 Sheet Tổng Hợp Hiệu Suất")
+    st.markdown("Ma trận so sánh KPI vs Thực tế toàn kênh.")
+    
+    df_master = tao_sheet_tong_hop()
+    
+    # Định dạng bảng với màu sắc (Style)
+    st.dataframe(
+        df_master.style.format({
+            "KPI_Doanh_Thu": "${:,.0f}",
+            "Doanh_Thu_USD": "${:,.0f}",
+            "%_Doanh_Thu": "{:.1f}%"
+        }).background_gradient(subset=["%_Doanh_Thu"], cmap="RdYlGn"),
+        use_container_width=True
+    )
 
 # ==========================================
 # TAB 2: NHẬP MỤC TIÊU 
@@ -317,7 +354,7 @@ with tab_dashboard:
                 target_gio = df_kpi_filter["KPI_So_Gio"].sum()
                 target_tap = df_kpi_filter["KPI_So_Tap"].sum()
 
-            st.markdown("### 🏆 CHỈ SỐ KẾT QUẢ TỔNG QUAN")
+            st.markdown("### 🏆 1. Chỉ Số Kết Qủa Tổng Quan")
             dt_pct = (df_final['Doanh_Thu_USD'].sum() / target_dt * 100) if target_dt > 0 else 0
             play_pct = (df_final['Luot_Play'].sum() / target_play * 100) if target_play > 0 else 0
             gio_pct = (df_final['So_Gio_Nghe'].sum() / target_gio * 100) if target_gio > 0 else 0
@@ -334,7 +371,7 @@ with tab_dashboard:
             st.markdown("<br>", unsafe_allow_html=True)
             st.markdown("---")
             
-            st.markdown("### 🚀 Phân Tích Tiến Độ & Bảng Xếp Hạng Kênh")
+            st.markdown("### 🚀 2. Phân Tích Tiến Độ")
             chiso_chon = st.radio("🛠️ Chọn chỉ số để xem phân tích:", ["Doanh Thu", "Lượt Play", "Giờ Nghe"], horizontal=True)
             map_chiso = { "Doanh Thu": {"kq": "Doanh_Thu_USD", "kpi": "KPI_Doanh_Thu", "format": "$"}, "Lượt Play": {"kq": "Luot_Play", "kpi": "KPI_Luot_Play", "format": ""}, "Giờ Nghe": {"kq": "So_Gio_Nghe", "kpi": "KPI_So_Gio", "format": "h"} }
             cot_kq, cot_kpi, kieu_format = map_chiso[chiso_chon]["kq"], map_chiso[chiso_chon]["kpi"], map_chiso[chiso_chon]["format"]
@@ -374,7 +411,7 @@ with tab_dashboard:
                 st.plotly_chart(fig_vs, use_container_width=True)
 
             st.markdown("---")
-            st.markdown(f"### 🏅 Bảng Xếp Hạng Kênh Theo {chiso_chon}")
+            st.markdown(f"### 🏅 3. Bảng Xếp Hạng Kênh Theo {chiso_chon}")
             tuan_co_data = list(df_final["Tuần"].unique()); tuan_co_data.sort(key=lambda x: int(x.replace("Tuần ", "")) if "Tuần " in x else 0)
             
             if not tuan_co_data: st.info("Chưa có dữ liệu tuần để xếp hạng.")
