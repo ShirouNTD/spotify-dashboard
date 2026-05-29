@@ -42,7 +42,6 @@ st.markdown("""
 FILE_DU_LIEU = "spotify_master_data.csv"
 FILE_KPI = "spotify_channel_kpi.csv" 
 
-# Hàm khởi tạo file CSV
 def khoi_tao_he_thong_db():
     if not os.path.exists(FILE_DU_LIEU):
         pd.DataFrame(columns=["Tháng", "Tuần", "Kênh_Spotify", "Doanh_Thu_USD", "Luot_Play", "So_Gio_Nghe", "So_Tap_Upload", "Bat_Kiem_Tien", "Thoi_Gian_Nhap"]).to_csv(FILE_DU_LIEU, index=False)
@@ -64,7 +63,6 @@ khoi_tao_he_thong_db()
 df = pd.read_csv(FILE_DU_LIEU)
 df_kpi = pd.read_csv(FILE_KPI)
 
-# TẠO DANH SÁCH KÊNH MASTER 
 danh_sach_kenh_master = list(set(df["Kênh_Spotify"].dropna().unique()) | set(df_kpi["Kênh_Spotify"].dropna().unique()))
 danh_sach_kenh_master.sort()
 
@@ -75,7 +73,6 @@ def lay_trang_thai_kiem_tien(ten_kenh):
     if not df_match.empty: return bool(df_match.iloc[-1]["Bat_Kiem_Tien"])
     return False
 
-# Hàm vẽ thẻ HTML Scorecard
 def make_card(label, value, pct=None):
     if pct is not None:
         badge = f"<span class='{'badge-green' if pct >= 100 else 'badge-red'}'>{pct:.1f}% KPI</span>"
@@ -89,7 +86,6 @@ def make_card(label, value, pct=None):
     </div>
     """
 
-# Xử lý State Memory
 if "rk_kq" not in st.session_state: st.session_state.rk_kq = 0
 if "rk_kpi" not in st.session_state: st.session_state.rk_kpi = 0
 
@@ -100,7 +96,6 @@ if "toast_msg" in st.session_state:
     st.toast(st.session_state.toast_msg[0], icon=st.session_state.toast_msg[1])
     del st.session_state.toast_msg
 
-# Khai báo biến reset chung
 cac_key_can_xoa = ["loc_thang", "loc_tuan", "loc_kenh", "loc_bkt", "loc_tuan_phan_tich", "loc_tuan_rank"]
 
 tab_dashboard, tab_nhap_kpi, tab_nhap_kq, tab_xoa_data = st.tabs([
@@ -112,7 +107,6 @@ tab_dashboard, tab_nhap_kpi, tab_nhap_kq, tab_xoa_data = st.tabs([
 # ==========================================
 with tab_nhap_kpi:
     st.subheader("Thiết Lập Kênh & Mục Tiêu (KPI) Tháng")
-    st.info("💡 Bạn có thể tạo Kênh mới tại đây. Hệ thống sẽ chia KPI Tháng ra các Tuần để vẽ biểu đồ.")
     rk_kpi = st.session_state.rk_kpi
     
     col_kpi1, col_kpi2, col_kpi3 = st.columns(3)
@@ -209,7 +203,7 @@ with tab_nhap_kq:
                 st.rerun()
 
 # ==========================================
-# TAB 4: QUẢN LÝ DỮ LIỆU (SỬA & XÓA)
+# TAB 4: QUẢN LÝ DỮ LIỆU
 # ==========================================
 with tab_xoa_data:
     if not danh_sach_kenh_master:
@@ -275,7 +269,7 @@ with tab_dashboard:
     if df.empty:
         st.info("Hệ thống chưa có dữ liệu kết quả nào được ghi nhận. Vui lòng cập nhật.")
     else:
-        # BỘ LỌC TỔNG CÓ THÊM LỌC TUẦN
+        # BỘ LỌC TỔNG (LỌC TUẦN DẠNG MULTISELECT)
         col_loc1, col_loc_tuan, col_loc2, col_loc3 = st.columns([1.2, 1.2, 2, 1.2])
         with col_loc1:
             thang_hien_co = list(df["Tháng"].unique())
@@ -286,7 +280,8 @@ with tab_dashboard:
         with col_loc_tuan:
             tuan_hien_co = list(df_thang["Tuần"].unique())
             tuan_hien_co.sort(key=lambda x: int(x.replace("Tuần ", "")) if "Tuần " in x else 0)
-            tuan_chon = st.selectbox("📅 Lọc theo Tuần:", ["Tất cả các tuần"] + tuan_hien_co, key="loc_tuan")
+            # Cải tiến: Multiselect cho Tuần
+            tuan_chon = st.multiselect("📅 Lọc theo Tuần:", options=tuan_hien_co, default=tuan_hien_co, key="loc_tuan")
 
         danh_sach_kenh_hien_co = list(df_thang["Kênh_Spotify"].unique())
         
@@ -305,26 +300,26 @@ with tab_dashboard:
             elif loc_bkt == "Đã bật" and is_bkt: kenh_hien_thi_cuoi_cung.append(k)
             elif loc_bkt == "Chưa bật" and not is_bkt: kenh_hien_thi_cuoi_cung.append(k)
 
-        if not kenh_hien_thi_cuoi_cung:
-            st.warning(f"⚠️ Không có kênh nào thỏa mãn điều kiện!")
+        if not kenh_hien_thi_cuoi_cung or not tuan_chon:
+            st.warning(f"⚠️ Vui lòng chọn ít nhất 1 Kênh và 1 Tuần để hiển thị dữ liệu!")
         else:
-            # Gán lại tập dữ liệu chuẩn cho Dashboard
             df_final = df_thang[df_thang["Kênh_Spotify"].isin(kenh_hien_thi_cuoi_cung)]
-            if tuan_chon != "Tất cả các tuần":
-                df_final = df_final[df_final["Tuần"] == tuan_chon]
+            # Áp dụng bộ lọc đa Tuần
+            df_final = df_final[df_final["Tuần"].isin(tuan_chon)]
             
-            # ĐỌC & TÍNH TOÁN KPI ĐỘNG THÔNG MINH
+            # ĐỌC & TÍNH TOÁN KPI ĐỘNG ĐA TUẦN
             df_kpi_read = pd.read_csv(FILE_KPI)
             df_kpi_filter = df_kpi_read[df_kpi_read["Kênh_Spotify"].isin(kenh_hien_thi_cuoi_cung)]
             if thang_chon != "Tất cả các tháng":
                 df_kpi_filter = df_kpi_filter[df_kpi_filter["Tháng"] == thang_chon]
                 
-            # Nếu người dùng chọn 1 tuần cụ thể, hệ thống sẽ chia tỷ lệ KPI ra cho tuần đó
-            if tuan_chon != "Tất cả các tuần":
-                target_dt = (df_kpi_filter["KPI_Doanh_Thu"] / df_kpi_filter["So_Tuan"].fillna(4)).sum()
-                target_play = (df_kpi_filter["KPI_Luot_Play"] / df_kpi_filter["So_Tuan"].fillna(4)).sum()
-                target_gio = (df_kpi_filter["KPI_So_Gio"] / df_kpi_filter["So_Tuan"].fillna(4)).sum()
-                target_tap = (df_kpi_filter["KPI_So_Tap"] / df_kpi_filter["So_Tuan"].fillna(4)).sum()
+            # Nội suy KPI: Nếu không chọn đủ tất cả các tuần, nhân KPI tuần với số lượng tuần được chọn
+            if len(tuan_chon) < len(tuan_hien_co):
+                so_tuan_chon = len(tuan_chon)
+                target_dt = (df_kpi_filter["KPI_Doanh_Thu"] / df_kpi_filter["So_Tuan"].fillna(4)).sum() * so_tuan_chon
+                target_play = (df_kpi_filter["KPI_Luot_Play"] / df_kpi_filter["So_Tuan"].fillna(4)).sum() * so_tuan_chon
+                target_gio = (df_kpi_filter["KPI_So_Gio"] / df_kpi_filter["So_Tuan"].fillna(4)).sum() * so_tuan_chon
+                target_tap = (df_kpi_filter["KPI_So_Tap"] / df_kpi_filter["So_Tuan"].fillna(4)).sum() * so_tuan_chon
             else:
                 target_dt = df_kpi_filter["KPI_Doanh_Thu"].sum()
                 target_play = df_kpi_filter["KPI_Luot_Play"].sum()
