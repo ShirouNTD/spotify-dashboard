@@ -19,60 +19,194 @@ st.set_page_config(page_title="Spotify Performance Hub", layout="wide", page_ico
 
 # ==========================================
 
+
+
 # GIAO DIỆN NATIVE - OVERLAY KÍNH XANH
+
+
 
 # ==========================================
 
+
+
 st.markdown("""
+
+
+
 <style>
-    /* Font Lexend */
+
+
+
+/* Nhập Font Lexend từ Google Fonts */
+
+
+
     @import url('https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;600;800&display=swap');
-    
+
+
+
+
+
+
+
+    /* Ép toàn bộ App dùng font Lexend */
+
+
+
     html, body, [class*="css"], [class*="st-"], div, span, p, h1, h2, h3, h4, h5, h6 {
+
+
+
         font-family: 'Lexend', sans-serif !important;
+
+
+
     }
 
-    /* 1. MẶC ĐỊNH (DARK MODE) */
-    :root {
-        --background-color: #0E1117;
-        --secondary-background-color: #262730;
-        --text-color: #FAFAFA;
-    }
 
-    /* 2. ÉP KIỂU CHO LIGHT MODE (NỀN TRẮNG SẠCH) */
-    @media (prefers-color-scheme: light) {
-        :root {
-            --background-color: #FFFFFF !important;      /* Trắng tinh khôi */
-            --secondary-background-color: #F0F2F6 !important; /* Xám cực nhạt */
-            --text-color: #262730 !important;           /* Xám đậm (dễ đọc hơn đen thuần) */
-        }
-    }
 
-    /* CẤU TRÚC CHUNG */
+
+
+
+
     [data-testid="stAppViewContainer"] { 
+
+
+
         background-color: var(--background-color) !important; 
-        background-image: linear-gradient(rgba(29, 185, 84, 0.05), rgba(29, 185, 84, 0.05)) !important;
-    }
-    [data-testid="stSidebar"] { 
-        background-color: var(--secondary-background-color) !important; 
-    }
-    
-    .spotify-card {
-        background-color: var(--secondary-background-color) !important; 
-        border: 1px solid rgba(29, 185, 84, 0.1) !important; 
-        border-radius: 12px; padding: 15px; height: 100%; 
-        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+
+
+
+        background-image: linear-gradient(rgba(29, 185, 84, 0.07), rgba(29, 185, 84, 0.07)) !important;
+
+
+
     }
 
-    /* Các thành phần khác giữ nguyên logic var() để tự đổi màu */
-    p, h1, h2, h3, h4, h5, h6, li, label, .stMarkdown, .stText { color: var(--text-color) !important; }
+
+
+    [data-testid="stSidebar"] { 
+
+
+
+        background-color: var(--secondary-background-color) !important; 
+
+
+
+        background-image: linear-gradient(rgba(29, 185, 84, 0.12), rgba(29, 185, 84, 0.12)) !important;
+
+
+
+    }
+
+
+
+    [data-testid="stHeader"] { background-color: transparent !important; }
+
+
+
     
-    .spotify-label { color: var(--text-color) !important; opacity: 0.7; }
-    .spotify-value { color: var(--text-color) !important; }
+
+
+
+    p, h1, h2, h3, h4, h5, h6, li, label, .stMarkdown, .stText, div[data-testid="stMarkdownContainer"] { color: var(--text-color) !important; }
+
+
+
     
-    div.stButton > button[kind="primary"] { background-color: #1DB954 !important; color: white !important; }
+
+
+
+    .spotify-card {
+
+
+
+        background-color: var(--secondary-background-color) !important; 
+
+
+
+        background-image: linear-gradient(rgba(29, 185, 84, 0.03), rgba(29, 185, 84, 0.03)) !important;
+
+
+
+        border: 1px solid rgba(29, 185, 84, 0.2) !important; 
+
+
+
+        border-radius: 12px; padding: 15px; height: 100%; 
+
+
+
+        box-shadow: 0 4px 10px rgba(0,0,0,0.05); transition: transform 0.2s, box-shadow 0.2s;
+
+
+
+    }
+
+
+
+    .spotify-card:hover { transform: translateY(-3px); box-shadow: 0 6px 15px rgba(29,185,84,0.15); }
+
+
+
+    
+
+
+
+    .spotify-label { font-size: 13px; font-weight: 600; color: var(--text-color) !important; opacity: 0.7; text-transform: uppercase; margin-bottom: 5px; }
+
+
+
+    .spotify-value { font-size: 26px; font-weight: 900; margin-bottom: 10px; color: var(--text-color) !important; }
+
+
+
+    
+
+
+
+    .badge-green { background-color: rgba(29, 185, 84, 0.15) !important; color: #1DB954 !important; padding: 4px 8px; border-radius: 6px; font-size: 13px; font-weight: 800; border: 1px solid rgba(29, 185, 84, 0.3); }
+
+
+
+    .badge-red { background-color: rgba(226, 33, 52, 0.15) !important; color: #E22134 !important; padding: 4px 8px; border-radius: 6px; font-size: 13px; font-weight: 800; border: 1px solid rgba(226, 33, 52, 0.3); }
+
+
+
+    
+
+
+
+    .text-success { color: #1DB954 !important; font-size: 18px; font-weight: bold; }
+
+
+
+    .text-danger { color: #E22134 !important; font-size: 18px; font-weight: bold; }
+
+
+
+
+
+
+
+    div.stButton > button[kind="primary"] { background-color: #1DB954 !important; color: white !important; border: none; border-radius: 20px; font-weight: bold; }
+
+
+
+    div.stButton > button[kind="primary"]:hover { background-color: #1ED760 !important; color: white !important; }
+
+
+
+    div.stButton > button * { color: white !important; }
+
+
+
 </style>
-""", unsafe_allow_html=True)
+
+
+
+""", unsafe_allow_html=True) 
+
 
 
 # ==========================================
