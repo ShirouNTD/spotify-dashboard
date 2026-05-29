@@ -16,45 +16,53 @@ if "rk_kpi" not in st.session_state:
     st.session_state.rk_kpi = 0
 
 # ==========================================
-# 1. CẤU HÌNH GIAO DIỆN CHÍNH
+# 1. CẤU HÌNH GIAO DIỆN CHÍNH (VERSION MỚI NHẤT)
 # ==========================================
-st.set_page_config(page_title="Spotify Performance Hub", layout="wide", page_icon="🎧")
-
 st.markdown("""
 <style>
-/* 1. Ép Font chuẩn */
+    @import url('https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;600;800&display=swap');
+    
     html, body, [class*="css"], [class*="st-"], div, span, p, h1, h2, h3, h4, h5, h6 {
         font-family: 'Lexend', sans-serif !important;
     }
 
-/* 2. ÉP MÀU CHỮ CỰC MẠNH (Dùng cho cả Light và Dark Mode) */
-    /* Khi ở Light Mode, Streamlit gán class 'stApp' có data-theme='light' */
-    [data-theme='light'] * {
-        color: #0C7A33 !important;
+    /* CARD CHỈ SỐ: ĐÃ CÓ MÀU NỀN CỐ ĐỊNH CHO TỪNG THEME */
+    [data-theme='light'] .spotify-card {
+        background-color: #FFFFFF !important;
+        border: 1px solid #E0E0E0 !important;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.05) !important;
     }
+    [data-theme='dark'] .spotify-card {
+        background-color: #262730 !important;
+        border: 1px solid rgba(29, 185, 84, 0.2) !important;
+    }
+
+    /* MÀU CHỮ TUYỆT ĐỐI */
+    [data-theme='light'] * { color: #0C7A33 !important; }
+    [data-theme='dark'] * { color: #FAFAFA !important; }
     
-    /* Khi ở Dark Mode, Streamlit gán class 'stApp' có data-theme='dark' */
-    [data-theme='dark'] * {
-        color: #FAFAFA !important;
-    }
-
-/* 3. Đảm bảo các thành phần đặc thù luôn theo màu Xanh lá khi ở Light Mode */
-    [data-theme='light'] .spotify-label, 
-    [data-theme='light'] .spotify-value, 
-    [data-theme='light'] p, 
-    [data-theme='light'] span {
-        color: #0C7A33 !important;
-    }
-
-/* 4. Định nghĩa lại background cho Card để tránh bị xung đột */
-    .spotify-card {
-        background-color: var(--secondary-background-color) !important;
-        border: 1px solid rgba(128, 128, 128, 0.2) !important;
-        border-radius: 12px;
-        padding: 15px;
-    }
+    /* FIX MÀU CHO CÁC PHẦN TỬ ĐẶC BIỆT */
+    .badge-green { background-color: rgba(29, 185, 84, 0.15) !important; color: #1DB954 !important; }
+    .badge-red { background-color: rgba(226, 33, 52, 0.15) !important; color: #E22134 !important; }
 </style>
-""", unsafe_allow_html=True)
+""", unsafe_allow_html=True) 
+
+# ==========================================
+# 2. HÀM SCORE CARD (SỬA LẠI ĐỂ HIỂN THỊ ĐẸP)
+# ==========================================
+def make_card(label, value, pct=None):
+    badge = ""
+    if pct is not None:
+        color_class = 'badge-green' if pct >= 100 else 'badge-red'
+        badge = f"<div class='{color_class}' style='display:inline-block; margin-top:5px; padding:2px 8px; border-radius:6px; font-size:12px; font-weight:800;'>{pct:.1f}% KPI</div>"
+    
+    return f"""
+    <div class="spotify-card" style="padding: 20px; border-radius: 15px; margin-bottom: 10px;">
+        <div class="spotify-label" style="font-size: 12px; text-transform: uppercase; margin-bottom: 5px;">{label}</div>
+        <div class="spotify-value" style="font-size: 24px; font-weight: 800;">{value}</div>
+        {badge}
+    </div>
+    """
 
 # ==========================================
 # KHỞI TẠO DATA
