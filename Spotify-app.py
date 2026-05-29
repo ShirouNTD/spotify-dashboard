@@ -20,45 +20,50 @@ if "rk_kpi" not in st.session_state:
 # ==========================================
 st.set_page_config(page_title="Spotify Performance Hub", layout="wide", page_icon="🎧")
 
-# DÙNG PYTHON ĐỂ BẮT CHUẨN THEME CỦA STREAMLIT, KHÔNG LO LỖI CSS
-is_light = st.get_option("theme.base") == "light"
-mau_chu = "#0C7A33" if is_light else "#FAFAFA" # Xanh lá rõ nét cho Light, Trắng sáng cho Dark
-
-st.markdown(f"""
+st.markdown("""
 <style>
 /* Nhập Font Lexend từ Google Fonts */
     @import url('https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;600;800&display=swap');
     
-    html, body, [class*="css"], [class*="st-"], div, span, p, h1, h2, h3, h4, h5, h6 {{
+    html, body, [class*="css"], [class*="st-"], div, span, p, h1, h2, h3, h4, h5, h6 {
         font-family: 'Lexend', sans-serif !important;
-    }}
+    }
 
-    /* ĐỂ STREAMLIT TỰ QUẢN LÝ MÀU NỀN */
-    [data-testid="stAppViewContainer"] {{ background-color: var(--background-color) !important; background-image: none !important; }}
-    [data-testid="stSidebar"] {{ background-color: var(--secondary-background-color) !important; background-image: none !important; }}
+    /* ĐỂ STREAMLIT TỰ QUẢN LÝ MÀU NỀN & MÀU CHỮ CƠ BẢN (TRÁNH LỖI CHỮ TRẮNG NỀN TRẮNG) */
+    [data-testid="stAppViewContainer"] { background-color: var(--background-color) !important; background-image: none !important; }
+    [data-testid="stSidebar"] { background-color: var(--secondary-background-color) !important; background-image: none !important; }
     
-    .spotify-card {{
+    .spotify-card {
         background-color: var(--secondary-background-color) !important; 
-        border: 1px solid rgba(29, 185, 84, 0.2) !important; 
+        border: 1px solid rgba(128, 128, 128, 0.2) !important; 
         border-radius: 12px; padding: 15px; height: 100%; 
         box-shadow: 0 4px 10px rgba(0,0,0,0.05); transition: transform 0.2s, box-shadow 0.2s;
-    }}
+    }
     
-    /* ÉP MÀU CHỮ BẰNG PYTHON (TRẮNG HOẶC XANH LÁ) */
-    p, h1, h2, h3, h4, h5, h6, li, label, .stMarkdown, .stText, div[data-testid="stMarkdownContainer"] {{ 
-        color: {mau_chu} !important; 
-    }}
-    .spotify-label {{ color: {mau_chu} !important; opacity: 0.8; }}
-    .spotify-value {{ color: {mau_chu} !important; }}
+    /* TRẠNG THÁI MẶC ĐỊNH LÀ AN TOÀN: Chữ sẽ tự đổi Trắng (Dark) / Xám (Light) để không bao giờ bị tàng hình */
+    p, h1, h2, h3, h4, h5, h6, li, label, .stMarkdown, .stText, div[data-testid="stMarkdownContainer"] { 
+        color: var(--text-color) !important; 
+    }
+    .spotify-label { color: var(--text-color) !important; opacity: 0.7; }
+    .spotify-value { color: var(--text-color) !important; }
+
+    /* NẾU LÀ LIGHT MODE: Ép sang Xanh Lá Đậm đúng ý Boss */
+    @media (prefers-color-scheme: light) {
+        p, h1, h2, h3, h4, h5, h6, li, label, .stMarkdown, .stText, div[data-testid="stMarkdownContainer"] { 
+            color: #1B5E20 !important; 
+        }
+        .spotify-label { color: #1B5E20 !important; opacity: 0.8; }
+        .spotify-value { color: #1B5E20 !important; }
+    }
 
     /* CSS Chung */
-    [data-testid="stHeader"] {{ background-color: transparent !important; }}
-    .spotify-card:hover {{ transform: translateY(-3px); box-shadow: 0 6px 15px rgba(29,185,84,0.15) !important; }}
-    .spotify-label {{ font-size: 13px; font-weight: 600; text-transform: uppercase; margin-bottom: 5px; }}
-    .spotify-value {{ font-size: 26px; font-weight: 900; margin-bottom: 10px; }}
+    [data-testid="stHeader"] { background-color: transparent !important; }
+    .spotify-card:hover { transform: translateY(-3px); box-shadow: 0 6px 15px rgba(29,185,84,0.15) !important; }
+    .spotify-label { font-size: 13px; font-weight: 600; text-transform: uppercase; margin-bottom: 5px; }
+    .spotify-value { font-size: 26px; font-weight: 900; margin-bottom: 10px; }
     
-    .badge-green {{ background-color: rgba(29, 185, 84, 0.15) !important; color: #1DB954 !important; padding: 4px 8px; border-radius: 6px; font-size: 13px; font-weight: 800; border: 1px solid rgba(29, 185, 84, 0.3); }}
-    .badge-red {{ background-color: rgba(226, 33, 52, 0.15) !important; color: #E22134 !important; padding: 4px 8px; border-radius: 6px; font-size: 13px; font-weight: 800; border: 1px solid rgba(226, 33, 52, 0.3); }}
+    .badge-green { background-color: rgba(29, 185, 84, 0.15) !important; color: #1DB954 !important; padding: 4px 8px; border-radius: 6px; font-size: 13px; font-weight: 800; border: 1px solid rgba(29, 185, 84, 0.3); }
+    .badge-red { background-color: rgba(226, 33, 52, 0.15) !important; color: #E22134 !important; padding: 4px 8px; border-radius: 6px; font-size: 13px; font-weight: 800; border: 1px solid rgba(226, 33, 52, 0.3); }
 </style>
 """, unsafe_allow_html=True)
 
@@ -419,32 +424,28 @@ with tab_dashboard:
                 fig_vs.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
                 st.plotly_chart(fig_vs, use_container_width=True)
 
-                # --- 🏆 3. BẢNG XẾP HẠNG TOP KÊNH TĂNG TRƯỞNG (TUẦN) ---
-                st.markdown(f"### 🏆 3. Bảng Xếp Hạng Tăng Trưởng Theo {chiso_chon}")
+                # --- 🏅 3. BẢNG XẾP HẠNG TOP KÊNH (TUẦN) ---
+                st.markdown("---")
+                st.markdown(f"### 🏅 3. Bảng Xếp Hạng Kênh Theo {chiso_chon}")
+                tuan_co_data = list(df_final["Tuần"].unique()); tuan_co_data.sort(key=lambda x: int(x.replace("Tuần ", "")) if "Tuần " in x else 0)
                 
-                df_top_w = df_final.groupby("Kênh_Spotify")[cot_kq].sum().reset_index()
-                df_kpi_w = df_kpi_filter.groupby("Kênh_Spotify")["Muc_Tieu_Tuan_Hien_Tai"].sum().reset_index()
-                df_top_w = df_top_w.merge(df_kpi_w, on="Kênh_Spotify", how="left")
-                df_top_w["% Tăng Trưởng"] = (df_top_w[cot_kq] / df_top_w["Muc_Tieu_Tuan_Hien_Tai"] * 100).fillna(0)
-                
-                # CHIA ĐÔI MÀN HÌNH VÀ VẼ LIST
-                col_top1_w, col_top2_w = st.columns(2)
-                
-                with col_top1_w:
-                    st.markdown("#### 🔥 Top 5 Hoàn Thành Tốt Nhất")
-                    df_high_w = df_top_w.sort_values(by="% Tăng Trưởng", ascending=False).head(5).reset_index(drop=True)
-                    html_high = ""
-                    for i, row in df_high_w.iterrows():
-                        html_high += f"<div style='display:flex; justify-content:space-between; padding:12px; margin-bottom:8px; border-radius:8px; background:var(--secondary-background-color); border:1px solid rgba(29, 185, 84, 0.4);'><span style='font-weight:600;'>#{i+1} &nbsp; {row['Kênh_Spotify']}</span><span style='color:#1DB954; font-weight:800; font-size: 16px;'>{row['% Tăng Trưởng']:,.1f}%</span></div>"
-                    st.markdown(html_high, unsafe_allow_html=True)
-
-                with col_top2_w:
-                    st.markdown("#### ⚠️ Top 5 Cần Chú Ý Nhất")
-                    df_low_w = df_top_w.sort_values(by="% Tăng Trưởng", ascending=True).head(5).reset_index(drop=True)
-                    html_low = ""
-                    for i, row in df_low_w.iterrows():
-                        html_low += f"<div style='display:flex; justify-content:space-between; padding:12px; margin-bottom:8px; border-radius:8px; background:var(--secondary-background-color); border:1px solid rgba(226, 33, 52, 0.4);'><span style='font-weight:600;'>#{i+1} &nbsp; {row['Kênh_Spotify']}</span><span style='color:#E22134; font-weight:800; font-size: 16px;'>{row['% Tăng Trưởng']:,.1f}%</span></div>"
-                    st.markdown(html_low, unsafe_allow_html=True)
+                if not tuan_co_data: st.info("Chưa có dữ liệu tuần để xếp hạng.")
+                else:
+                    tuan_chon_rank = st.selectbox("📌 Chọn thời gian để xếp hạng:", ["Tất cả các tuần"] + tuan_co_data, key="loc_tuan_rank")
+                    df_rank = df_final.groupby("Kênh_Spotify")[cot_kq].sum().reset_index() if tuan_chon_rank == "Tất cả các tuần" else df_final[df_final["Tuần"] == tuan_chon_rank].groupby("Kênh_Spotify")[cot_kq].sum().reset_index()
+                    df_rank = df_rank.sort_values(by=cot_kq, ascending=False).reset_index(drop=True); df_rank[cot_kq] = df_rank[cot_kq].round(2)
+                    
+                    top_5 = df_rank.head(5)
+                    bot_5 = pd.DataFrame(columns=["Kênh_Spotify", cot_kq]) if len(df_rank) <= 5 else df_rank[~df_rank["Kênh_Spotify"].isin(top_5["Kênh_Spotify"])].tail(5).sort_values(by=cot_kq, ascending=True)
+                    
+                    def fmt(val): return f"${val:,.2f}" if chiso_chon == "Doanh Thu" else (f"{val:,.1f}h" if chiso_chon == "Giờ Nghe" else f"{val:,.0f}")
+                    col_top, col_bot = st.columns(2)
+                    with col_top:
+                        st.success(f"🌟 **TOP 5 CAO NHẤT**")
+                        for idx, row in top_5.iterrows(): st.markdown(f"**#{idx+1}. {row['Kênh_Spotify']}** ➔ <span class='text-success'>{fmt(row[cot_kq])}</span>", unsafe_allow_html=True); st.markdown("")
+                    with col_bot:
+                        st.error(f"⚠️ **TOP 5 THẤP NHẤT**")
+                        for idx, row in bot_5.iterrows(): st.markdown(f"**🔻 {row['Kênh_Spotify']}** ➔ <span class='text-danger'>{fmt(row[cot_kq])}</span>", unsafe_allow_html=True); st.markdown("")
 
                 # --- 🍩 4. BIỂU ĐỒ DONUT (BÁO CÁO TUẦN) ---
                 st.markdown("### 🍩 4. Phân Tích Cơ Cấu & Tỷ Trọng (Tuần)")
@@ -538,29 +539,28 @@ with tab_dashboard:
                 fig_vs_m.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
                 st.plotly_chart(fig_vs_m, use_container_width=True)
 
-             # --- 🏆 3. BẢNG XẾP HẠNG DOANH THU (THÁNG FINAL) ---
-                st.markdown("### 🏆 3. Bảng Xếp Hạng Kênh Theo Doanh Thu (Tháng Final)")
+             # --- 🏅 3. BẢNG XẾP HẠNG TOP KÊNH (THÁNG FINAL) ---
+                st.markdown("---")
+                st.markdown(f"### 🏅 3. Bảng Xếp Hạng Kênh Theo {chiso_chon_m}")
+                thang_co_data = list(df_final_m["Tháng"].unique()); thang_co_data.sort(key=lambda x: int(x.replace("Tháng ", "")) if "Tháng " in x else 0)
                 
-                df_top_m = df_final_m.groupby("Kênh_Spotify")["Doanh_Thu_USD"].sum().reset_index()
-                
-                # CHIA ĐÔI MÀN HÌNH VÀ VẼ LIST
-                col_top1_m, col_top2_m = st.columns(2)
-                
-                with col_top1_m:
-                    st.markdown("#### 🔥 Top 5 Doanh Thu Cao Nhất")
-                    df_high_m = df_top_m.sort_values(by="Doanh_Thu_USD", ascending=False).head(5).reset_index(drop=True)
-                    html_high_m = ""
-                    for i, row in df_high_m.iterrows():
-                        html_high_m += f"<div style='display:flex; justify-content:space-between; padding:12px; margin-bottom:8px; border-radius:8px; background:var(--secondary-background-color); border:1px solid rgba(29, 185, 84, 0.4);'><span style='font-weight:600;'>#{i+1} &nbsp; {row['Kênh_Spotify']}</span><span style='color:#1DB954; font-weight:800; font-size: 16px;'>${row['Doanh_Thu_USD']:,.0f}</span></div>"
-                    st.markdown(html_high_m, unsafe_allow_html=True)
-
-                with col_top2_m:
-                    st.markdown("#### ⚠️ Top 5 Doanh Thu Thấp Nhất")
-                    df_low_m = df_top_m.sort_values(by="Doanh_Thu_USD", ascending=True).head(5).reset_index(drop=True)
-                    html_low_m = ""
-                    for i, row in df_low_m.iterrows():
-                        html_low_m += f"<div style='display:flex; justify-content:space-between; padding:12px; margin-bottom:8px; border-radius:8px; background:var(--secondary-background-color); border:1px solid rgba(226, 33, 52, 0.4);'><span style='font-weight:600;'>#{i+1} &nbsp; {row['Kênh_Spotify']}</span><span style='color:#E22134; font-weight:800; font-size: 16px;'>${row['Doanh_Thu_USD']:,.0f}</span></div>"
-                    st.markdown(html_low_m, unsafe_allow_html=True)
+                if not thang_co_data: st.info("Chưa có dữ liệu tháng để xếp hạng.")
+                else:
+                    thang_chon_rank = st.selectbox("📌 Chọn thời gian để xếp hạng:", ["Tất cả các tháng"] + thang_co_data, key="loc_thang_rank_m")
+                    df_rank_m = df_final_m.groupby("Kênh_Spotify")[cot_kq_m].sum().reset_index() if thang_chon_rank == "Tất cả các tháng" else df_final_m[df_final_m["Tháng"] == thang_chon_rank].groupby("Kênh_Spotify")[cot_kq_m].sum().reset_index()
+                    df_rank_m = df_rank_m.sort_values(by=cot_kq_m, ascending=False).reset_index(drop=True); df_rank_m[cot_kq_m] = df_rank_m[cot_kq_m].round(2)
+                    
+                    top_5_m = df_rank_m.head(5)
+                    bot_5_m = pd.DataFrame(columns=["Kênh_Spotify", cot_kq_m]) if len(df_rank_m) <= 5 else df_rank_m[~df_rank_m["Kênh_Spotify"].isin(top_5_m["Kênh_Spotify"])].tail(5).sort_values(by=cot_kq_m, ascending=True)
+                    
+                    def fmt_m(val): return f"${val:,.2f}" if chiso_chon_m == "Doanh Thu" else (f"{val:,.1f}h" if chiso_chon_m == "Giờ Nghe" else f"{val:,.0f}")
+                    col_top_m, col_bot_m = st.columns(2)
+                    with col_top_m:
+                        st.success(f"🌟 **TOP 5 CAO NHẤT**")
+                        for idx, row in top_5_m.iterrows(): st.markdown(f"**#{idx+1}. {row['Kênh_Spotify']}** ➔ <span class='text-success'>{fmt_m(row[cot_kq_m])}</span>", unsafe_allow_html=True); st.markdown("")
+                    with col_bot_m:
+                        st.error(f"⚠️ **TOP 5 THẤP NHẤT**")
+                        for idx, row in bot_5_m.iterrows(): st.markdown(f"**🔻 {row['Kênh_Spotify']}** ➔ <span class='text-danger'>{fmt_m(row[cot_kq_m])}</span>", unsafe_allow_html=True); st.markdown("")
                     
                 # --- 🍩 4. BIỂU ĐỒ DONUT (BÁO CÁO THÁNG) ---
                 st.markdown("### 🍩 4. Phân Tích Cơ Cấu & Tỷ Trọng (Tháng Final)")
