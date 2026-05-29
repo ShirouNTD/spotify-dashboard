@@ -241,21 +241,29 @@ with tab_master:
             return val
         return format_val
 
-   # 4. Hiển thị bảng (Xử lý dứt điểm index thừa và làm tròn số)
+   # 4. Hiển thị bảng (Xử lý ẩn cột So_Tuan và làm sạch index)
+    
+    # Tạo danh sách các cột cần ẩn
+    cols_to_hide = ["So_Tuan"]
+    # Kiểm tra nếu trong df_display có tồn tại cột 'index' thì thêm vào để ẩn luôn
+    if "index" in df_display.columns:
+        cols_to_hide.append("index")
+
     st.dataframe(
         df_display.style
         .format({
             "KPI Doanh Thu": "${:,.0f}",
             "Kết quả tháng": "${:,.0f}",
             "% Hoàn thành tháng": "{:.0f}%",
-            # Sử dụng cú pháp lambda để tự động format cho các cột Tuần có tên thay đổi
             **{col: "${:,.0f}" for col in df_display.columns if "KPI Tuần" in col},
             **{col: "${:,.0f}" for col in df_display.columns if "Kết quả Tuần" in col},
             **{col: "{:.0f}%" for col in df_display.columns if "% Tuần" in col}
         })
-        .hide(axis="index"), # Lệnh .hide(axis="index") này sẽ xóa sạch cái cột 0,1,2 ngoài cùng!
+        .hide(axis="index") # Ẩn cột chỉ số dòng của Pandas
+        .hide(subset=[c for c in cols_to_hide if c in df_display.columns], axis="columns"), # Ẩn cột So_Tuan và index
         use_container_width=True
     )
+
 # ==========================================
 # TAB 2: NHẬP MỤC TIÊU 
 # ==========================================
