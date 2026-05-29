@@ -5,12 +5,12 @@ import os
 from datetime import datetime
 import numpy as np
 
-# 1. CẤU HÌNH GIAO DIỆN CHUẨN
+# 1. CẤU HÌNH GIAO DIỆN
 st.set_page_config(page_title="Spotify Performance Hub", layout="wide", page_icon="🎧")
 
 FILE_DU_LIEU = "spotify_master_data.csv"
 
-# Hàm khởi tạo & nâng cấp file CSV
+# Hàm khởi tạo & nâng cấp file
 def khoi_tao_db():
     if not os.path.exists(FILE_DU_LIEU):
         df_mau = pd.DataFrame(columns=[
@@ -27,7 +27,7 @@ def khoi_tao_db():
 khoi_tao_db()
 df = pd.read_csv(FILE_DU_LIEU)
 
-# Khởi tạo các biến lưu trữ trạng thái ô nhập liệu (để xóa về 0 sau khi lưu)
+# KHỞI TẠO BỘ NHỚ ĐỆM CHO UX (Đưa số về 0 sau khi lưu)
 if "val_kenh_moi" not in st.session_state: st.session_state.val_kenh_moi = ""
 if "val_doanh_thu" not in st.session_state: st.session_state.val_doanh_thu = 0.0
 if "val_luot_play" not in st.session_state: st.session_state.val_luot_play = 0
@@ -44,30 +44,23 @@ kpi_play = st.sidebar.number_input("KPI Lượt Play:", value=500000, step=10000
 kpi_gio = st.sidebar.number_input("KPI Giờ Nghe:", value=20000.0, step=1000.0)
 kpi_tap = st.sidebar.number_input("KPI Số Tập Upload:", value=15, step=1)
 
-# ==========================================
-# TIÊU ĐỀ CHÍNH
-# ==========================================
 st.title("🎧 TRUNG TÂM QUẢN TRỊ HIỆU SUẤT SPOTIFY")
 st.markdown("---")
 
 tab_dashboard, tab_nhap_lieu = st.tabs(["📊 Báo Cáo Dashboard", "📥 Cổng Nhập Liệu (Tự Động Gợi Ý)"])
 
 # ==========================================
-# KHU VỰC 1: CỔNG NHẬP LIỆU (ĐÃ TỐI ƯU HÓA UX RESET & CHỐNG TRÙNG)
+# KHU VỰC 1: CỔNG NHẬP LIỆU (CƠ CHẾ UPSERT + FORCE RESET BỘ LỌC)
 # ==========================================
 with tab_nhap_lieu:
     st.subheader("Nhập liệu Báo cáo Tuần")
-    st.info("💡 Hệ thống áp dụng cơ chế tự động Ghi đè nếu nhập trùng Tuần và Kênh cũ. Nhập xong hệ thống sẽ tự reset số liệu về 0.")
     
     col1, col2, col3 = st.columns(3)
-    
     with col1:
         thang = st.selectbox("Tháng Báo Cáo:", [f"Tháng {i}" for i in range(1, 13)])
         tuan = st.selectbox("Tuần Báo Cáo:", [f"Tuần {i}" for i in range(1, 53)])
         
         danh_sach_kenh_cu = list(df["Kênh_Spotify"].unique()) if not df.empty else []
-        
-        # Đồng bộ selectbox kênh với bộ nhớ đệm
         lua_chon_kenh = st.selectbox(
             "Gõ để tìm kênh hoặc Thêm kênh mới:", 
             options=["➕ Nhập kênh mới..."] + danh_sach_kenh_cu,
@@ -95,18 +88,14 @@ with tab_nhap_lieu:
         if not kenh:
             st.error("⚠️ Vui lòng nhập hoặc chọn Tên Kênh Spotify!")
         else:
-            # --- THUẬT TOÁN CHỐNG TRÙNG LẶP DỮ LIỆU (UPSERT) ---
-            # Kiểm tra xem dòng dữ liệu trùng Tuần + Tên Kênh đã tồn tại chưa
+            # 1. Cơ chế Upsert (Ghi đè nếu trùng, Thêm mới nếu chưa có)
             dieu_kien_trung = (df["Tuần"] == tuan) & (df["Kênh_Spotify"] == kenh)
-            
             if dieu_kien_trung.any():
-                # Nếu đã có, tiến hành ghi đè thông số mới lên dòng cũ
                 df.loc[dieu_kien_trung, ["Tháng", "Doanh_Thu_USD", "Luot_Play", "So_Gio_Nghe", "So_Tap_Upload", "Bat_Kiem_Tien", "Thoi_Gian_Nhap"]] = [
                     thang, float(doanh_thu), int(luot_play), float(gio_nghe), int(so_tap), trang_thai_kt, datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                 ]
                 st.toast(f"🔄 Đã ghi đè & cập nhật số liệu mới cho {kenh} ({tuan})!", icon="🔄")
             else:
-                # Nếu chưa có, append dòng dữ liệu mới vào bảng như bình thường
                 du_lieu_moi = pd.DataFrame([{
                     "Tháng": thang, "Tuần": tuan, "Kênh_Spotify": kenh,
                     "Doanh_Thu_USD": float(doanh_thu), "Luot_Play": int(luot_play),
@@ -117,10 +106,9 @@ with tab_nhap_lieu:
                 df = pd.concat([df, du_lieu_moi], ignore_index=True)
                 st.toast(f"✅ Đã lưu thành công số liệu mới cho {kenh} ({tuan})!", icon="✅")
             
-            # Lưu file CSV xuống máy chủ
             df.to_csv(FILE_DU_LIEU, index=False)
             
-            # --- CƠ CHẾ RESET TOÀN BỘ Ô CỦA FORM VỀ 0 ---
+            # 2. XÓA BỘ NHỚ ĐỆM CỦA FORM ĐỂ ĐƯA VỀ 0
             st.session_state.val_kenh_moi = ""
             st.session_state.val_doanh_thu = 0.0
             st.session_state.val_luot_play = 0
@@ -128,7 +116,10 @@ with tab_nhap_lieu:
             st.session_state.val_so_tap = 0
             st.session_state.val_lua_chon_kenh = "➕ Nhập kênh mới..."
             
-            # Kích hoạt lệnh nháy nhẹ giao diện để áp dụng reset
+            # 3. ÉP XÓA TRÍ NHỚ BỘ LỌC ĐỂ DASHBOARD CHẮC CHẮN CẬP NHẬT BIỂU ĐỒ MỚI
+            if "loc_thang" in st.session_state: del st.session_state["loc_thang"]
+            if "loc_kenh" in st.session_state: del st.session_state["loc_kenh"]
+            
             st.rerun()
 
 # ==========================================
@@ -138,17 +129,17 @@ with tab_dashboard:
     if df.empty:
         st.info("Hệ thống chưa có dữ liệu. Vui lòng sang tab 'Cổng Nhập Liệu' để bổ sung thông tin.")
     else:
-        # BỘ LỌC
+        # BỘ LỌC (Đã được gắn Key để liên kết với cơ chế ép xóa trí nhớ)
         col_loc1, col_loc2 = st.columns(2)
         with col_loc1:
             thang_hien_co = list(df["Tháng"].unique())
-            thang_chon = st.selectbox("📅 Lọc Dashboard theo Tháng:", ["Tất cả các tháng"] + thang_hien_co)
+            thang_chon = st.selectbox("📅 Lọc Dashboard theo Tháng:", ["Tất cả các tháng"] + thang_hien_co, key="loc_thang")
             
         df_thang = df if thang_chon == "Tất cả các tháng" else df[df["Tháng"] == thang_chon]
         danh_sach_kenh_hien_co = list(df_thang["Kênh_Spotify"].unique())
         
         with col_loc2:
-            kenh_duoc_chon = st.multiselect("🎧 Tích chọn các kênh muốn theo dõi:", options=danh_sach_kenh_hien_co, default=danh_sach_kenh_hien_co)
+            kenh_duoc_chon = st.multiselect("🎧 Tích chọn các kênh muốn theo dõi:", options=danh_sach_kenh_hien_co, default=danh_sach_kenh_hien_co, key="loc_kenh")
             
         st.markdown("---")
         
