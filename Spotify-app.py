@@ -508,17 +508,18 @@ with tab_dashboard:
             else:
                 df_plot = df_pie.groupby("Kênh_Spotify")[cot_tieu_chi].sum().reset_index()
                 
-              # --- VẼ DONUT BẰNG CÁCH GÁN MÀU TỰ ĐỘNG ---
+            # --- VẼ DONUT ĐÃ TÍCH HỢP THEME ---
             df_plot = df_pie.groupby("Kênh_Spotify")[cot_tieu_chi].sum().sort_values(ascending=False).reset_index()
             
             if df_plot.empty:
                 st.info("Không có dữ liệu để hiển thị biểu đồ.")
             else:
-                # Tạo dải màu thủ công dựa trên số lượng kênh
-                # Nếu số kênh > bảng màu, nó sẽ tự lặp lại màu để tránh lỗi
-                palette = ['#A8D08D', '#BEE5A3', '#D5F9B9', '#FFE699', '#FFD966', '#FFC555', '#FFB347', '#FFA07A']
+                # 1. Xác định Theme và Bảng màu
+                is_light = st.get_option("theme.base") == "light"
+                palette = ['#E65100', '#F57F17', '#FBC02D', '#BF360C', '#FF8F00', '#FFD600'] if is_light else ['#A8D08D', '#BEE5A3', '#D5F9B9', '#FFE699', '#FFD966', '#FFC555', '#FFB347', '#FFA07A']
                 colors = (palette * (len(df_plot) // len(palette) + 1))[:len(df_plot)]
 
+                # 2. Vẽ biểu đồ
                 fig_pie = px.pie(
                     df_plot, 
                     values=cot_tieu_chi, 
@@ -528,20 +529,21 @@ with tab_dashboard:
                     color_discrete_sequence=colors
                 )
                 
+                # 3. Cấu hình giao diện (tự động đổi màu chữ theo theme)
                 fig_pie.update_layout(
                     paper_bgcolor='rgba(0,0,0,0)', 
                     plot_bgcolor='rgba(0,0,0,0)',
                     showlegend=True,
                     legend=dict(orientation="h", yanchor="top", y=-0.2, xanchor="center", x=0.5),
-                    font=dict(color="#555555")
+                    font=dict(color="#1B5E20" if is_light else "#555555")
                 )
                 
-                # Chỉnh chữ trắng 100%
+                # 4. Chỉnh chữ bên trong
                 fig_pie.update_traces(
                     textinfo='percent', 
                     textfont_color="white", 
                     textfont_size=12,
-                    textposition='inside' # Để chữ nằm trong lát cắt cho gọn
+                    textposition='inside'
                 )
                 
                 st.plotly_chart(fig_pie, use_container_width=True)
