@@ -4,8 +4,10 @@ import plotly.express as px
 import plotly.graph_objects as go
 import os
 from datetime import datetime
-import numpy as np
 
+# ==========================================
+# KHỞI TẠO SESSION STATE
+# ==========================================
 if "rk_kq" not in st.session_state:
     st.session_state.rk_kq = 0
 if "rk_kq_thang" not in st.session_state:
@@ -13,12 +15,11 @@ if "rk_kq_thang" not in st.session_state:
 if "rk_kpi" not in st.session_state:
     st.session_state.rk_kpi = 0
 
-# 1. CẤU HÌNH GIAO DIỆN
+# ==========================================
+# CẤU HÌNH GIAO DIỆN CHÍNH
+# ==========================================
 st.set_page_config(page_title="Spotify Performance Hub", layout="wide", page_icon="🎧")
 
-# ==========================================
-# GIAO DIỆN NATIVE - LIGHT MODE TRẮNG
-# ==========================================
 st.markdown("""
 <style>
 /* Nhập Font Lexend từ Google Fonts */
@@ -27,54 +28,52 @@ st.markdown("""
     html, body, [class*="css"], [class*="st-"], div, span, p, h1, h2, h3, h4, h5, h6 {
         font-family: 'Lexend', sans-serif !important;
     }
-    
-    /* MẶC ĐỊNH DARK THEME (Giữ nguyên overlay) */
-    :root {
-        --bg-main: var(--background-color);
-        --bg-overlay: linear-gradient(rgba(29, 185, 84, 0.07), rgba(29, 185, 84, 0.07));
-        --bg-sidebar-overlay: linear-gradient(rgba(29, 185, 84, 0.12), rgba(29, 185, 84, 0.12));
-        --text-c: var(--text-color);
-    }
 
-    /* LIGHT THEME: Nền trắng, chữ xanh lá đậm, bỏ overlay xanh pastel */
-    @media (prefers-color-scheme: light) {
-        :root {
-            --bg-main: #FFFFFF !important;
-            --bg-overlay: none !important; /* Xóa kính xanh */
-            --bg-sidebar-overlay: none !important;
-            --text-c: #1B5E20 !important; /* Xanh lá đậm */
-        }
-        [data-testid="stSidebar"] {
-            background-color: #F8F9FA !important; /* Xám cực nhẹ cho Sidebar đỡ chói */
-        }
-        .spotify-card {
-            background-color: #FFFFFF !important;
-            border: 1px solid #E0E0E0 !important;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05) !important;
-        }
-    }
-
-    /* Áp dụng biến màu */
+    /* MẶC ĐỊNH DARK THEME (Giữ nguyên overlay kính xanh) */
     [data-testid="stAppViewContainer"] { 
-        background-color: var(--bg-main) !important; 
-        background-image: var(--bg-overlay) !important;
+        background-color: #0E1117 !important; 
+        background-image: linear-gradient(rgba(29, 185, 84, 0.07), rgba(29, 185, 84, 0.07)) !important;
     }
     [data-testid="stSidebar"] { 
-        background-image: var(--bg-sidebar-overlay) !important;
+        background-color: #262730 !important;
+        background-image: linear-gradient(rgba(29, 185, 84, 0.12), rgba(29, 185, 84, 0.12)) !important;
     }
-    [data-testid="stHeader"] { background-color: transparent !important; }
-    p, h1, h2, h3, h4, h5, h6, li, label, .stMarkdown, .stText, div[data-testid="stMarkdownContainer"] { color: var(--text-c) !important; }
-    
     .spotify-card {
-        background-color: var(--secondary-background-color); 
-        background-image: var(--bg-overlay);
-        border: 1px solid rgba(29, 185, 84, 0.2); 
+        background-color: #262730 !important; 
+        background-image: linear-gradient(rgba(29, 185, 84, 0.03), rgba(29, 185, 84, 0.03)) !important;
+        border: 1px solid rgba(29, 185, 84, 0.2) !important; 
         border-radius: 12px; padding: 15px; height: 100%; 
         box-shadow: 0 4px 10px rgba(0,0,0,0.05); transition: transform 0.2s, box-shadow 0.2s;
     }
-    .spotify-card:hover { transform: translateY(-3px); box-shadow: 0 6px 15px rgba(29,185,84,0.15); }
-    .spotify-label { font-size: 13px; font-weight: 600; color: var(--text-c) !important; opacity: 0.7; text-transform: uppercase; margin-bottom: 5px; }
-    .spotify-value { font-size: 26px; font-weight: 900; margin-bottom: 10px; color: var(--text-c) !important; }
+    p, h1, h2, h3, h4, h5, h6, li, label, .stMarkdown, .stText, div[data-testid="stMarkdownContainer"] { 
+        color: #FAFAFA !important; 
+    }
+
+    /* LIGHT THEME: Nền trắng tinh khôi, dập tắt mọi hiệu ứng gradient màu xanh */
+    @media (prefers-color-scheme: light) {
+        [data-testid="stAppViewContainer"] { 
+            background: #FFFFFF !important; 
+        }
+        [data-testid="stSidebar"] { 
+            background: #F8F9FA !important; 
+        }
+        .spotify-card {
+            background: #FFFFFF !important;
+            border: 1px solid #E0E0E0 !important;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05) !important;
+        }
+        p, h1, h2, h3, h4, h5, h6, li, label, .stMarkdown, .stText, div[data-testid="stMarkdownContainer"] { 
+            color: #1B5E20 !important; 
+        }
+        .spotify-label { color: #1B5E20 !important; opacity: 0.7; }
+        .spotify-value { color: #1B5E20 !important; }
+    }
+
+    /* CSS Chung không ảnh hưởng bởi Theme */
+    [data-testid="stHeader"] { background-color: transparent !important; }
+    .spotify-card:hover { transform: translateY(-3px); box-shadow: 0 6px 15px rgba(29,185,84,0.15) !important; }
+    .spotify-label { font-size: 13px; font-weight: 600; text-transform: uppercase; margin-bottom: 5px; }
+    .spotify-value { font-size: 26px; font-weight: 900; margin-bottom: 10px; }
     
     .badge-green { background-color: rgba(29, 185, 84, 0.15) !important; color: #1DB954 !important; padding: 4px 8px; border-radius: 6px; font-size: 13px; font-weight: 800; border: 1px solid rgba(29, 185, 84, 0.3); }
     .badge-red { background-color: rgba(226, 33, 52, 0.15) !important; color: #E22134 !important; padding: 4px 8px; border-radius: 6px; font-size: 13px; font-weight: 800; border: 1px solid rgba(226, 33, 52, 0.3); }
@@ -90,24 +89,21 @@ st.markdown("""
 # ==========================================
 # KHỞI TẠO DATA
 # ==========================================
-FILE_DU_LIEU = "spotify_master_data.csv" # Dữ liệu Tuần
-FILE_KQ_THANG = "spotify_monthly_data.csv" # Dữ liệu chốt Tháng (MỚI)
+FILE_DU_LIEU = "spotify_master_data.csv" 
+FILE_KQ_THANG = "spotify_monthly_data.csv" 
 FILE_KPI = "spotify_channel_kpi.csv" 
 
 def khoi_tao_he_thong_db():
-    # Khởi tạo DB Tuần
     if not os.path.exists(FILE_DU_LIEU): pd.DataFrame(columns=["Tháng", "Tuần", "Kênh_Spotify", "Doanh_Thu_USD", "Luot_Play", "So_Gio_Nghe", "So_Tap_Upload", "Bat_Kiem_Tien", "Thoi_Gian_Nhap"]).to_csv(FILE_DU_LIEU, index=False)
     else:
         df_hien_tai = pd.read_csv(FILE_DU_LIEU)
         if "Bat_Kiem_Tien" not in df_hien_tai.columns: df_hien_tai["Bat_Kiem_Tien"] = False; df_hien_tai.to_csv(FILE_DU_LIEU, index=False)
             
-    # Khởi tạo DB KPI
     if not os.path.exists(FILE_KPI): pd.DataFrame(columns=["Tháng", "Kênh_Spotify", "KPI_Doanh_Thu", "KPI_Luot_Play", "KPI_So_Gio", "KPI_So_Tap", "So_Tuan", "Bat_Kiem_Tien"]).to_csv(FILE_KPI, index=False)
     else:
         df_kpi_hien_tai = pd.read_csv(FILE_KPI)
         if "Bat_Kiem_Tien" not in df_kpi_hien_tai.columns: df_kpi_hien_tai["Bat_Kiem_Tien"] = False; df_kpi_hien_tai.to_csv(FILE_KPI, index=False)
         
-    # Khởi tạo DB Tháng (MỚI)
     if not os.path.exists(FILE_KQ_THANG): pd.DataFrame(columns=["Năm", "Tháng", "Kênh_Spotify", "Doanh_Thu_USD", "Luot_Play", "So_Gio_Nghe", "So_Tap_Upload", "Bat_Kiem_Tien", "Thoi_Gian_Nhap"]).to_csv(FILE_KQ_THANG, index=False)
 
 khoi_tao_he_thong_db()
@@ -147,24 +143,19 @@ def tao_sheet_tong_hop(thang_chon):
     master = pd.DataFrame(danh_sach_kenh_master, columns=["Kênh_Spotify"])
     master = master.merge(kpi_thang[["Kênh_Spotify", "KPI_Doanh_Thu", "So_Tuan"]], on="Kênh_Spotify", how="left")
     
-    # 1. Cột Kết quả tổng (Cộng dồn từ các Tuần)
     thang_kq_sum = df_kq[df_kq["Tháng"] == thang_chon].groupby("Kênh_Spotify")["Doanh_Thu_USD"].sum().reset_index()
     thang_kq_sum.rename(columns={"Doanh_Thu_USD": "Kết quả tổng"}, inplace=True)
     master = master.merge(thang_kq_sum, on="Kênh_Spotify", how="left")
     master["Kết quả tổng"] = master["Kết quả tổng"].fillna(0)
     master["% Hoàn thành"] = (master["Kết quả tổng"] / master["KPI_Doanh_Thu"] * 100).fillna(0)
     
-    # 2. Cột Kết quả tháng (Chốt từ data Tháng thực tế)
     chot_thang = df_kq_thang[df_kq_thang["Tháng"] == thang_chon][["Kênh_Spotify", "Doanh_Thu_USD"]]
     chot_thang.rename(columns={"Doanh_Thu_USD": "Kết quả tháng"}, inplace=True)
-    
-    # Nhóm lại để tránh lỗi duplicate kênh nếu lỡ nhập 2 lần trong 1 tháng
     chot_thang = chot_thang.groupby("Kênh_Spotify")["Kết quả tháng"].sum().reset_index() 
     master = master.merge(chot_thang, on="Kênh_Spotify", how="left")
     master["Kết quả tháng"] = master["Kết quả tháng"].fillna(0)
     master["% Hoàn thành tháng"] = (master["Kết quả tháng"] / master["KPI_Doanh_Thu"] * 100).fillna(0)
     
-    # 3. Vòng lặp trải cột theo Tuần
     tuan_trong_thang = sorted([t for t in df_kq[df_kq["Tháng"] == thang_chon]["Tuần"].unique()])
     for tuan in tuan_trong_thang:
         master[f"{tuan}_Target"] = (master["KPI_Doanh_Thu"] / master["So_Tuan"]).fillna(0)
@@ -191,7 +182,6 @@ with tab_master:
     df_raw = tao_sheet_tong_hop(chon_thang)
     df_display = df_raw.copy()
     
-    # Gom cột thông minh
     rename_map = {
         "Kênh_Spotify": "Kênh",
         "KPI_Doanh_Thu": "KPI Doanh Thu",
@@ -207,20 +197,18 @@ with tab_master:
     
     df_display = df_display.rename(columns=rename_map)
     
-    # Sắp xếp lại thứ tự cột cho hợp lý
     cols = ["Kênh", "KPI Doanh Thu", "Kết quả tổng", "% Hoàn thành", "Kết quả tháng", "% Hoàn thành tháng"]
-    # Thêm các cột tuần vào sau cùng
     tuan_cols = [c for c in df_display.columns if "Tuần" in c]
     df_display = df_display[cols + tuan_cols]
     
     df_display.insert(0, "STT", range(1, len(df_display) + 1))
 
+    # Xóa sạch các cột thừa để chuẩn bị hiển thị
     df_clean = df_display.copy()
     cols_to_drop = ["So_Tuan", "index"]
     for col in cols_to_drop:
         if col in df_clean.columns: df_clean = df_clean.drop(columns=[col])
 
-    # Vẽ bảng
     st.dataframe(
         df_clean.style
         .format({
@@ -287,10 +275,10 @@ with tab_nhap_kpi:
             st.session_state.rk_kpi += 1; st.rerun()
 
 # ==========================================
-# TAB 3: NHẬP KẾT QUẢ (SUB-MENU)
+# TAB 3: NHẬP KẾT QUẢ 
 # ==========================================
 with tab_nhap_kq:
-    loai_nhap_kq = st.radio("🛠️ Chọn chế độ nhập liệu:", ["📥 Nhập Kết Quả Tuần", "📅 Chốt Kết Quả Tháng"], horizontal=True, label_visibility="collapsed")
+    loai_nhap_kq = st.radio("🛠️ Chọn chế độ nhập liệu:", ["📥 Nhập Kết Quả Tuần", "📅 Kết Quả Tháng (Final)"], horizontal=True, label_visibility="collapsed")
     st.markdown("---")
     
     if loai_nhap_kq == "📥 Nhập Kết Quả Tuần":
@@ -331,8 +319,8 @@ with tab_nhap_kq:
                 st.session_state.rk_kq += 1; st.rerun()
 
     else:
-        # NHẬP KẾT QUẢ THÁNG (MỚI)
-        st.subheader("Cập Nhật Chốt Số Liệu Tháng (Thực Tế)")
+        # NHẬP KẾT QUẢ THÁNG (FINAL)
+        st.subheader("Cập Nhật Số Liệu Tháng (Thực Tế Final)")
         rkm = st.session_state.rk_kq_thang
         colm1, colm2, colm3 = st.columns(3)
         with colm1:
@@ -394,10 +382,10 @@ with tab_xoa_data:
                 st.rerun()
 
 # ==========================================
-# TAB 1: DASHBOARD (SUB-MENU)
+# TAB 1: DASHBOARD CHÍNH 
 # ==========================================
 with tab_dashboard:
-    loai_dashboard = st.radio("📊 Chọn cấp độ báo cáo:", ["📅 Báo cáo Tuần (Tiến độ)", "📆 Báo cáo Tháng (Chốt số)"], horizontal=True, label_visibility="collapsed")
+    loai_dashboard = st.radio("📊 Chọn cấp độ báo cáo:", ["📅 Báo cáo Tuần (Tiến độ)", "📆 Báo cáo Tháng (Final)"], horizontal=True, label_visibility="collapsed")
     st.markdown("---")
     
     if loai_dashboard == "📅 Báo cáo Tuần (Tiến độ)":
@@ -428,8 +416,6 @@ with tab_dashboard:
                 so_tuan_chon = len(tuan_chon)
                 target_dt = (df_kpi_filter["KPI_Doanh_Thu"] / df_kpi_filter["So_Tuan"].fillna(4)).sum() * so_tuan_chon if len(tuan_chon) < len(tuan_hien_co) else df_kpi_filter["KPI_Doanh_Thu"].sum()
                 target_play = (df_kpi_filter["KPI_Luot_Play"] / df_kpi_filter["So_Tuan"].fillna(4)).sum() * so_tuan_chon if len(tuan_chon) < len(tuan_hien_co) else df_kpi_filter["KPI_Luot_Play"].sum()
-                target_gio = (df_kpi_filter["KPI_So_Gio"] / df_kpi_filter["So_Tuan"].fillna(4)).sum() * so_tuan_chon if len(tuan_chon) < len(tuan_hien_co) else df_kpi_filter["KPI_So_Gio"].sum()
-                target_tap = (df_kpi_filter["KPI_So_Tap"] / df_kpi_filter["So_Tuan"].fillna(4)).sum() * so_tuan_chon if len(tuan_chon) < len(tuan_hien_co) else df_kpi_filter["KPI_So_Tap"].sum()
 
                 st.markdown("### 🏆 1. Chỉ Số Tuần Tổng Quan")
                 dt_pct = (df_final['Doanh_Thu_USD'].sum() / target_dt * 100) if target_dt > 0 else 0
@@ -457,8 +443,45 @@ with tab_dashboard:
                 fig_vs.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
                 st.plotly_chart(fig_vs, use_container_width=True)
 
+                # --- 🍩 3. BIỂU ĐỒ DONUT (BÁO CÁO TUẦN) ---
+                st.markdown("### 🍩 3. Phân Tích Cơ Cấu & Tỷ Trọng (Tuần)")
+                
+                col_sl1_w, col_sl2_w = st.columns(2)
+                with col_sl1_w:
+                    tieu_chi_map_w = {"Doanh thu": "Doanh_Thu_USD", "Lượt Play": "Luot_Play", "Giờ nghe": "So_Gio_Nghe"}
+                    tieu_chi_chon_w = st.selectbox("Tiêu chí so sánh:", list(tieu_chi_map_w.keys()), key="tc_donut_w")
+                    cot_tieu_chi_w = tieu_chi_map_w[tieu_chi_chon_w]
+                with col_sl2_w:
+                    kenh_all_w = df_final["Kênh_Spotify"].unique()
+                    kenh_chon_w = st.multiselect("Chọn kênh:", options=kenh_all_w, default=kenh_all_w, key="kc_donut_w")
+
+                df_pie_w = df_final[df_final["Kênh_Spotify"].isin(kenh_chon_w)]
+                
+                if df_pie_w.empty: 
+                    st.info("Vui lòng chọn kênh để hiển thị biểu đồ.")
+                else:
+                    df_plot_w = df_pie_w.groupby("Kênh_Spotify")[cot_tieu_chi_w].sum().sort_values(ascending=False).reset_index()
+                    
+                    palette = ['#2E7D32', '#4CAF50', '#81C784', '#A5D6A7', '#DCE775', '#E8F5E9']
+                    colors = (palette * (len(df_plot_w) // len(palette) + 1))[:len(df_plot_w)]
+
+                    fig_pie_w = px.pie(
+                        df_plot_w, values=cot_tieu_chi_w, names="Kênh_Spotify", 
+                        hole=0.4, title=f"Tỷ Trọng theo {tieu_chi_chon_w}", color_discrete_sequence=colors
+                    )
+                    
+                    is_light = st.get_option("theme.base") == "light"
+                    fig_pie_w.update_layout(
+                        paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', showlegend=True,
+                        legend=dict(orientation="h", yanchor="top", y=-0.2, xanchor="center", x=0.5),
+                        font=dict(color="#1B5E20" if is_light else "#E0E0E0") 
+                    )
+                    fig_pie_w.update_traces(textinfo='percent', textfont_color="white", textfont_size=12, textposition='inside')
+                    
+                    st.plotly_chart(fig_pie_w, use_container_width=True)
+
     else:
-        # DASHBOARD THÁNG (MỚI)
+        # DASHBOARD THÁNG (FINAL)
         if df_thang_chot.empty: st.info("Hệ thống chưa có dữ liệu chốt THÁNG nào.")
         else:
             col_loc1_m, col_loc_thang_m, col_loc2_m, col_loc3_m = st.columns([1.2, 1.2, 2, 1.2])
@@ -500,7 +523,6 @@ with tab_dashboard:
                 cot_kq_m, cot_kpi_m = map_chiso_m[chiso_chon_m]["kq"], map_chiso_m[chiso_chon_m]["kpi"]
                 
                 df_trend_m = df_final_m.groupby("Tháng")[cot_kq_m].sum().reset_index()
-                # Sort theo thứ tự tháng chuẩn
                 df_trend_m["Sort"] = df_trend_m["Tháng"].apply(lambda x: int(x.replace("Tháng ", "")))
                 df_trend_m = df_trend_m.sort_values(by="Sort").drop(columns=["Sort"])
                 
@@ -512,3 +534,40 @@ with tab_dashboard:
                 fig_vs_m.add_trace(go.Scatter(x=df_trend_m["Tháng"], y=df_trend_m[cot_kpi_m], mode='lines+markers', name='Mục Tiêu Tháng', line=dict(color='#E22134', width=3, dash='dash')))
                 fig_vs_m.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
                 st.plotly_chart(fig_vs_m, use_container_width=True)
+
+                # --- 🍩 3. BIỂU ĐỒ DONUT (BÁO CÁO THÁNG) ---
+                st.markdown("### 🍩 3. Phân Tích Cơ Cấu & Tỷ Trọng (Tháng Final)")
+                
+                col_sl1_m, col_sl2_m = st.columns(2)
+                with col_sl1_m:
+                    tieu_chi_map_m = {"Doanh thu": "Doanh_Thu_USD", "Lượt Play": "Luot_Play", "Giờ nghe": "So_Gio_Nghe"}
+                    tieu_chi_chon_m = st.selectbox("Tiêu chí so sánh:", list(tieu_chi_map_m.keys()), key="tc_donut_m")
+                    cot_tieu_chi_m = tieu_chi_map_m[tieu_chi_chon_m]
+                with col_sl2_m:
+                    kenh_all_m = df_final_m["Kênh_Spotify"].unique()
+                    kenh_chon_m = st.multiselect("Chọn kênh:", options=kenh_all_m, default=kenh_all_m, key="kc_donut_m")
+
+                df_pie_m = df_final_m[df_final_m["Kênh_Spotify"].isin(kenh_chon_m)]
+                
+                if df_pie_m.empty: 
+                    st.info("Vui lòng chọn kênh để hiển thị biểu đồ.")
+                else:
+                    df_plot_m = df_pie_m.groupby("Kênh_Spotify")[cot_tieu_chi_m].sum().sort_values(ascending=False).reset_index()
+                    
+                    palette = ['#2E7D32', '#4CAF50', '#81C784', '#A5D6A7', '#DCE775', '#E8F5E9']
+                    colors = (palette * (len(df_plot_m) // len(palette) + 1))[:len(df_plot_m)]
+
+                    fig_pie_m = px.pie(
+                        df_plot_m, values=cot_tieu_chi_m, names="Kênh_Spotify", 
+                        hole=0.4, title=f"Tỷ Trọng theo {tieu_chi_chon_m}", color_discrete_sequence=colors
+                    )
+                    
+                    is_light = st.get_option("theme.base") == "light"
+                    fig_pie_m.update_layout(
+                        paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', showlegend=True,
+                        legend=dict(orientation="h", yanchor="top", y=-0.2, xanchor="center", x=0.5),
+                        font=dict(color="#1B5E20" if is_light else "#E0E0E0") 
+                    )
+                    fig_pie_m.update_traces(textinfo='percent', textfont_color="white", textfont_size=12, textposition='inside')
+                    
+                    st.plotly_chart(fig_pie_m, use_container_width=True)
