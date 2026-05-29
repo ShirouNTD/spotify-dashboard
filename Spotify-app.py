@@ -27,14 +27,12 @@ def khoi_tao_db():
 khoi_tao_db()
 df = pd.read_csv(FILE_DU_LIEU)
 
-# ==========================================
-# THUẬT TOÁN "CHÌA KHÓA TÁI SINH" ĐỂ RESET FORM
-# ==========================================
+# THUẬT TOÁN "CHÌA KHÓA TÁI SINH" ĐỂ RESET FORM VỀ 0
 if "form_reset_key" not in st.session_state: 
     st.session_state.form_reset_key = 0
 
 # ==========================================
-# KHU VỰC SIDEBAR: CÀI ĐẶT KPI
+# KHU VỰC SIDEBAR: CÀI ĐẶT KPI MỤC TIÊU
 # ==========================================
 st.sidebar.header("🎯 THIẾT LẬP KPI MỤC TIÊU")
 kpi_doanh_thu = st.sidebar.number_input("KPI Doanh Thu ($):", value=5000.0, step=100.0)
@@ -45,16 +43,16 @@ kpi_tap = st.sidebar.number_input("KPI Số Tập Upload:", value=15, step=1)
 st.title("🎧 TRUNG TÂM QUẢN TRỊ HIỆU SUẤT SPOTIFY")
 st.markdown("---")
 
-tab_dashboard, tab_nhap_lieu = st.tabs(["📊 Báo Cáo Dashboard", "📥 Cổng Nhập Liệu (Tự Động Gợi Ý)"])
+# TẠO 3 TAB CHỨC NĂNG RÕ RÀNG
+tab_dashboard, tab_nhap_lieu, tab_xoa_data = st.tabs(["📊 Báo Cáo Dashboard", "📥 Cổng Nhập Liệu", "🗑️ Xóa Dữ Liệu"])
 
 # ==========================================
-# KHU VỰC 1: CỔNG NHẬP LIỆU (ĐÃ FIX LỖI INSTANTIATION)
+# TAB 1: CỔNG NHẬP LIỆU (CHẶN TRÙNG LẶP TUYỆT ĐỐI)
 # ==========================================
 with tab_nhap_lieu:
     st.subheader("Nhập liệu Báo cáo Tuần")
-    st.info("💡 Hệ thống tự động Ghi đè dữ liệu trùng. Nhập thành công Form sẽ tự làm mới.")
+    st.info("💡 Nếu nhập sai số liệu cũ, vui lòng sang tab 'Xóa Dữ Liệu' để dọn dẹp bản ghi cũ trước khi nhập số mới.")
     
-    # Lấy chìa khóa reset hiện tại
     rk = st.session_state.form_reset_key
     
     col1, col2, col3 = st.columns(3)
@@ -90,14 +88,14 @@ with tab_nhap_lieu:
         if not kenh:
             st.error("⚠️ Vui lòng nhập hoặc chọn Tên Kênh Spotify!")
         else:
-            # 1. Cơ chế Upsert (Ghi đè hoặc Thêm mới)
+            # KIỂM TRA TRÙNG LẶP DỮ LIỆU
             dieu_kien_trung = (df["Tuần"] == tuan) & (df["Kênh_Spotify"] == kenh)
+            
             if dieu_kien_trung.any():
-                df.loc[dieu_kien_trung, ["Tháng", "Doanh_Thu_USD", "Luot_Play", "So_Gio_Nghe", "So_Tap_Upload", "Bat_Kiem_Tien", "Thoi_Gian_Nhap"]] = [
-                    thang, float(doanh_thu), int(luot_play), float(gio_nghe), int(so_tap), trang_thai_kt, datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                ]
-                st.toast(f"🔄 Đã ghi đè & cập nhật số liệu mới cho {kenh} ({tuan})!", icon="🔄")
+                # Lập tức chặn lại và cảnh báo nhân sự
+                st.error(f"⛔ Dữ liệu của '{kenh}' trong '{tuan}' đã tồn tại! Vui lòng sang tab '🗑️ Xóa Dữ Liệu' để gỡ bỏ bản ghi bị sai trước khi nhập lại.")
             else:
+                # Nếu dữ liệu sạch chưa tồn tại, tiến hành lưu mới
                 du_lieu_moi = pd.DataFrame([{
                     "Tháng": thang, "Tuần": tuan, "Kênh_Spotify": kenh,
                     "Doanh_Thu_USD": float(doanh_thu), "Luot_Play": int(luot_play),
@@ -105,21 +103,55 @@ with tab_nhap_lieu:
                     "Bat_Kiem_Tien": trang_thai_kt,
                     "Thoi_Gian_Nhap": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                 }])
-                df = pd.concat([df, du_lieu_moi], ignore_index=True)
+                
+                df_ghi_so = pd.concat([df, du_lieu_moi], ignore_index=True)
+                df_ghi_so.to_csv(FILE_DU_LIEU, index=False)
+                
                 st.toast(f"✅ Đã lưu thành công số liệu mới cho {kenh} ({tuan})!", icon="✅")
+                
+                # Xóa cache bộ lọc Dashboard
+                if "loc_thang" in st.session_state: del st.session_state["loc_thang"]
+                if "loc_kenh" in st.session_state: del st.session_state["loc_kenh"]
+                
+                # Làm mới Form
+                st.session_state.form_reset_key += 1
+                st.rerun()
+
+# ==========================================
+# TAB 2: QUẢN LÝ & XÓA DỮ LIỆU (CƠ CHẾ CHỦ ĐỘNG MỚI)
+# ==========================================
+with tab_xoa_data:
+    st.subheader("Trình Quản Lý & Xóa Dữ Liệu Cũ")
+    st.warning("⚠️ Chú ý: Dữ liệu sau khi bấm xóa sẽ bị gỡ hoàn toàn khỏi hệ thống để bạn có thể nhập lại.")
+    
+    df_xoa = pd.read_csv(FILE_DU_LIEU) # Lấy dữ liệu mới nhất
+    
+    if df_xoa.empty:
+        st.info("Kho dữ liệu hiện đang trống.")
+    else:
+        col_x1, col_x2 = st.columns(2)
+        with col_x1:
+            kenh_can_xoa = st.selectbox("1. Chọn Kênh cần sửa dữ liệu:", df_xoa["Kênh_Spotify"].unique(), key="del_kenh")
+        with col_x2:
+            # Chỉ hiển thị các Tuần mà Kênh đó đã có dữ liệu để tránh xóa nhầm
+            cac_tuan_da_co = df_xoa[df_xoa["Kênh_Spotify"] == kenh_can_xoa]["Tuần"].unique()
+            tuan_can_xoa = st.selectbox("2. Chọn Tuần bị sai cần xóa:", cac_tuan_da_co, key="del_tuan")
             
-            df.to_csv(FILE_DU_LIEU, index=False)
+        st.markdown("<br>", unsafe_allow_html=True)
+        if st.button("🗑️ Xác Nhận Xóa Bản Ghi Này", type="primary", use_container_width=True):
+            # Lọc bỏ dòng dữ liệu được chọn
+            df_con_lai = df_xoa[~((df_xoa["Kênh_Spotify"] == kenh_can_xoa) & (df_xoa["Tuần"] == tuan_can_xoa))]
+            df_con_lai.to_csv(FILE_DU_LIEU, index=False)
             
-            # 2. Xóa trí nhớ bộ lọc Dashboard để biểu đồ tự vẽ lại
+            # Ép reset bộ lọc dashboard
             if "loc_thang" in st.session_state: del st.session_state["loc_thang"]
             if "loc_kenh" in st.session_state: del st.session_state["loc_kenh"]
             
-            # 3. KÍCH HOẠT TÁI SINH FORM (Tự động đưa số về 0 mà không bị lỗi đỏ)
-            st.session_state.form_reset_key += 1
+            st.toast(f"✅ Đã xóa vĩnh viễn dữ liệu của {kenh_can_xoa} ({tuan_can_xoa})!", icon="✅")
             st.rerun()
 
 # ==========================================
-# KHU VỰC 2: DASHBOARD TỔNG HỢP
+# TAB 3: DASHBOARD TỔNG HỢP
 # ==========================================
 with tab_dashboard:
     if df.empty:
