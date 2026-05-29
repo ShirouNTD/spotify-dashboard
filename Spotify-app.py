@@ -155,22 +155,26 @@ with tab_master:
     # 2. Tạo bản copy để hiển thị
     df_display = df_raw.copy()
     
-    # 3. Rename các cột theo đúng yêu cầu của Boss
+    # 3. Rename các cột thông minh
     rename_map = {
         "Kênh_Spotify": "Kênh",
         "KPI_Doanh_Thu": "KPI Doanh Thu",
         "Doanh_Thu_USD": "Kết quả tháng",
-        "%_Tháng": "% Hoàn thành",
+        "%_Tháng": "% Hoàn thành tháng",
     }
-    # Tự động map cho các cột tuần (Tuần 1_Target -> KPI Tuần 1, v.v.)
+    
+    # Tự động map cho các cột tuần với tên duy nhất
     for col in df_display.columns:
         if "Tuần" in col:
             if "_Target" in col:
-                rename_map[col] = col.replace("_Target", "").replace("Tuần", "KPI Tuần")
+                # Ví dụ: KPI Tuần 1
+                rename_map[col] = col.replace("Tuần ", "KPI Tuần ").replace("_Target", "")
             elif "_Actual" in col:
-                rename_map[col] = col.replace("_Actual", "").replace("Tuần", "Kết quả Tuần")
+                # Ví dụ: Kết quả Tuần 1
+                rename_map[col] = col.replace("Tuần ", "Kết quả Tuần ").replace("_Actual", "")
             elif "_%" in col:
-                rename_map[col] = "% Hoàn thành" # Gộp chung tên cho các cột % tuần
+                # Ví dụ: % Tuần 1
+                rename_map[col] = col.replace("Tuần ", "% Tuần ").replace("_%", "")
     
     df_display = df_display.rename(columns=rename_map)
     df_display.insert(0, "STT", range(1, len(df_display) + 1))
