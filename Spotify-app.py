@@ -11,12 +11,19 @@ if "rk_kpi" not in st.session_state:
     st.session_state.rk_kpi = 0
 
 # 1. CẤU HÌNH GIAO DIỆN
+
 st.set_page_config(page_title="Spotify Performance Hub", layout="wide", page_icon="🎧")
 
+
+
 # ==========================================
+
 # GIAO DIỆN NATIVE - OVERLAY KÍNH XANH
+
 # ==========================================
+
 st.markdown("""
+
 <style>
     /* Nhập Font Lexend */
     @import url('https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;600;800&display=swap');
@@ -68,6 +75,7 @@ st.markdown("""
     div.stButton > button[kind="primary"] { background-color: #1DB954 !important; color: white !important; border-radius: 20px; font-weight: bold; }
 </style>
 
+""", unsafe_allow_html=True)
 # ==========================================
 # KHỞI TẠO DATA
 # ==========================================
