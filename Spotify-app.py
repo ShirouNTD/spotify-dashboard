@@ -566,19 +566,26 @@ with tab_dashboard:
             if df_plot.empty:
                 st.info("Không có dữ liệu để hiển thị biểu đồ.")
             else:
-                # Bảng màu Pastel chuẩn mực (Ngài giữ nguyên màu này cho cả 2 theme)
-                palette = ['#A8D08D', '#BEE5A3', '#D5F9B9', '#FFE699', '#FFD966', '#FFC555', '#FFB347', '#FFA07A']
-                colors = (palette * (len(df_plot) // len(palette) + 1))[:len(df_plot)]
+               # Palette ổn định, không chói, sang trọng cho cả 2 nền
+palette = ['#2E7D32', '#4CAF50', '#81C784', '#A5D6A7', '#DCE775', '#E8F5E9']
 
-                fig_pie = px.pie(
-                    df_plot, 
-                    values=cot_tieu_chi, 
-                    names="Kênh_Spotify", 
-                    hole=0.4, 
-                    title=f"Tỷ Trọng theo {tieu_chi_chon}",
-                    color_discrete_sequence=colors # Palette cũ xịn sò
-                )
-                
+# Vẽ biểu đồ
+fig_pie = px.pie(
+    df_plot, 
+    values=cot_tieu_chi, 
+    names="Kênh_Spotify", 
+    hole=0.4, 
+    color_discrete_sequence=palette
+)
+
+# Layout giữ nguyên, không cần đổi màu chữ theo theme nữa cho đỡ lỗi
+fig_pie.update_layout(
+    paper_bgcolor='rgba(0,0,0,0)', 
+    plot_bgcolor='rgba(0,0,0,0)',
+    showlegend=True,
+    legend=dict(orientation="h", yanchor="top", y=-0.2, xanchor="center", x=0.5),
+    font=dict(color="#555555") # Màu xám trung tính, trên nền sáng hay tối đều ổn
+)
                 # Cấu hình layout: Màu chữ tự động đổi theo theme
                 is_light = st.get_option("theme.base") == "light"
                 fig_pie.update_layout(
