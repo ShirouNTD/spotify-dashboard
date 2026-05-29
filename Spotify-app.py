@@ -108,7 +108,7 @@ tab_dashboard, tab_nhap_kpi, tab_nhap_kq, tab_xoa_data = st.tabs([
 ])
 
 # ==========================================
-# TAB 2: NHẬP MỤC TIÊU (CÓ THỂ CHỈNH SỬA)
+# TAB 2: NHẬP MỤC TIÊU 
 # ==========================================
 with tab_nhap_kpi:
     st.subheader("Thiết Lập Kênh & Mục Tiêu (KPI) Tháng")
@@ -127,7 +127,6 @@ with tab_nhap_kpi:
             
         bkt_kpi = st.checkbox("✅ Kênh đã bật kiếm tiền", value=trang_thai_mac_dinh, key=f"bkt_{lua_chon_kenh_kpi}_{rk_kpi}")
         
-    # LOGIC KIỂM TRA & TẢI KPI CŨ RA ĐỂ GHI ĐÈ
     kpi_cu = df_kpi[(df_kpi["Tháng"] == thang_kpi) & (df_kpi["Kênh_Spotify"] == kenh_kpi)]
     if not kpi_cu.empty and kenh_kpi:
         v_w = int(kpi_cu.iloc[0]["So_Tuan"]) if pd.notna(kpi_cu.iloc[0]["So_Tuan"]) else 4
@@ -161,7 +160,7 @@ with tab_nhap_kpi:
             st.session_state.rk_kpi += 1; st.rerun()
 
 # ==========================================
-# TAB 3: NHẬP KẾT QUẢ (CÓ THỂ GHI ĐÈ)
+# TAB 3: NHẬP KẾT QUẢ
 # ==========================================
 with tab_nhap_kq:
     st.subheader("Cập Nhật Kết Quả Vận Hành Tuần")
@@ -179,7 +178,6 @@ with tab_nhap_kq:
             trang_thai_bkt_kq = lay_trang_thai_kiem_tien(kenh_kq)
             st.caption(f"Trạng thái kênh: {'✅ Đã bật kiếm tiền' if trang_thai_bkt_kq else '⏳ Chưa bật kiếm tiền'}")
 
-    # LOGIC KIỂM TRA & TẢI KẾT QUẢ CŨ RA ĐỂ GHI ĐÈ
     kq_cu = df[(df["Tháng"] == thang_kq) & (df["Tuần"] == tuan_kq) & (df["Kênh_Spotify"] == kenh_kq)]
     if not kq_cu.empty and kenh_kq:
         v_dt_kq = float(kq_cu.iloc[0]["Doanh_Thu_USD"])
@@ -390,21 +388,26 @@ with tab_dashboard:
                     for idx, row in bot_5.iterrows(): st.markdown(f"**🔻 {row['Kênh_Spotify']}** ➔ <span class='text-danger'>{fmt(row[cot_kq])}</span>", unsafe_allow_html=True); st.markdown("")
 
             st.markdown("---")
+            # --- CẬP NHẬT GIAO DIỆN BIỂU ĐỒ DONUT THEO YÊU CẦU ---
             st.markdown("### 🥧 Phân Tích Cơ Cấu & Tỷ Trọng")
             tuan_chon_pie = st.selectbox("📌 Phân tích Tỷ trọng theo thời gian:", ["Tất cả các tuần"] + tuan_co_data, key="loc_tuan_phan_tich")
             df_phan_tich = df_final if tuan_chon_pie == "Tất cả các tuần" else df_final[df_final["Tuần"] == tuan_chon_pie]
             
             if df_phan_tich.empty: st.info(f"Không có dữ liệu kết quả cho {tuan_chon_pie}.")
             else:
-                col_pie, col_bar = st.columns(2)
-                with col_pie:
-                    df_pie = df_phan_tich.groupby("Kênh_Spotify")[cot_kq].sum().reset_index(); df_pie[cot_kq] = df_pie[cot_kq].round(2)
-                    fig_pie = px.pie(df_pie, values=cot_kq, names="Kênh_Spotify", hole=0.4, title=f"Tỷ Trọng {chiso_chon}")
-                    fig_pie.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
-                    st.plotly_chart(fig_pie, use_container_width=True)
-                with col_bar:
-                    df_bar = df_phan_tich.groupby("Kênh_Spotify")[cot_kq].sum().reset_index(); df_bar[cot_kq] = df_bar[cot_kq].round(2)
-                    fig_bar = px.bar(df_bar, x="Kênh_Spotify", y=cot_kq, title=f"So Sánh Lượng {chiso_chon}", text_auto='.2s')
-                    fig_bar.update_traces(marker_color='#1DB954', textfont_size=12, textangle=0, textposition="outside")
-                    fig_bar.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
-                    st.plotly_chart(fig_bar, use_container_width=True)
+                col_pie1, col_pie2 = st.columns(2)
+                
+                # Bảng 1: Donut linh hoạt theo tùy chọn (Doanh thu / Lượt Play / Giờ nghe)
+                with col_pie1:
+                    df_pie1 = df_phan_tich.groupby("Kênh_Spotify")[cot_kq].sum().reset_index()
+                    df_pie1[cot_kq] = df_pie1[cot_kq].round(2)
+                    fig_pie1 = px.pie(df_pie1, values=cot_kq, names="Kênh_Spotify", hole=0.4, title=f"Tỷ Trọng {chiso_chon}")
+                    fig_pie1.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
+                    st.plotly_chart(fig_pie1, use_container_width=True)
+                    
+                # Bảng 2: Donut cố định hiển thị Tổng Lượt Play
+                with col_pie2:
+                    df_pie2 = df_phan_tich.groupby("Kênh_Spotify")["Luot_Play"].sum().reset_index()
+                    fig_pie2 = px.pie(df_pie2, values="Luot_Play", names="Kênh_Spotify", hole=0.4, title=f"Tỷ Trọng Tổng Lượt Play")
+                    fig_pie2.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
+                    st.plotly_chart(fig_pie2, use_container_width=True)
