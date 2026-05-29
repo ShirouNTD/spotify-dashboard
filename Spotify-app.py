@@ -15,9 +15,7 @@ if "rk_kq_thang" not in st.session_state:
 if "rk_kpi" not in st.session_state:
     st.session_state.rk_kpi = 0
 
-# ==========================================
-# CẤU HÌNH GIAO DIỆN CHÍNH
-# ==========================================
+# 1. CẤU HÌNH GIAO DIỆN
 st.set_page_config(page_title="Spotify Performance Hub", layout="wide", page_icon="🎧")
 
 st.markdown("""
@@ -29,47 +27,46 @@ st.markdown("""
         font-family: 'Lexend', sans-serif !important;
     }
 
-    /* MẶC ĐỊNH DARK THEME (Giữ nguyên overlay kính xanh) */
+    /* 🟢 DÙNG BIẾN NATIVE CỦA STREAMLIT ĐỂ KHÔNG BAO GIỜ BỊ SAI NỀN */
     [data-testid="stAppViewContainer"] { 
-        background-color: #0E1117 !important; 
-        background-image: linear-gradient(rgba(29, 185, 84, 0.07), rgba(29, 185, 84, 0.07)) !important;
+        background-color: var(--background-color) !important; 
     }
     [data-testid="stSidebar"] { 
-        background-color: #262730 !important;
-        background-image: linear-gradient(rgba(29, 185, 84, 0.12), rgba(29, 185, 84, 0.12)) !important;
+        background-color: var(--secondary-background-color) !important;
     }
     .spotify-card {
-        background-color: #262730 !important; 
-        background-image: linear-gradient(rgba(29, 185, 84, 0.03), rgba(29, 185, 84, 0.03)) !important;
-        border: 1px solid rgba(29, 185, 84, 0.2) !important; 
+        background-color: var(--secondary-background-color) !important; 
         border-radius: 12px; padding: 15px; height: 100%; 
         box-shadow: 0 4px 10px rgba(0,0,0,0.05); transition: transform 0.2s, box-shadow 0.2s;
     }
-    p, h1, h2, h3, h4, h5, h6, li, label, .stMarkdown, .stText, div[data-testid="stMarkdownContainer"] { 
-        color: #FAFAFA !important; 
+
+    /* 🌑 DARK THEME: Bật overlay kính xanh */
+    @media (prefers-color-scheme: dark) {
+        [data-testid="stAppViewContainer"] { background-image: linear-gradient(rgba(29, 185, 84, 0.07), rgba(29, 185, 84, 0.07)) !important; }
+        [data-testid="stSidebar"] { background-image: linear-gradient(rgba(29, 185, 84, 0.12), rgba(29, 185, 84, 0.12)) !important; }
+        .spotify-card {
+            background-image: linear-gradient(rgba(29, 185, 84, 0.03), rgba(29, 185, 84, 0.03)) !important;
+            border: 1px solid rgba(29, 185, 84, 0.2) !important; 
+        }
+        p, h1, h2, h3, h4, h5, h6, li, label, .stMarkdown, .stText, div[data-testid="stMarkdownContainer"] { color: #FAFAFA !important; }
+        .spotify-label { color: #FAFAFA !important; opacity: 0.7; }
+        .spotify-value { color: #FAFAFA !important; }
     }
 
-    /* LIGHT THEME: Nền trắng tinh khôi, dập tắt mọi hiệu ứng gradient màu xanh */
+    /* ☀️ LIGHT THEME: Tắt sạch overlay, nền trắng, chữ xanh lá đậm */
     @media (prefers-color-scheme: light) {
-        [data-testid="stAppViewContainer"] { 
-            background: #FFFFFF !important; 
-        }
-        [data-testid="stSidebar"] { 
-            background: #F8F9FA !important; 
-        }
+        [data-testid="stAppViewContainer"] { background-image: none !important; }
+        [data-testid="stSidebar"] { background-image: none !important; }
         .spotify-card {
-            background: #FFFFFF !important;
-            border: 1px solid #E0E0E0 !important;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05) !important;
+            background-image: none !important;
+            border: 1px solid #E0E0E0 !important; 
         }
-        p, h1, h2, h3, h4, h5, h6, li, label, .stMarkdown, .stText, div[data-testid="stMarkdownContainer"] { 
-            color: #1B5E20 !important; 
-        }
+        p, h1, h2, h3, h4, h5, h6, li, label, .stMarkdown, .stText, div[data-testid="stMarkdownContainer"] { color: #1B5E20 !important; }
         .spotify-label { color: #1B5E20 !important; opacity: 0.7; }
         .spotify-value { color: #1B5E20 !important; }
     }
 
-    /* CSS Chung không ảnh hưởng bởi Theme */
+    /* ⚙️ CSS CHUNG (Cho cả 2 Theme) */
     [data-testid="stHeader"] { background-color: transparent !important; }
     .spotify-card:hover { transform: translateY(-3px); box-shadow: 0 6px 15px rgba(29,185,84,0.15) !important; }
     .spotify-label { font-size: 13px; font-weight: 600; text-transform: uppercase; margin-bottom: 5px; }
@@ -84,7 +81,7 @@ st.markdown("""
     div.stButton > button[kind="primary"]:hover { background-color: #1ED760 !important; color: white !important; }
     div.stButton > button * { color: white !important; }
 </style>
-""", unsafe_allow_html=True) 
+""", unsafe_allow_html=True)
 
 # ==========================================
 # KHỞI TẠO DATA
