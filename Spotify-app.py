@@ -20,66 +20,52 @@ if "rk_kpi" not in st.session_state:
 # ==========================================
 st.set_page_config(page_title="Spotify Performance Hub", layout="wide", page_icon="🎧")
 
-# Dùng Python để ép màu tuyệt đối (Tránh lỗi xung đột của Streamlit)
-is_light = st.get_option("theme.base") == "light"
-
-bg_main = "#FFFFFF" if is_light else "#0E1117"
-bg_sidebar = "#F8F9FA" if is_light else "#262730"
-text_c = "#1B5E20" if is_light else "#FAFAFA"
-card_bg = "#FFFFFF" if is_light else "#262730"
-border_card = "1px solid #E0E0E0" if is_light else "1px solid rgba(29, 185, 84, 0.2)"
-
-# Lớp kính xanh (Chỉ bật khi ở Dark Mode)
-overlay_main = "none" if is_light else "linear-gradient(rgba(29, 185, 84, 0.07), rgba(29, 185, 84, 0.07))"
-overlay_sidebar = "none" if is_light else "linear-gradient(rgba(29, 185, 84, 0.12), rgba(29, 185, 84, 0.12))"
-overlay_card = "none" if is_light else "linear-gradient(rgba(29, 185, 84, 0.03), rgba(29, 185, 84, 0.03))"
-
-st.markdown(f"""
+st.markdown("""
 <style>
 /* Nhập Font Lexend từ Google Fonts */
     @import url('https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;600;800&display=swap');
     
-    html, body, [class*="css"], [class*="st-"], div, span, p, h1, h2, h3, h4, h5, h6 {{
+    html, body, [class*="css"], [class*="st-"], div, span, p, h1, h2, h3, h4, h5, h6 {
         font-family: 'Lexend', sans-serif !important;
-    }}
+    }
 
-    [data-testid="stAppViewContainer"] {{ 
-        background-color: {bg_main} !important; 
-        background-image: {overlay_main} !important;
-    }}
-    [data-testid="stSidebar"] {{ 
-        background-color: {bg_sidebar} !important;
-        background-image: {overlay_sidebar} !important;
-    }}
-    .spotify-card {{
-        background-color: {card_bg} !important; 
-        background-image: {overlay_card} !important;
-        border: {border_card} !important; 
+    /* Giao phó toàn bộ màu sắc cho biến mặc định của Streamlit */
+    [data-testid="stAppViewContainer"] { 
+        background-color: var(--background-color) !important; 
+        background-image: none !important;
+    }
+    [data-testid="stSidebar"] { 
+        background-color: var(--secondary-background-color) !important;
+        background-image: none !important;
+    }
+    .spotify-card {
+        background-color: var(--secondary-background-color) !important; 
+        border: 1px solid rgba(128, 128, 128, 0.2) !important; 
         border-radius: 12px; padding: 15px; height: 100%; 
         box-shadow: 0 4px 10px rgba(0,0,0,0.05); transition: transform 0.2s, box-shadow 0.2s;
-    }}
+    }
     
-    /* Ép màu chữ cứng cho mọi thành phần */
-    p, h1, h2, h3, h4, h5, h6, li, label, .stMarkdown, .stText, div[data-testid="stMarkdownContainer"] {{ 
-        color: {text_c} !important; 
-    }}
-    .spotify-label {{ color: {text_c} !important; opacity: 0.7; }}
-    .spotify-value {{ color: {text_c} !important; }}
+    /* Chữ tự động đổi màu theo Theme */
+    p, h1, h2, h3, h4, h5, h6, li, label, .stMarkdown, .stText, div[data-testid="stMarkdownContainer"] { 
+        color: var(--text-color) !important; 
+    }
+    .spotify-label { color: var(--text-color) !important; opacity: 0.7; }
+    .spotify-value { color: var(--text-color) !important; }
 
-    /* CSS Chung không ảnh hưởng bởi Theme */
-    [data-testid="stHeader"] {{ background-color: transparent !important; }}
-    .spotify-card:hover {{ transform: translateY(-3px); box-shadow: 0 6px 15px rgba(29,185,84,0.15) !important; }}
-    .spotify-label {{ font-size: 13px; font-weight: 600; text-transform: uppercase; margin-bottom: 5px; }}
-    .spotify-value {{ font-size: 26px; font-weight: 900; margin-bottom: 10px; }}
+    /* CSS Chung (Cố định, không ảnh hưởng bởi Theme) */
+    [data-testid="stHeader"] { background-color: transparent !important; }
+    .spotify-card:hover { transform: translateY(-3px); box-shadow: 0 6px 15px rgba(29,185,84,0.15) !important; }
+    .spotify-label { font-size: 13px; font-weight: 600; text-transform: uppercase; margin-bottom: 5px; }
+    .spotify-value { font-size: 26px; font-weight: 900; margin-bottom: 10px; }
     
-    .badge-green {{ background-color: rgba(29, 185, 84, 0.15) !important; color: #1DB954 !important; padding: 4px 8px; border-radius: 6px; font-size: 13px; font-weight: 800; border: 1px solid rgba(29, 185, 84, 0.3); }}
-    .badge-red {{ background-color: rgba(226, 33, 52, 0.15) !important; color: #E22134 !important; padding: 4px 8px; border-radius: 6px; font-size: 13px; font-weight: 800; border: 1px solid rgba(226, 33, 52, 0.3); }}
-    .text-success {{ color: #1DB954 !important; font-size: 18px; font-weight: bold; }}
-    .text-danger {{ color: #E22134 !important; font-size: 18px; font-weight: bold; }}
+    .badge-green { background-color: rgba(29, 185, 84, 0.15) !important; color: #1DB954 !important; padding: 4px 8px; border-radius: 6px; font-size: 13px; font-weight: 800; border: 1px solid rgba(29, 185, 84, 0.3); }
+    .badge-red { background-color: rgba(226, 33, 52, 0.15) !important; color: #E22134 !important; padding: 4px 8px; border-radius: 6px; font-size: 13px; font-weight: 800; border: 1px solid rgba(226, 33, 52, 0.3); }
+    .text-success { color: #1DB954 !important; font-size: 18px; font-weight: bold; }
+    .text-danger { color: #E22134 !important; font-size: 18px; font-weight: bold; }
     
-    div.stButton > button[kind="primary"] {{ background-color: #1DB954 !important; color: white !important; border: none; border-radius: 20px; font-weight: bold; }}
-    div.stButton > button[kind="primary"]:hover {{ background-color: #1ED760 !important; color: white !important; }}
-    div.stButton > button * {{ color: white !important; }}
+    div.stButton > button[kind="primary"] { background-color: #1DB954 !important; color: white !important; border: none; border-radius: 20px; font-weight: bold; }
+    div.stButton > button[kind="primary"]:hover { background-color: #1ED760 !important; color: white !important; }
+    div.stButton > button * { color: white !important; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -440,8 +426,37 @@ with tab_dashboard:
                 fig_vs.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
                 st.plotly_chart(fig_vs, use_container_width=True)
 
-                # --- 🍩 3. BIỂU ĐỒ DONUT (BÁO CÁO TUẦN) ---
-                st.markdown("### 🍩 3. Phân Tích Cơ Cấu & Tỷ Trọng (Tuần)")
+                # --- 🏆 3. BẢNG XẾP HẠNG TOP KÊNH TĂNG TRƯỞNG (TUẦN) ---
+                st.markdown(f"### 🏆 3. Top Kênh Tăng Trưởng Theo {chiso_chon}")
+                
+                # Nhóm dữ liệu kết quả và KPI dựa theo chỉ số đang chọn ở biểu đồ trên
+                df_top_w = df_final.groupby("Kênh_Spotify")[cot_kq].sum().reset_index()
+                df_kpi_w = df_kpi_filter.groupby("Kênh_Spotify")["Muc_Tieu_Tuan_Hien_Tai"].sum().reset_index()
+                
+                # Gộp và tính % Tăng trưởng (% Hoàn thành KPI Tuần)
+                df_top_w = df_top_w.merge(df_kpi_w, on="Kênh_Spotify", how="left")
+                df_top_w["% Tăng Trưởng"] = (df_top_w[cot_kq] / df_top_w["Muc_Tieu_Tuan_Hien_Tai"] * 100).fillna(0)
+                
+                # Lấy Top 10 Kênh (Sắp xếp tăng dần để vẽ bar ngang từ trên xuống)
+                df_top_w = df_top_w.sort_values(by="% Tăng Trưởng", ascending=True).tail(10)
+                
+                fig_top_w = px.bar(
+                    df_top_w, x="% Tăng Trưởng", y="Kênh_Spotify", orientation='h',
+                    color="% Tăng Trưởng", color_continuous_scale="Greens",
+                    text_auto='.1f'
+                )
+                
+                is_light = st.get_option("theme.base") == "light"
+                fig_top_w.update_layout(
+                    paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)',
+                    font=dict(color="#1B5E20" if is_light else "#E0E0E0"),
+                    xaxis_title=f"% Hoàn thành KPI {chiso_chon} Tuần", yaxis_title="",
+                    coloraxis_showscale=False, margin=dict(l=0, r=0, t=10, b=0)
+                )
+                st.plotly_chart(fig_top_w, use_container_width=True)
+
+                # --- 🍩 4. BIỂU ĐỒ DONUT (BÁO CÁO TUẦN) ---
+                st.markdown("### 🍩 4. Phân Tích Cơ Cấu & Tỷ Trọng (Tuần)")
                 
                 col_sl1_w, col_sl2_w = st.columns(2)
                 with col_sl1_w:
@@ -532,8 +547,39 @@ with tab_dashboard:
                 fig_vs_m.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
                 st.plotly_chart(fig_vs_m, use_container_width=True)
 
-                # --- 🍩 3. BIỂU ĐỒ DONUT (BÁO CÁO THÁNG) ---
-                st.markdown("### 🍩 3. Phân Tích Cơ Cấu & Tỷ Trọng (Tháng Final)")
+                # --- 🏆 3. BẢNG XẾP HẠNG DOANH THU (THÁNG) ---
+                st.markdown("### 🏆 3. Bảng Xếp Hạng Kênh Theo Doanh Thu (Tháng Final)")
+                
+                # Tùy chọn xem Top cao hay thấp bằng nút bấm
+                top_k_m = st.radio("Lọc xếp hạng:", ["🔥 Top Doanh Thu Cao Nhất", "⚠️ Top Doanh Thu Thấp Nhất"], horizontal=True, key="top_m")
+                
+                df_top_m = df_final_m.groupby("Kênh_Spotify")["Doanh_Thu_USD"].sum().reset_index()
+                
+                if top_k_m == "🔥 Top Doanh Thu Cao Nhất":
+                    df_top_m = df_top_m.sort_values(by="Doanh_Thu_USD", ascending=True).tail(10)
+                    c_scale = "Greens"
+                else:
+                    # Sort ngược lại để vẽ màu đỏ báo động
+                    df_top_m = df_top_m.sort_values(by="Doanh_Thu_USD", ascending=False).tail(10)
+                    c_scale = "Reds"
+                    
+                fig_top_m = px.bar(
+                    df_top_m, x="Doanh_Thu_USD", y="Kênh_Spotify", orientation='h',
+                    color="Doanh_Thu_USD", color_continuous_scale=c_scale,
+                    text_auto='.2s'
+                )
+                
+                is_light = st.get_option("theme.base") == "light"
+                fig_top_m.update_layout(
+                    paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)',
+                    font=dict(color="#1B5E20" if is_light else "#E0E0E0"),
+                    xaxis_title="Doanh Thu (USD)", yaxis_title="",
+                    coloraxis_showscale=False, margin=dict(l=0, r=0, t=10, b=0)
+                )
+                st.plotly_chart(fig_top_m, use_container_width=True)
+
+                # --- 🍩 4. BIỂU ĐỒ DONUT (BÁO CÁO THÁNG) ---
+                st.markdown("### 🍩 4. Phân Tích Cơ Cấu & Tỷ Trọng (Tháng Final)")
                 
                 col_sl1_m, col_sl2_m = st.columns(2)
                 with col_sl1_m:
