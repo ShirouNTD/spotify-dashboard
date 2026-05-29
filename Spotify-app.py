@@ -199,7 +199,7 @@ with tab_dashboard:
     if df.empty:
         st.info("Hệ thống chưa có dữ liệu kết quả nào được ghi nhận. Vui lòng cập nhật.")
     else:
-        # BỘ LỌC TỔNG
+        # BỘ LỌC TỔNG (THÊM BỘ LỌC BẬT KIẾM TIỀN)
         col_loc1, col_loc2, col_loc3 = st.columns([1, 2, 1])
         with col_loc1:
             thang_hien_co = list(df["Tháng"].unique())
@@ -245,24 +245,30 @@ with tab_dashboard:
             target_gio = df_kpi_filter["KPI_So_Gio"].sum()
             target_tap = df_kpi_filter["KPI_So_Tap"].sum()
 
-            # --- SCORECARDS ---
-            st.markdown("### 🏆 CHỈ SỐ KẾT QUẢ vs MỤC TIÊU")
+            # --- SCORECARDS (ĐÃ ĐỔI DELTA THÀNH % HOÀN THÀNH KPI) ---
+            st.markdown("### 🏆 CHỈ SỐ KẾT QUẢ TỔNG QUAN")
             
             tong_so_kenh = len(kenh_hien_thi_cuoi_cung)
             so_kenh_bkt = sum([1 for k in kenh_hien_thi_cuoi_cung if lay_trang_thai_kiem_tien(k)])
             
+            # Tính % hoàn thành KPI
+            dt_pct = (df_final['Doanh_Thu_USD'].sum() / target_dt * 100) if target_dt > 0 else 0
+            play_pct = (df_final['Luot_Play'].sum() / target_play * 100) if target_play > 0 else 0
+            gio_pct = (df_final['So_Gio_Nghe'].sum() / target_gio * 100) if target_gio > 0 else 0
+            tap_pct = (df_final['So_Tap_Upload'].sum() / target_tap * 100) if target_tap > 0 else 0
+            
             sc1, sc2, sc3, sc4, sc5, sc6 = st.columns(6)
-            sc1.metric("🏢 Tổng Kênh Đang Lọc", tong_so_kenh)
-            sc2.metric("💸 Kênh Bật Kiếm Tiền", so_kenh_bkt)
-            sc3.metric("💰 Doanh Thu", f"${df_final['Doanh_Thu_USD'].sum():,.0f}", delta=f"${df_final['Doanh_Thu_USD'].sum() - target_dt:,.0f} vs KPI")
-            sc4.metric("▶️ Lượt Play", f"{df_final['Luot_Play'].sum():,.0f}", delta=f"{df_final['Luot_Play'].sum() - target_play:,.0f} vs KPI")
-            sc5.metric("⏱️ Giờ Nghe", f"{df_final['So_Gio_Nghe'].sum():,.0f}h", delta=f"{df_final['So_Gio_Nghe'].sum() - target_gio:,.0f} vs KPI")
-            sc6.metric("🎙️ Tập Upload", f"{df_final['So_Tap_Upload'].sum():,.0f}", delta=f"{df_final['So_Tap_Upload'].sum() - target_tap:,.0f} vs KPI")
+            sc1.metric("🏢 Tổng Kênh", tong_so_kenh)
+            sc2.metric("💸 Đã Bật Kiếm Tiền", so_kenh_bkt)
+            sc3.metric("💰 Doanh Thu", f"${df_final['Doanh_Thu_USD'].sum():,.0f}", delta=f"{dt_pct:.1f}% KPI", delta_color="off")
+            sc4.metric("▶️ Lượt Play", f"{df_final['Luot_Play'].sum():,.0f}", delta=f"{play_pct:.1f}% KPI", delta_color="off")
+            sc5.metric("⏱️ Giờ Nghe", f"{df_final['So_Gio_Nghe'].sum():,.0f}h", delta=f"{gio_pct:.1f}% KPI", delta_color="off")
+            sc6.metric("🎙️ Tập Upload", f"{df_final['So_Tap_Upload'].sum():,.0f}", delta=f"{tap_pct:.1f}% KPI", delta_color="off")
             
             st.markdown("---")
             
             # --- CHỌN CHỈ SỐ CHO TOÀN BỘ BIỂU ĐỒ & RANKING ---
-            st.markdown("### 🚀 Phân Tích Tiến Độ & Hiệu Suất Theo Chỉ Số")
+            st.markdown("### 🚀 Phân Tích Tiến Độ & Bảng Xếp Hạng Kênh")
             chiso_chon = st.radio("🛠️ Chọn chỉ số để xem phân tích:", 
                                   ["Doanh Thu", "Lượt Play", "Giờ Nghe"], horizontal=True)
             
@@ -318,56 +324,33 @@ with tab_dashboard:
 
             st.markdown("---")
 
-            # --- 2. BẢNG XẾP HẠNG TOP 5: TĂNG TRƯỞNG WOW (WEEK-OVER-WEEK) ---
-            st.markdown(f"### 🏅 Top 5 Kênh Biến Động Hiệu Suất ({chiso_chon})")
+            # --- 2. BẢNG XẾP HẠNG TOP 5: CAO NHẤT / THẤP NHẤT TỔNG ĐỐI (ABSOLUTE) ---
+            st.markdown(f"### 🏅 Bảng Xếp Hạng Kênh Theo {chiso_chon}")
             
             tuan_co_data = list(df_final["Tuần"].unique())
             tuan_co_data.sort(key=lambda x: int(x.replace("Tuần ", "")) if "Tuần " in x else 0)
             
             if not tuan_co_data:
-                st.info("Chưa có dữ liệu tuần để so sánh biến động.")
+                st.info("Chưa có dữ liệu tuần để xếp hạng.")
             else:
-                tuan_chon_rank = st.selectbox("📌 Chọn Tuần xem biến động (Hệ thống sẽ tự động so sánh với Tuần liền trước):", tuan_co_data, key="loc_tuan_rank")
+                tuan_chon_rank = st.selectbox("📌 Chọn thời gian để xếp hạng:", ["Tất cả các tuần"] + tuan_co_data, key="loc_tuan_rank")
                 
-                # --- THUẬT TOÁN TÌM TUẦN TRƯỚC XUYÊN THÁNG ---
-                # Quét trên toàn bộ Data (không bị chặn bởi bộ lọc Tháng hiện tại)
-                df_all_months = df[df["Kênh_Spotify"].isin(kenh_hien_thi_cuoi_cung)]
-                all_weeks = list(df_all_months["Tuần"].unique())
-                all_weeks.sort(key=lambda x: int(x.replace("Tuần ", "")) if "Tuần " in x else 0)
-                
-                tuan_truoc_str = None
-                if tuan_chon_rank in all_weeks:
-                    curr_idx = all_weeks.index(tuan_chon_rank)
-                    if curr_idx > 0:
-                        tuan_truoc_str = all_weeks[curr_idx - 1]
-                
-                # Hiển thị thông báo minh bạch cho sếp
-                if tuan_truoc_str is None:
-                    st.info(f"💡 **{tuan_chon_rank}** là tuần đầu tiên được ghi nhận của nhóm kênh này. Không có dữ liệu tuần trước đó để so sánh (Tính là tăng trưởng mới 100%).")
+                # Gom dữ liệu theo thời gian chọn
+                if tuan_chon_rank == "Tất cả các tuần":
+                    df_rank = df_final.groupby("Kênh_Spotify")[cot_kq].sum().reset_index()
                 else:
-                    st.success(f"✅ Đang đối chiếu hiệu suất của **{tuan_chon_rank}** với tuần liền trước là **{tuan_truoc_str}** (Bao gồm cả dữ liệu tháng trước nếu giao tháng).")
+                    df_rank = df_final[df_final["Tuần"] == tuan_chon_rank].groupby("Kênh_Spotify")[cot_kq].sum().reset_index()
                 
-                # Tính toán
-                df_curr = df_final[df_final["Tuần"] == tuan_chon_rank].groupby("Kênh_Spotify")[cot_kq].sum().reset_index()
+                # Xếp hạng từ cao xuống thấp
+                df_rank = df_rank.sort_values(by=cot_kq, ascending=False).reset_index(drop=True)
                 
-                if tuan_truoc_str:
-                    # Lấy dữ liệu Tuần trước từ bộ Data toàn thời gian (Xuyên tháng)
-                    df_prev = df_all_months[df_all_months["Tuần"] == tuan_truoc_str].groupby("Kênh_Spotify")[cot_kq].sum().reset_index()
+                # Cắt Top 5 và Bot 5
+                top_5 = df_rank.head(5)
+                # Đảm bảo không lấy trùng kênh từ top 5 vào bot 5
+                if len(df_rank) <= 5:
+                    bot_5 = pd.DataFrame(columns=["Kênh_Spotify", cot_kq]) # Trống nếu ít hơn hoặc bằng 5 kênh
                 else:
-                    df_prev = pd.DataFrame(columns=["Kênh_Spotify", cot_kq])
-                
-                df_wow = pd.merge(df_curr, df_prev, on="Kênh_Spotify", how="outer", suffixes=('_curr', '_prev')).fillna(0)
-                
-                def calc_growth(curr, prev):
-                    if prev == 0 and curr == 0: return 0.0
-                    if prev == 0 and curr > 0: return 100.0  
-                    return ((curr - prev) / prev) * 100.0
-                    
-                df_wow["Growth"] = df_wow.apply(lambda row: calc_growth(row[f"{cot_kq}_curr"], row[f"{cot_kq}_prev"]), axis=1)
-                df_wow = df_wow.sort_values(by="Growth", ascending=False).reset_index(drop=True)
-                
-                top_5 = df_wow.head(5)
-                bot_5 = df_wow[~df_wow["Kênh_Spotify"].isin(top_5["Kênh_Spotify"])].tail(5).sort_values(by="Growth", ascending=True)
+                    bot_5 = df_rank[~df_rank["Kênh_Spotify"].isin(top_5["Kênh_Spotify"])].tail(5).sort_values(by=cot_kq, ascending=True)
                 
                 col_top, col_bot = st.columns(2)
                 
@@ -377,27 +360,23 @@ with tab_dashboard:
                     return f"{val:,.0f}"
 
                 with col_top:
-                    st.success("🚀 **TOP 5 KÊNH TĂNG TRƯỞNG MẠNH NHẤT (WoW)**")
+                    st.success(f"🌟 **TOP 5 KÊNH ĐẠT {chiso_chon.upper()} CAO NHẤT**")
                     if top_5.empty:
                         st.write("Không có dữ liệu.")
                     else:
                         for idx, row in top_5.iterrows():
-                            g = row['Growth']
-                            color = "#1DB954" if g > 0 else ("#FF5722" if g < 0 else "#888888")
-                            icon = "📈" if g > 0 else ("📉" if g < 0 else "➖")
-                            st.markdown(f"**#{idx+1}. {row['Kênh_Spotify']}** ➔ <span style='color:{color}; font-size:18px; font-weight:bold;'>{g:+.1f}% {icon}</span><br>*(Tuần này: {fmt(row[f'{cot_kq}_curr'])} | Tuần trước: {fmt(row[f'{cot_kq}_prev'])})*", unsafe_allow_html=True)
+                            val = row[cot_kq]
+                            st.markdown(f"**#{idx+1}. {row['Kênh_Spotify']}** ➔ <span style='color:#1DB954; font-size:18px; font-weight:bold;'>{fmt(val)}</span>", unsafe_allow_html=True)
                             st.markdown("")
                             
                 with col_bot:
-                    st.error("⚠️ **TOP 5 KÊNH SUY GIẢM / CHẬM LẠI (WoW)**")
+                    st.error(f"⚠️ **TOP 5 KÊNH ĐẠT {chiso_chon.upper()} THẤP NHẤT**")
                     if bot_5.empty:
-                        st.write("Không có kênh nào trong danh sách này (Tất cả kênh đã lọt vào bảng Top 5 Tốt).")
+                        st.write("Không có kênh nào trong danh sách này (Tất cả kênh đã lọt vào bảng Top 5 Cao).")
                     else:
                         for idx, row in bot_5.iterrows():
-                            g = row['Growth']
-                            color = "#1DB954" if g > 0 else ("#FF5722" if g < 0 else "#888888")
-                            icon = "📈" if g > 0 else ("📉" if g < 0 else "➖")
-                            st.markdown(f"**🔻 {row['Kênh_Spotify']}** ➔ <span style='color:{color}; font-size:18px; font-weight:bold;'>{g:+.1f}% {icon}</span><br>*(Tuần này: {fmt(row[f'{cot_kq}_curr'])} | Tuần trước: {fmt(row[f'{cot_kq}_prev'])})*", unsafe_allow_html=True)
+                            val = row[cot_kq]
+                            st.markdown(f"**🔻 {row['Kênh_Spotify']}** ➔ <span style='color:#FF5722; font-size:18px; font-weight:bold;'>{fmt(val)}</span>", unsafe_allow_html=True)
                             st.markdown("")
 
             st.markdown("---")
