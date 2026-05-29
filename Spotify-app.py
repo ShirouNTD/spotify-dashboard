@@ -487,19 +487,6 @@ with tab_dashboard:
             # --- CẬP NHẬT GIAO DIỆN BIỂU ĐỒ DONUT MỚI ---
             st.markdown("### 🍩 3. Phân Tích Cơ Cấu & Tỷ Trọng")
             
-            # Slicer tùy chỉnh mới
-            col_sl1, col_sl2 = st.columns(2)
-            with col_sl1:
-                # Map tên hiển thị với tên cột thực tế
-                tieu_chi_map = {"Doanh thu": "Doanh_Thu_USD", "Lượt Play": "Luot_Play", "Giờ nghe": "Gio_Nghe"}
-                tieu_chi_chon = st.selectbox("Tiêu chí so sánh:", list(tieu_chi_map.keys()))
-                cot_tieu_chi = tieu_chi_map[tieu_chi_chon]
-            with col_sl2:
-                kenh_chon = st.multiselect("Chọn kênh:", options=df_final["Kênh_Spotify"].unique(), default=df_final["Kênh_Spotify"].unique())
-
-            # --- CẬP NHẬT GIAO DIỆN BIỂU ĐỒ DONUT MỚI ---
-            st.markdown("### 🍩 Phân Tích Cơ Cấu & Tỷ Trọng")
-            
             # Khởi tạo dữ liệu nguồn (đảm bảo không bao giờ lỗi biến)
             df_phan_tich = df_final if "df_final" in locals() else df_master
             
