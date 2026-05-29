@@ -539,10 +539,9 @@ with tab_dashboard:
             # --- CẬP NHẬT GIAO DIỆN BIỂU ĐỒ DONUT MỚI ---
             st.markdown("### 🍩 3. Phân Tích Cơ Cấu & Tỷ Trọng")
             
-            # Khởi tạo dữ liệu nguồn (đảm bảo không bao giờ lỗi biến)
+            # Khởi tạo dữ liệu
             df_phan_tich = df_final if "df_final" in locals() else df_master
             
-            # Slicer tùy chỉnh với 'key' riêng biệt để không bao giờ bị Duplicate
             col_sl1, col_sl2 = st.columns(2)
             with col_sl1:
                 tieu_chi_map = {"Doanh thu": "Doanh_Thu_USD", "Lượt Play": "Luot_Play", "Giờ nghe": "Gio_Nghe"}
@@ -552,48 +551,35 @@ with tab_dashboard:
                 kenh_all = df_phan_tich["Kênh_Spotify"].unique()
                 kenh_chon = st.multiselect("Chọn kênh:", options=kenh_all, default=kenh_all, key="kenh_chart_final")
 
-            # Lọc dữ liệu
+            # Lọc và nhóm dữ liệu
             df_pie = df_phan_tich[df_phan_tich["Kênh_Spotify"].isin(kenh_chon)]
             
             if df_pie.empty: 
                 st.info("Vui lòng chọn kênh để hiển thị biểu đồ.")
             else:
-                df_plot = df_pie.groupby("Kênh_Spotify")[cot_tieu_chi].sum().reset_index()
+                df_plot = df_pie.groupby("Kênh_Spotify")[cot_tieu_chi].sum().sort_values(ascending=False).reset_index()
                 
-            # --- VẼ DONUT: GIỮ NGUYÊN MÀU PASTEL CŨ ---
-            df_plot = df_pie.groupby("Kênh_Spotify")[cot_tieu_chi].sum().sort_values(ascending=False).reset_index()
+                # Palette xanh rừng sang trọng
+                palette = ['#2E7D32', '#4CAF50', '#81C784', '#A5D6A7', '#DCE775', '#E8F5E9']
+                colors = (palette * (len(df_plot) // len(palette) + 1))[:len(df_plot)]
 
-            if df_plot.empty:
-                st.info("Không có dữ liệu để hiển thị biểu đồ.")
-            else:
-               # Palette ổn định, không chói, sang trọng cho cả 2 nền
-palette = ['#2E7D32', '#4CAF50', '#81C784', '#A5D6A7', '#DCE775', '#E8F5E9']
-
-# Vẽ biểu đồ
-fig_pie = px.pie(
-    df_plot, 
-    values=cot_tieu_chi, 
-    names="Kênh_Spotify", 
-    hole=0.4, 
-    color_discrete_sequence=palette
-)
-
-# Layout giữ nguyên, không cần đổi màu chữ theo theme nữa cho đỡ lỗi
-fig_pie.update_layout(
-    paper_bgcolor='rgba(0,0,0,0)', 
-    plot_bgcolor='rgba(0,0,0,0)',
-    showlegend=True,
-    legend=dict(orientation="h", yanchor="top", y=-0.2, xanchor="center", x=0.5),
-    font=dict(color="#555555") # Màu xám trung tính, trên nền sáng hay tối đều ổn
-)
-                # Cấu hình layout: Màu chữ tự động đổi theo theme
+                # Vẽ biểu đồ
+                fig_pie = px.pie(
+                    df_plot, 
+                    values=cot_tieu_chi, 
+                    names="Kênh_Spotify", 
+                    hole=0.4, 
+                    title=f"Tỷ Trọng theo {tieu_chi_chon}",
+                    color_discrete_sequence=colors
+                )
+                
+                # Cấu hình Layout (Đã dọn dẹp)
                 is_light = st.get_option("theme.base") == "light"
                 fig_pie.update_layout(
                     paper_bgcolor='rgba(0,0,0,0)', 
                     plot_bgcolor='rgba(0,0,0,0)',
                     showlegend=True,
                     legend=dict(orientation="h", yanchor="top", y=-0.2, xanchor="center", x=0.5),
-                    # Chữ xanh đậm nếu light, chữ trắng/xám nếu dark
                     font=dict(color="#1B5E20" if is_light else "#E0E0E0") 
                 )
                 
