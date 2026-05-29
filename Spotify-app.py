@@ -5,6 +5,10 @@ import plotly.graph_objects as go
 import os
 from datetime import datetime
 import numpy as np
+if "rk_kq" not in st.session_state:
+    st.session_state.rk_kq = 0
+if "rk_kpi" not in st.session_state:
+    st.session_state.rk_kpi = 0
 
 # 1. CẤU HÌNH GIAO DIỆN
 st.set_page_config(page_title="Spotify Performance Hub", layout="wide", page_icon="🎧")
