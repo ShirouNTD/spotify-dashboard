@@ -537,7 +537,7 @@ with tab_dashboard:
                     for idx, row in bot_5.iterrows(): st.markdown(f"**🔻 {row['Kênh_Spotify']}** ➔ <span class='text-danger'>{fmt(row[cot_kq])}</span>", unsafe_allow_html=True); st.markdown("")
 
             # --- CẬP NHẬT GIAO DIỆN BIỂU ĐỒ DONUT MỚI ---
-            st.markdown("### 🍩 3. Phân Tích Cơ Cấu & Tỷ Trọng")
+            st.markdown("### 🍩 4. Phân Tích Cơ Cấu & Tỷ Trọng")
             
             # Khởi tạo dữ liệu
             df_phan_tich = df_final if "df_final" in locals() else df_master
