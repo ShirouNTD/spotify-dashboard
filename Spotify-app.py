@@ -241,29 +241,30 @@ with tab_master:
             return val
         return format_val
 
-   # 4. Hiển thị bảng (Xử lý ẩn cột So_Tuan và làm sạch index)
+  # 4. Hiển thị bảng dứt điểm
+    # Xử lý dọn dẹp dữ liệu trước khi đưa vào Styler
+    df_clean = df_display.copy()
     
-    # Tạo danh sách các cột cần ẩn
-    cols_to_hide = ["So_Tuan"]
-    # Kiểm tra nếu trong df_display có tồn tại cột 'index' thì thêm vào để ẩn luôn
-    if "index" in df_display.columns:
-        cols_to_hide.append("index")
+    # Loại bỏ hoàn toàn cột thừa khỏi dataframe trước khi vẽ
+    cols_to_drop = ["So_Tuan", "index"]
+    for col in cols_to_drop:
+        if col in df_clean.columns:
+            df_clean = df_clean.drop(columns=[col])
 
+    # Vẽ bảng
     st.dataframe(
-        df_display.style
+        df_clean.style
         .format({
             "KPI Doanh Thu": "${:,.0f}",
             "Kết quả tháng": "${:,.0f}",
             "% Hoàn thành tháng": "{:.0f}%",
-            **{col: "${:,.0f}" for col in df_display.columns if "KPI Tuần" in col},
-            **{col: "${:,.0f}" for col in df_display.columns if "Kết quả Tuần" in col},
-            **{col: "{:.0f}%" for col in df_display.columns if "% Tuần" in col}
+            **{col: "${:,.0f}" for col in df_clean.columns if "KPI Tuần" in col},
+            **{col: "${:,.0f}" for col in df_clean.columns if "Kết quả Tuần" in col},
+            **{col: "{:.0f}%" for col in df_clean.columns if "% Tuần" in col}
         })
-        .hide(axis="index") # Ẩn cột chỉ số dòng của Pandas
-        .hide(subset=[c for c in cols_to_hide if c in df_display.columns], axis="columns"), # Ẩn cột So_Tuan và index
+        .hide(axis="index"), # Chỉ còn ẩn cái số 0, 1, 2 ở hàng
         use_container_width=True
     )
-
 # ==========================================
 # TAB 2: NHẬP MỤC TIÊU 
 # ==========================================
