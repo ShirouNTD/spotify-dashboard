@@ -53,71 +53,35 @@ st.markdown(f"""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;600;800&display=swap');
     html, body, [class*="css"], [class*="st-"] {{ font-family: 'Lexend', sans-serif !important; }}
- 
-    /* ÉP MÀU NỀN CỰC MẠNH */
-    .stApp, [data-testid="stAppViewContainer"] {{ background-color: {bg_main} !important; background-image: none !important; }}
-    [data-testid="stSidebar"] {{ background-color: {bg_sec} !important; background-image: none !important; }}
-    /* CHỈ ẨN CÁI NÚT DEPLOY VÀ HEADER TOOLBAR ĐỂ GIAO DIỆN SẠCH SẼ (Sidebar để nguyên gốc) */
+    
+    .stApp, [data-testid="stAppViewContainer"] {{ background-color: {'#FFFFFF' if is_light else '#0E1117'} !important; }}
+    [data-testid="stSidebar"] {{ background-color: {'#F8F9FA' if is_light else '#262730'} !important; }}
     [data-testid="stToolbar"] {{ visibility: hidden !important; }}
     #MainMenu {{ display: none !important; }}
- 
-    /* ÉP MÀU CHỮ TOÀN CỤC */
+    
     .stMarkdown, .stText, p, h1, h2, h3, h4, h5, h6, label, li, span, div[data-testid="stMarkdownContainer"] {{
         color: {text_c} !important;
     }}
- 
-    /* 🎨 ĐỔI MÀU CÁC Ô CHỌN LỌC (MULTISELECT CHIPS) THÀNH CAM PASTEL */
-    span[data-baseweb="tag"] {{
-        background-color: {primary_bg} !important;
-        color: {primary_text} !important;
-    }}
-    span[data-baseweb="tag"] span {{
-        color: {primary_text} !important;
-    }}
-    /* 🎨 ĐỔI MÀU CÁC NÚT BẤM (BUTTON PRIMARY) THÀNH CAM PASTEL */
-    div.stButton > button[kind="primary"] {{
-        background-color: {primary_bg} !important;
-        color: {primary_text} !important;
-        border: none !important;
-    }}
-    div.stButton > button[kind="primary"] * {{
-        color: {primary_text} !important;
-    }}
- 
-    /* FORMAT THẺ CARD CHỈ SỐ */
-    .spotify-card {{
-        background-color: {bg_sec} !important;
-        border: 1px solid {border_c} !important;
-        border-radius: 12px; padding: 15px;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-    }}
- 
-    /* BẢO VỆ CÁC MÀU XANH ĐỎ TRONG BẢNG XẾP HẠNG KHÔNG BỊ ĐÈ */
+
+    span[data-baseweb="tag"] {{ background-color: {primary_bg} !important; color: {primary_text} !important; }}
+    span[data-baseweb="tag"] span {{ color: {primary_text} !important; }}
+    div.stButton > button[kind="primary"] {{ background-color: {primary_bg} !important; color: {primary_text} !important; border: none !important; }}
+    div.stButton > button[kind="primary"] * {{ color: {primary_text} !important; }}
+
+    .spotify-card {{ background-color: {bg_sec} !important; border: 1px solid {border_c} !important; border-radius: 12px; padding: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }}
+    
     .text-success, .text-success * {{ color: #1DB954 !important; }}
     .text-danger, .text-danger * {{ color: #E22134 !important; }}
     .badge-green {{ background-color: rgba(29, 185, 84, 0.15) !important; color: #1DB954 !important; }}
     .badge-red {{ background-color: rgba(226, 33, 52, 0.15) !important; color: #E22134 !important; }}
 
-/* --- FIX LỖI CHỮ TRẮNG KHI MỞ DROP-DOWN --- */
-    
-    /* 1. Nền của cái bảng chọn sổ xuống */
-    div[role="listbox"] {
-        background-color: {'#FFFFFF' if is_light else '#262730'} !important;
-    }
-    
-    /* 2. Màu chữ của các option bên trong bảng chọn */
-    div[role="listbox"] div, 
-    div[role="listbox"] span {
-        color: {'#111827' if is_light else '#FAFAFA'} !important;
-    }
-
-    /* 3. Màu chữ của ô hiển thị kết quả (ví dụ: "Tháng 5") */
-    div[data-baseweb="select"] > div {
-        color: {'#111827' if is_light else '#FAFAFA'} !important;
-    }
- 
+    /* FIX DROP-DOWN MENU */
+    div[role="listbox"] {{ background-color: {'#FFFFFF' if is_light else '#262730'} !important; }}
+    div[role="listbox"] div, div[role="listbox"] span {{ color: {'#111827' if is_light else '#FAFAFA'} !important; }}
+    div[data-baseweb="select"] > div {{ color: {'#111827' if is_light else '#FAFAFA'} !important; }}
 </style>
 """, unsafe_allow_html=True)
+
 # ==========================================
 # KHỞI TẠO DATA
 # ==========================================
