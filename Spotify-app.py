@@ -491,23 +491,24 @@ with tab_xoa_data:
                     # Trích xuất số Index (từ chữ "Dòng X |...")
                     idx_to_drop = [int(val.split(" | ")[0].replace("Dòng ", "")) for val in dong_can_xoa]
                     
-                    # Tiến hành xóa và lưu lại
-                    df_delete = df_delete.drop(idx_to_drop)
+                    # CHIẾN THUẬT MỚI: Dùng màng lọc (Lọc giữ lại những index KHÔNG nằm trong danh sách xóa)
+                    # Cách này bất tử với lỗi KeyError
+                    df_delete = df_delete[~df_delete.index.isin(idx_to_drop)]
+                    
+                    # Tiến hành lưu lại
                     df_delete.to_csv(file_path, index=False)
                     
                     st.success("✅ Đã xóa thành công! Đang tự động cập nhật lại hệ thống...")
                     
                     # Lệnh làm mới (reload) lại toàn bộ app
+                    import time
+                    time.sleep(1) # Dừng 1 giây để Boss kịp nhìn thấy thông báo màu xanh
                     try:
                         st.rerun()
                     except:
                         st.experimental_rerun()
                 else:
                     st.warning("⚠️ Boss chưa chọn dòng nào để xóa!")
-        else:
-            st.info("Bảng dữ liệu này hiện đang trống.")
-    else:
-        st.error(f"Lỗi: Không tìm thấy file gốc ({file_path}).")
         
 # ==========================================
 # TAB 1: DASHBOARD CHÍNH 
