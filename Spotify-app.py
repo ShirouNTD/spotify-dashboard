@@ -84,23 +84,26 @@ st.markdown(f"""
     .badge-green {{ background-color: rgba(29, 185, 84, 0.15) !important; color: #1DB954 !important; }}
     .badge-red {{ background-color: rgba(226, 33, 52, 0.15) !important; color: #E22134 !important; }}
 
-    /* FIX CẤP ĐỘ 3: PHÁ ĐẢO MÀU */
-    div[role="listbox"] {{
-        /* Ép nền cực đậm để làm nổi chữ trắng */
-        background-color: {{'#111827' if is_light else '#000000'}} !important; 
-        border: 1px solid #444 !important;
+    /* ÉP MÀU DỨT ĐIỂM - CHỐNG MỌI CƠ CHẾ GHI ĐÈ */
+    
+    /* 1. Ép cả cái thùng chứa listbox */
+    div[role="listbox"],
+    div[data-baseweb="popover"] {{
+        background-color: {{'#FFFFFF' if is_light else '#262730'}} !important;
+        border: 1px solid {{'#CCCCCC' if is_light else '#444444'}} !important;
     }}
     
-    div[role="listbox"] div[role="option"], 
-    div[role="listbox"] div[role="option"] span {{
-        /* Ép chữ trắng */
-        color: #FFFFFF !important;
+    /* 2. Ép tất cả các phần tử con, cháu, chắt bên trong */
+    div[role="listbox"] * {{
+        color: {{'#000000' if is_light else '#FFFFFF'}} !important;
         background-color: transparent !important;
+        -webkit-text-fill-color: {{'#000000' if is_light else '#FFFFFF'}} !important;
     }}
 
-    div[role="listbox"] div[role="option"]:hover {{
-        /* Ép màu khi di chuột vào */
-        background-color: {{'#333333' if is_light else '#444444'}} !important;
+    /* 3. Đè màu lên trạng thái được chọn (Selected) và Di chuột (Hover) */
+    div[role="listbox"] div[role="option"]:hover,
+    div[role="option"][aria-selected="true"] {{
+        background-color: {{'#DDDDDD' if is_light else '#4A4A4A'}} !important;
     }}
 </style>
 """, unsafe_allow_html=True)
