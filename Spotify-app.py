@@ -111,36 +111,52 @@ def make_card(label, value, pct=None):
     </div>
     """
 
-def tao_sheet_tong_hop(thang_chon):
+def tao_sheet_tong_hop(thang_chon, chiso_chon):
     df_kq = pd.read_csv(FILE_DU_LIEU)
     df_kpi = pd.read_csv(FILE_KPI)
     df_kq_thang = pd.read_csv(FILE_KQ_THANG)
     
+    # Từ điển ánh xạ Chỉ số sang tên Cột trong Database
+    map_col = {
+        "Doanh Thu": {"kq": "Doanh_Thu_USD", "kpi": "KPI_Doanh_Thu"},
+        "Lượt Play": {"kq": "Luot_Play", "kpi": "KPI_Luot_Play"},
+        "Giờ Nghe": {"kq": "So_Gio_Nghe", "kpi": "KPI_So_Gio"},
+        "Số Tập Upload": {"kq": "So_Tap_Upload", "kpi": "KPI_So_Tap"}
+    }
+    
+    col_kq = map_col[chiso_chon]["kq"]
+    col_kpi = map_col[chiso_chon]["kpi"]
+    
     kpi_thang = df_kpi[df_kpi["Tháng"] == thang_chon]
     master = pd.DataFrame(danh_sach_kenh_master, columns=["Kênh_Spotify"])
-    master = master.merge(kpi_thang[["Kênh_Spotify", "KPI_Doanh_Thu", "So_Tuan"]], on="Kênh_Spotify", how="left")
+    master = master.merge(kpi_thang[["Kênh_Spotify", col_kpi, "So_Tuan"]], on="Kênh_Spotify", how="left")
+    master[col_kpi] = master[col_kpi].fillna(0)
     
-    thang_kq_sum = df_kq[df_kq["Tháng"] == thang_chon].groupby("Kênh_Spotify")["Doanh_Thu_USD"].sum().reset_index()
-    thang_kq_sum.rename(columns={"Doanh_Thu_USD": "Kết quả tổng"}, inplace=True)
+    # Kết quả Tổng hợp (Của các tuần)
+    thang_kq_sum = df_kq[df_kq["Tháng"] == thang_chon].groupby("Kênh_Spotify")[col_kq].sum().reset_index()
+    thang_kq_sum.rename(columns={col_kq: "Kết quả tổng"}, inplace=True)
     master = master.merge(thang_kq_sum, on="Kênh_Spotify", how="left")
     master["Kết quả tổng"] = master["Kết quả tổng"].fillna(0)
-    master["% Hoàn thành"] = (master["Kết quả tổng"] / master["KPI_Doanh_Thu"] * 100).fillna(0)
+    master["% Hoàn thành"] = (master["Kết quả tổng"] / master[col_kpi] * 100).replace([float('inf'), -float('inf')], 0).fillna(0)
     
-    chot_thang = df_kq_thang[df_kq_thang["Tháng"] == thang_chon][["Kênh_Spotify", "Doanh_Thu_USD"]]
-    chot_thang.rename(columns={"Doanh_Thu_USD": "Kết quả tháng"}, inplace=True)
+    # Kết quả chốt Final
+    chot_thang = df_kq_thang[df_kq_thang["Tháng"] == thang_chon][["Kênh_Spotify", col_kq]]
+    chot_thang.rename(columns={col_kq: "Kết quả tháng"}, inplace=True)
     chot_thang = chot_thang.groupby("Kênh_Spotify")["Kết quả tháng"].sum().reset_index() 
     master = master.merge(chot_thang, on="Kênh_Spotify", how="left")
     master["Kết quả tháng"] = master["Kết quả tháng"].fillna(0)
-    master["% Hoàn thành tháng"] = (master["Kết quả tháng"] / master["KPI_Doanh_Thu"] * 100).fillna(0)
+    master["% Hoàn thành tháng"] = (master["Kết quả tháng"] / master[col_kpi] * 100).replace([float('inf'), -float('inf')], 0).fillna(0)
     
+    # Trải chi tiết từng Tuần
     tuan_trong_thang = sorted([t for t in df_kq[df_kq["Tháng"] == thang_chon]["Tuần"].unique()])
     for tuan in tuan_trong_thang:
-        master[f"{tuan}_Target"] = (master["KPI_Doanh_Thu"] / master["So_Tuan"]).fillna(0)
-        kq_tuan = df_kq[(df_kq["Tháng"] == thang_chon) & (df_kq["Tuần"] == tuan)][["Kênh_Spotify", "Doanh_Thu_USD"]]
-        master = master.merge(kq_tuan.rename(columns={"Doanh_Thu_USD": f"{tuan}_Actual"}), on="Kênh_Spotify", how="left")
-        master[f"{tuan}_%"] = (master[f"{tuan}_Actual"] / master[f"{tuan}_Target"] * 100).fillna(0)
+        master[f"{tuan}_Target"] = (master[col_kpi] / master["So_Tuan"]).fillna(0)
+        kq_tuan = df_kq[(df_kq["Tháng"] == thang_chon) & (df_kq["Tuần"] == tuan)][["Kênh_Spotify", col_kq]]
+        master = master.merge(kq_tuan.rename(columns={col_kq: f"{tuan}_Actual"}), on="Kênh_Spotify", how="left")
+        master[f"{tuan}_Actual"] = master[f"{tuan}_Actual"].fillna(0)
+        master[f"{tuan}_%"] = (master[f"{tuan}_Actual"] / master[f"{tuan}_Target"] * 100).replace([float('inf'), -float('inf')], 0).fillna(0)
         
-    return master
+    return master, col_kpi
 
 st.title("🎧 TRUNG TÂM QUẢN TRỊ HIỆU SUẤT SPOTIFY")
 st.markdown("---")
@@ -154,12 +170,19 @@ tab_dashboard, tab_master, tab_nhap_kpi, tab_nhap_kq, tab_xoa_data = st.tabs([
 # ==========================================
 with tab_master:
     st.header("📑 Sheet Tổng Hợp Hiệu Suất")
-    chon_thang = st.selectbox("Chọn tháng:", [f"Tháng {i}" for i in range(1, 13)])
     
-    df_raw = tao_sheet_tong_hop(chon_thang)
+    col1, col2 = st.columns(2)
+    with col1:
+        chon_thang = st.selectbox("📅 Chọn tháng:", [f"Tháng {i}" for i in range(1, 13)])
+    with col2:
+        chiso_sheet = st.selectbox("🛠️ Chọn chỉ số hiển thị:", ["Doanh Thu", "Lượt Play", "Giờ Nghe", "Số Tập Upload"])
+    
+    # Cấp dữ liệu động
+    df_raw, col_kpi_name = tao_sheet_tong_hop(chon_thang, chiso_sheet)
     df_display = df_raw.copy()
     
-    rename_map = { "Kênh_Spotify": "Kênh", "KPI_Doanh_Thu": "KPI Doanh Thu" }
+    # Đổi tên cột chuẩn xác
+    rename_map = { "Kênh_Spotify": "Kênh", col_kpi_name: f"KPI {chiso_sheet}" }
     for col in df_display.columns:
         if "Tuần" in col:
             if "_Target" in col: rename_map[col] = col.replace("Tuần ", "KPI Tuần ").replace("_Target", "")
@@ -168,7 +191,8 @@ with tab_master:
     
     df_display = df_display.rename(columns=rename_map)
     
-    cols = ["Kênh", "KPI Doanh Thu", "Kết quả tổng", "% Hoàn thành", "Kết quả tháng", "% Hoàn thành tháng"]
+    # Sắp xếp hiển thị
+    cols = ["Kênh", f"KPI {chiso_sheet}", "Kết quả tổng", "% Hoàn thành", "Kết quả tháng", "% Hoàn thành tháng"]
     tuan_cols = [c for c in df_display.columns if "Tuần" in c]
     df_display = df_display[cols + tuan_cols]
     df_display.insert(0, "STT", range(1, len(df_display) + 1))
@@ -178,13 +202,25 @@ with tab_master:
     for col in cols_to_drop:
         if col in df_clean.columns: df_clean = df_clean.drop(columns=[col])
 
+    # Dynamic Formatting (Định dạng Đô la, Giờ nghe, hay Số thập phân tự động nhảy)
+    format_dict = {
+        "Doanh Thu": "${:,.0f}",
+        "Lượt Play": "{:,.0f}",
+        "Giờ Nghe": "{:,.0f}h",
+        "Số Tập Upload": "{:,.0f}"
+    }
+    val_fmt = format_dict[chiso_sheet]
+
     st.dataframe(
         df_clean.style
         .format({
-            "KPI Doanh Thu": "${:,.0f}", "Kết quả tổng": "${:,.0f}", "% Hoàn thành": "{:.0f}%",
-            "Kết quả tháng": "${:,.0f}", "% Hoàn thành tháng": "{:.0f}%",
-            **{col: "${:,.0f}" for col in df_clean.columns if "KPI Tuần" in col},
-            **{col: "${:,.0f}" for col in df_clean.columns if "Kết quả Tuần" in col},
+            f"KPI {chiso_sheet}": val_fmt, 
+            "Kết quả tổng": val_fmt, 
+            "% Hoàn thành": "{:.0f}%",
+            "Kết quả tháng": val_fmt, 
+            "% Hoàn thành tháng": "{:.0f}%",
+            **{col: val_fmt for col in df_clean.columns if "KPI Tuần" in col},
+            **{col: val_fmt for col in df_clean.columns if "Kết quả Tuần" in col},
             **{col: "{:.0f}%" for col in df_clean.columns if "% Tuần" in col}
         }).hide(axis="index"), 
         use_container_width=True
