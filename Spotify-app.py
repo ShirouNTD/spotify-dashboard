@@ -20,64 +20,49 @@ if "rk_kpi" not in st.session_state:
 # ==========================================
 st.set_page_config(page_title="Spotify Performance Hub", layout="wide", page_icon="🎧")
 
-# Khởi tạo Theme Toggle
 col_title, col_toggle = st.columns([8, 2])
 with col_title:
     st.title("🎧 TRUNG TÂM QUẢN TRỊ HIỆU SUẤT SPOTIFY")
 with col_toggle:
     theme_choice = st.radio("Theme:", ["☀️ Light", "🌙 Dark"], horizontal=True, label_visibility="collapsed")
-is_light = "Light" in theme_choice 
-
-alert_txt_color = '#111827' if is_light else '#FAFAFA'
+is_light = "Light" in theme_choice
 
 # CSS "Sát thủ" dẹp sạch vạch trắng và ép màu
 st.markdown(f"""
 <style>
-    /* 1. TẮT HOÀN TOÀN BORDER MẶC ĐỊNH & VẠCH KẺ */
-    div[data-testid="stHeader"] {{ display: none !important; }}
-    hr {{ display: none !important; }} 
+    /* NHẬP FONT LEXEND TRỞ LẠI */
+    @import url('https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;600;800&display=swap');
     
-    /* 2. ÉP MÀU NỀN & CHỮ */
+    html, body, [class*="css"], [class*="st-"] {{ 
+        font-family: 'Lexend', sans-serif !important; 
+    }}
+
+    /* TẮT VẠCH TRẮNG & HEADER */
+    div[data-testid="stHeader"], hr {{ display: none !important; }}
+    
+    /* MÀU NỀN & CHỮ TOÀN CỤC */
     .stApp {{ background-color: {'#FFFFFF' if is_light else '#0E1117'} !important; }}
     p, h1, h2, h3, h4, h5, h6, span, label, div {{ 
         color: {'#0C7A33' if is_light else '#FAFAFA'} !important; 
     }}
     
-    /* 3. ĐỔI MÀU Ô THÔNG BÁO (ERROR/INFO) SANG PASTEL */
+    /* Ô THÔNG BÁO (ALERT) */
     div[data-testid="stAlert"] {{
         background-color: {'#FFF0E6' if is_light else 'rgba(226, 33, 52, 0.2)'} !important;
         border: 1px solid {'#FFD8C4' if is_light else 'rgba(226, 33, 52, 0.4)'} !important;
     }}
     div[data-testid="stAlert"] * {{ color: {'#111827' if is_light else '#FAFAFA'} !important; }}
 
-    /* 4. MÀU NÚT BẤM & TAG (CAM PASTEL CHO LIGHT) */
+    /* NÚT BẤM & TAG */
     span[data-baseweb="tag"], button[kind="primary"] {{ 
         background-color: {'#FFD1BA' if is_light else '#E22134'} !important;
         color: {'#111827' if is_light else '#FAFAFA'} !important;
     }}
-    /* 🛡️ TRỊ DỨT ĐIỂM CHỮ XANH LÁ TRONG CÁC Ô ĐỎ/XANH */
-    div[data-testid="stAlert"] {{
-        background-color: {alert_bg} !important;
-        border: 1px solid {alert_border} !important;
-    }}
-    div[data-testid="stAlert"] *, div[data-testid="stAlert"] p, div[data-testid="stAlert"] span {{
-        color: {alert_txt_color} !important; 
-    }}
 
-    /* FIX MÀU BỘ LỌC (SELECTBOX/RADIO) */
-    .stRadio label, .stSelectbox label, div[data-baseweb="select"] span {{
-        color: {text_c} !important;
+    /* FIX BỘ LỌC (SELECTBOX/RADIO) */
+    .stRadio label, .stSelectbox label, div[data-baseweb="select"], div[data-baseweb="select"] span {{
+        color: {'#111827' if is_light else '#FAFAFA'} !important;
     }}
-    
-/* Ép màu chữ trong các bộ lọc (Selectbox, Radio) về màu tối khi ở Light Mode */
-.stRadio label, .stSelectbox label, div[data-baseweb="select"] span {
-    color: {'#111827' if is_light else '#FAFAFA'} !important;
-}
-/* Đảm bảo chữ bên trong ô chọn cũng không bị trắng xóa trên nền sáng */
-div[data-baseweb="select"] {
-    color: {'#111827' if is_light else '#FAFAFA'} !important;
-}
-    
 </style>
 """, unsafe_allow_html=True)
 
