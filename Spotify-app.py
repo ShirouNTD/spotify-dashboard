@@ -50,11 +50,17 @@ st.markdown(f"""
     .stApp, [data-testid="stAppViewContainer"] {{ background-color: {bg_main} !important; background-image: none !important; }}
     [data-testid="stSidebar"] {{ background-color: {bg_sec} !important; background-image: none !important; }}
     
-    /* ẨN MENU DEPLOY MẶC ĐỊNH NHƯNG GIỮ LẠI NÚT MỞ SIDEBAR */
-    #MainMenu {{ visibility: hidden; }}
-    [data-testid="stToolbar"] {{ visibility: hidden !important; }}
-    header[data-testid="stHeader"] {{ background-color: transparent !important; }}
-    footer {{ visibility: hidden; }}
+    /* ẨN TẬN GỐC MENU DEPLOY VÀ HEADER ĐỂ KHÔNG BỊ HIỆN CHỮ RÁC KHI HOVER */
+    #MainMenu {{ display: none !important; }}
+    [data-testid="stToolbar"] {{ display: none !important; }}
+    header[data-testid="stHeader"] {{ 
+        background-color: transparent !important; 
+        pointer-events: none !important; 
+    }}
+    footer {{ display: none !important; }}
+    
+    /* Phục hồi tương tác chuột RIÊNG cho nút thụt/mở Sidebar để Boss vẫn bấm được */
+    [data-testid="collapsedControl"] {{ pointer-events: auto !important; }}
 
     /* ÉP MÀU CHỮ TRÁNH TÀNG HÌNH */
     .stMarkdown, .stText, p, h1, h2, h3, h4, h5, h6, label, li, span, div[data-testid="stMarkdownContainer"] {{
