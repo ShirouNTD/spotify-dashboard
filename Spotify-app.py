@@ -664,7 +664,7 @@ with tab_dashboard:
                     # Xác định màu chữ tùy theo Theme
                     chart_text_color = '#FAFAFA' if not is_light else '#0C7A33'
 
-                    fig_pie_,.update_layout(
+                    fig_pie_m.update_layout(
                         paper_bgcolor='rgba(0,0,0,0)', 
                         plot_bgcolor='rgba(0,0,0,0)', 
                         font=dict(color=chart_text_color), # Đổi màu text trong biểu đồ
@@ -675,5 +675,5 @@ with tab_dashboard:
                     )
                     
                     # QUAN TRỌNG: Thêm theme=None để giữ nguyên màu
-                    st.plotly_chart(fig_pie_,, use_container_width=True, theme=None)
+                    st.plotly_chart(fig_pie_m, use_container_width=True, theme=None)
                     
