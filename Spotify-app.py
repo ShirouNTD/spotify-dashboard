@@ -58,64 +58,43 @@ st.markdown(f"""
     @import url('https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;600;800&display=swap');
     html, body, [class*="css"], [class*="st-"] {{ font-family: 'Lexend', sans-serif !important; }}
     
+    /* GIAO DIỆN CHUNG */
     .stApp, [data-testid="stAppViewContainer"] {{ background-color: {'#FFFFFF' if is_light else '#0E1117'} !important; }}
     [data-testid="stSidebar"] {{ background-color: {'#F8F9FA' if is_light else '#262730'} !important; }}
     [data-testid="stToolbar"] {{ visibility: hidden !important; }}
     #MainMenu {{ display: none !important; }}
     
+    /* CHỮ TOÀN CỤC */
     .stMarkdown, .stText, p, h1, h2, h3, h4, h5, h6, label, li, span, div[data-testid="stMarkdownContainer"] {{
         color: {text_c} !important;
     }}
 
+    /* NÚT & TAG */
     span[data-baseweb="tag"] {{ background-color: {primary_bg} !important; color: {primary_text} !important; }}
     span[data-baseweb="tag"] span {{ color: {primary_text} !important; }}
     div.stButton > button[kind="primary"] {{ background-color: {primary_bg} !important; color: {primary_text} !important; border: none !important; }}
     div.stButton > button[kind="primary"] * {{ color: {primary_text} !important; }}
 
+    /* THẺ CARD */
     .spotify-card {{ background-color: {bg_sec} !important; border: 1px solid {border_c} !important; border-radius: 12px; padding: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }}
     
+    /* MÀU XANH/ĐỎ CHỈ SỐ */
     .text-success, .text-success * {{ color: #1DB954 !important; }}
     .text-danger, .text-danger * {{ color: #E22134 !important; }}
     .badge-green {{ background-color: rgba(29, 185, 84, 0.15) !important; color: #1DB954 !important; }}
     .badge-red {{ background-color: rgba(226, 33, 52, 0.15) !important; color: #E22134 !important; }}
 
-/* FIX DỨT ĐIỂM MÀU CHỮ TRONG DROPDOWN */
-    
-    /* 1. Nền của bảng chọn */
-    div[role="listbox"] {{
-        background-color: {{'#FFFFFF' if is_light else '#262730'}} !important;
+    /* DROPDOWN - ĐÃ GỘP VÀ LÀM SẠCH */
+    div[role="listbox"] {{ 
+        background-color: {'#FFFFFF' if is_light else '#262730'} !important; 
     }}
-    
-    /* 2. Ép màu chữ ĐEN cho các mục option (luôn nhìn thấy được trên mọi nền) */
     div[role="listbox"] div[role="option"], 
-    div[role="listbox"] div[role="option"] span {{
-        color: {{'#111827' if is_light else '#FAFAFA'}} !important;
+    div[role="listbox"] div[role="option"] span {{ 
+        color: {'#111827' if is_light else '#FAFAFA'} !important; 
     }}
-
-    /* 3. Đảm bảo trạng thái Hover (khi di chuột vào) cũng không bị mất màu */
-    div[role="listbox"] div[role="option"]:hover {{
-        background-color: {{'#F0F0F0' if is_light else '#3D3F47'}} !important;
+    div[role="listbox"] div[role="option"]:hover {{ 
+        background-color: {'#F0F0F0' if is_light else '#3D3F47'} !important; 
     }}
-    /* Ép cứng màu chữ đen cho Dark Mode (nếu ngài muốn chữ hiện rõ trên nền xám) */
-    /* Hoặc đổi lại thành '#FAFAFA' nếu ngài vẫn muốn chữ trắng nhưng cần độ tương phản cao hơn */
-    
-    div[role="listbox"] div[role="option"], 
-    div[role="listbox"] div[role="option"] span {{
-        color: {'#111827' if is_light else '#111827'} !important;
-    }}
-
-    /* 1. Ép nền của cái listbox thành màu Xám nhạt hoặc Trắng để làm nổi chữ trắng */
-    div[role="listbox"] {{
-        background-color: {'#FFFFFF' if is_light else '#E0E0E0'} !important;
-    }}
-    
-    /* 2. Ép chữ thành màu đen đậm để luôn đọc được trên cái nền vừa đổi ở trên */
-    div[role="listbox"] div[role="option"], 
-    div[role="listbox"] div[role="option"] span {{
-        color: #111827 !important;
-        -webkit-text-fill-color: #111827 !important;
-    }}
-    
 </style>
 """, unsafe_allow_html=True)
 
