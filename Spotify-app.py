@@ -16,93 +16,43 @@ if "rk_kpi" not in st.session_state:
     st.session_state.rk_kpi = 0
     
 # ==========================================
-# 1. CẤU HÌNH GIAO DIỆN & CUSTOM THEME
+# 1. CẤU HÌNH GIAO DIỆN CHUẨN (LIGHT/DARK)
 # ==========================================
-st.set_page_config(page_title="Spotify Performance Hub", layout="wide", page_icon="🎧", initial_sidebar_state="expanded")
+st.set_page_config(page_title="Spotify Performance Hub", layout="wide", page_icon="🎧")
 
-# TẠO GIAO DIỆN TOP-RIGHT CHỨA TIÊU ĐỀ VÀ NÚT ĐỔI THEME
+# Khởi tạo Theme Toggle
 col_title, col_toggle = st.columns([8, 2])
 with col_title:
     st.title("🎧 TRUNG TÂM QUẢN TRỊ HIỆU SUẤT SPOTIFY")
 with col_toggle:
-    st.write("") # Tạo khoảng trống đẩy nút xuống một xíu cho cân đối
-    theme_choice = st.radio("Giao diện:", ["☀️ Light Mode", "🌙 Dark Mode"], horizontal=True, label_visibility="collapsed")
-
+    theme_choice = st.radio("Theme:", ["☀️ Light", "🌙 Dark"], horizontal=True, label_visibility="collapsed")
 is_light = "Light" in theme_choice 
 
-# Bơm màu theo công tắc của Boss
-if is_light:
-    bg_main = "#FFFFFF"
-    bg_sec = "#F8F9FA"
-    text_c = "#0C7A33"  # Xanh lá đậm
-    border_c = "#E0E0E0"
-    
-    # MÀU ĐẶC TRỊ CHO NÚT BẤM VÀ Ô CHỌN MULTISELECT (CAM PASTEL)
-    primary_bg = "#FFD1BA" 
-    primary_text = "#111827" # Chữ đen xám cho dễ đọc
-else:
-    bg_main = "#0E1117"
-    bg_sec = "#262730"
-    text_c = "#FAFAFA"  # Trắng
-    border_c = "rgba(29, 185, 84, 0.2)"
-    
-    # Dark mode giữ màu đỏ gốc cho ngầu
-    primary_bg = "#E22134" 
-    primary_text = "#FAFAFA"
-
-# Bơm CSS ép tuyệt đối
+# CSS "Sát thủ" dẹp sạch vạch trắng và ép màu
 st.markdown(f"""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;600;800&display=swap');
+    /* 1. TẮT HOÀN TOÀN BORDER MẶC ĐỊNH & VẠCH KẺ */
+    div[data-testid="stHeader"] {{ display: none !important; }}
+    hr {{ display: none !important; }} 
     
-    html, body, [class*="css"], [class*="st-"] {{ font-family: 'Lexend', sans-serif !important; }}
-
-    /* ÉP MÀU NỀN CỰC MẠNH */
-    .stApp, [data-testid="stAppViewContainer"] {{ background-color: {bg_main} !important; background-image: none !important; }}
-    [data-testid="stSidebar"] {{ background-color: {bg_sec} !important; background-image: none !important; }}
-    
-    /* CHỈ ẨN CÁI NÚT DEPLOY VÀ HEADER TOOLBAR ĐỂ GIAO DIỆN SẠCH SẼ (Sidebar để nguyên gốc) */
-    [data-testid="stToolbar"] {{ visibility: hidden !important; }}
-    #MainMenu {{ display: none !important; }}
-
-    /* ÉP MÀU CHỮ TOÀN CỤC */
-    .stMarkdown, .stText, p, h1, h2, h3, h4, h5, h6, label, li, span, div[data-testid="stMarkdownContainer"] {{
-        color: {text_c} !important;
-    }}
-
-    /* 🎨 ĐỔI MÀU CÁC Ô CHỌN LỌC (MULTISELECT CHIPS) THÀNH CAM PASTEL */
-    span[data-baseweb="tag"] {{
-        background-color: {primary_bg} !important;
-        color: {primary_text} !important;
-    }}
-    span[data-baseweb="tag"] span {{
-        color: {primary_text} !important;
+    /* 2. ÉP MÀU NỀN & CHỮ */
+    .stApp {{ background-color: {'#FFFFFF' if is_light else '#0E1117'} !important; }}
+    p, h1, h2, h3, h4, h5, h6, span, label, div {{ 
+        color: {'#0C7A33' if is_light else '#FAFAFA'} !important; 
     }}
     
-    /* 🎨 ĐỔI MÀU CÁC NÚT BẤM (BUTTON PRIMARY) THÀNH CAM PASTEL */
-    div.stButton > button[kind="primary"] {{
-        background-color: {primary_bg} !important;
-        color: {primary_text} !important;
-        border: none !important;
+    /* 3. ĐỔI MÀU Ô THÔNG BÁO (ERROR/INFO) SANG PASTEL */
+    div[data-testid="stAlert"] {{
+        background-color: {'#FFF0E6' if is_light else 'rgba(226, 33, 52, 0.2)'} !important;
+        border: 1px solid {'#FFD8C4' if is_light else 'rgba(226, 33, 52, 0.4)'} !important;
     }}
-    div.stButton > button[kind="primary"] * {{
-        color: {primary_text} !important;
+    div[data-testid="stAlert"] * {{ color: {'#111827' if is_light else '#FAFAFA'} !important; }}
+
+    /* 4. MÀU NÚT BẤM & TAG (CAM PASTEL CHO LIGHT) */
+    span[data-baseweb="tag"], button[kind="primary"] {{ 
+        background-color: {'#FFD1BA' if is_light else '#E22134'} !important;
+        color: {'#111827' if is_light else '#FAFAFA'} !important;
     }}
-
-    /* FORMAT THẺ CARD CHỈ SỐ */
-    .spotify-card {{
-        background-color: {bg_sec} !important;
-        border: 1px solid {border_c} !important;
-        border-radius: 12px; padding: 15px;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-    }}
-
-    /* BẢO VỆ CÁC MÀU XANH ĐỎ TRONG BẢNG XẾP HẠNG KHÔNG BỊ ĐÈ */
-    .text-success, .text-success * {{ color: #1DB954 !important; }}
-    .text-danger, .text-danger * {{ color: #E22134 !important; }}
-    .badge-green {{ background-color: rgba(29, 185, 84, 0.15) !important; color: #1DB954 !important; }}
-    .badge-red {{ background-color: rgba(226, 33, 52, 0.15) !important; color: #E22134 !important; }}
-
 </style>
 """, unsafe_allow_html=True)
 
