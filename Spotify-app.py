@@ -75,10 +75,21 @@ st.markdown(f"""
     .badge-green {{ background-color: rgba(29, 185, 84, 0.15) !important; color: #1DB954 !important; }}
     .badge-red {{ background-color: rgba(226, 33, 52, 0.15) !important; color: #E22134 !important; }}
 
-    /* FIX DROP-DOWN MENU */
-    div[role="listbox"] {{ background-color: {'#FFFFFF' if is_light else '#262730'} !important; }}
-    div[role="listbox"] div, div[role="listbox"] span {{ color: {'#111827' if is_light else '#FAFAFA'} !important; }}
-    div[data-baseweb="select"] > div {{ color: {'#111827' if is_light else '#FAFAFA'} !important; }}
+/* FIX DROP-DOWN MENU - ÉP MÀU RIÊNG */
+    /* 1. Nền của cái bảng sổ xuống */
+    div[role="listbox"] {
+        background-color: {'#FFFFFF' if is_light else '#262730'} !important;
+    }
+    
+    /* 2. Chữ của các option trong danh sách: luôn phải ĐEN khi Light, TRẮNG khi Dark */
+    div[role="listbox"] div, div[role="listbox"] span {
+        color: {'#111827' if is_light else '#FAFAFA'} !important;
+    }
+    
+    /* 3. Chữ trong ô đang chọn (cái ô hiển thị "Tháng 5"): Dùng màu Xanh lá của ngài */
+    div[data-baseweb="select"] > div {
+        color: {text_c} !important;
+    }
 </style>
 """, unsafe_allow_html=True)
 
