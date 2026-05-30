@@ -86,7 +86,8 @@ st.markdown(f"""
         background-color: {'#FFFFFF' if is_light else '#262730'} !important;
     }}
     
-    /* 2. Ép màu chữ ĐEN/TRẮNG cho các lựa chọn bên trong */
+    /* 2. Ép màu chữ ĐEN cho các lựa chọn bên trong khi ở Dark Mode */
+    /* Ngài đổi thành '#111827' (Đen) để nó nổi bật trên nền xám của Dark Mode */
     div[role="listbox"] div, 
     div[role="listbox"] span,
     div[role="option"] div {{
