@@ -16,13 +16,19 @@ if "rk_kpi" not in st.session_state:
     st.session_state.rk_kpi = 0
     
 # ==========================================
-# 1. CẤU HÌNH GIAO DIỆN & CUSTOM THEME TOGGLE
+# 1. CẤU HÌNH GIAO DIỆN & CUSTOM THEME
 # ==========================================
 st.set_page_config(page_title="Spotify Performance Hub", layout="wide", page_icon="🎧", initial_sidebar_state="expanded")
 
-# TẠO CÔNG TẮC THEME ĐỘC QUYỀN TRÊN SIDEBAR
-st.sidebar.markdown("### 🎨 Tùy chỉnh Giao diện")
-theme_choice = st.sidebar.radio("Giao diện:", ["☀️ Light Mode", "🌙 Dark Mode"], horizontal=True, label_visibility="collapsed")
+# TẠO GIAO DIỆN TOP-RIGHT CHỨA TIÊU ĐỀ VÀ NÚT ĐỔI THEME
+col_title, col_toggle = st.columns([8, 2])
+with col_title:
+    st.title("🎧 TRUNG TÂM QUẢN TRỊ HIỆU SUẤT SPOTIFY")
+with col_toggle:
+    st.write("") # Tạo khoảng trống đẩy nút xuống một xíu cho cân đối
+    theme_choice = st.radio("Giao diện:", ["☀️ Light", "🌙 Dark"], horizontal=True, label_visibility="collapsed")
+
+st.markdown("---") # Đường kẻ ngang chia cách Header và các Tab
 
 is_light = "Light" in theme_choice 
 
@@ -30,17 +36,21 @@ is_light = "Light" in theme_choice
 if is_light:
     bg_main = "#FFFFFF"
     bg_sec = "#F8F9FA"
-    text_c = "#0C7A33"  # Xanh lá
+    text_c = "#0C7A33"  # Xanh lá đậm
     border_c = "#E0E0E0"
-    alert_c = "#111827" # CHỮ ĐEN CHO Ô BÁO LỖI (st.error, st.info)
+    alert_bg = "#FFF0E6"  # CAM PASTEL DỊU MẮT
+    alert_border = "#FFD8C4"
+    alert_text = "#111827" # Chữ đen xám
 else:
     bg_main = "#0E1117"
     bg_sec = "#262730"
     text_c = "#FAFAFA"  # Trắng
     border_c = "rgba(29, 185, 84, 0.2)"
-    alert_c = "#FAFAFA" # Chữ trắng 
+    alert_bg = "rgba(226, 33, 52, 0.15)" # Giữ màu đỏ sậm của Dark mode
+    alert_border = "rgba(226, 33, 52, 0.3)"
+    alert_text = "#FAFAFA"
 
-# Bơm CSS ép tuyệt đối 
+# Bơm CSS ép tuyệt đối (Đã xóa toàn bộ các lệnh can thiệp Sidebar)
 st.markdown(f"""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;600;800&display=swap');
@@ -51,32 +61,22 @@ st.markdown(f"""
     .stApp, [data-testid="stAppViewContainer"] {{ background-color: {bg_main} !important; background-image: none !important; }}
     [data-testid="stSidebar"] {{ background-color: {bg_sec} !important; background-image: none !important; }}
     
-    /* === ẨN HEADER, NÚT DEPLOY TẬN GỐC === */
-    #MainMenu {{ visibility: hidden; }}
-    [data-testid="stHeader"] {{ display: none !important; }}
+    /* CHỈ ẨN CÁI NÚT DEPLOY VÀ HEADER TOOLBAR ĐỂ GIAO DIỆN SẠCH SẼ (Sidebar để nguyên gốc) */
     [data-testid="stToolbar"] {{ visibility: hidden !important; }}
-    footer {{ visibility: hidden; }}
-
-    /* 🛑 TIÊU DIỆT CÁI BONG BÓNG CHỮ KHI HOVER VÀO MŨI TÊN SIDEBAR */
-    div[data-testid="stTooltipContent"], div[role="tooltip"] {{
-        display: none !important;
-        opacity: 0 !important;
-        visibility: hidden !important;
-    }}
+    #MainMenu {{ display: none !important; }}
 
     /* ÉP MÀU CHỮ TOÀN CỤC */
     .stMarkdown, .stText, p, h1, h2, h3, h4, h5, h6, label, li, span, div[data-testid="stMarkdownContainer"] {{
         color: {text_c} !important;
     }}
 
-    /* 🛡️ SNIPER: BẮN THẲNG VÀO THẺ P VÀ SPAN TRONG Ô THÔNG BÁO ĐỂ ÉP RA MÀU ĐEN (LIGHT) HOẶC TRẮNG (DARK) */
-    div[data-testid="stAlert"] p, 
-    div[data-testid="stAlert"] span, 
-    div[data-testid="stAlert"] h1, 
-    div[data-testid="stAlert"] h2, 
-    div[data-testid="stAlert"] h3, 
-    div[data-testid="stAlert"] div[data-testid="stMarkdownContainer"] {{
-        color: {alert_c} !important; 
+    /* 🛡️ TRỊ DỨT ĐIỂM Ô THÔNG BÁO: ĐỔI MÀU NỀN PASTEL VÀ MÀU CHỮ */
+    div[data-testid="stAlert"] {{
+        background-color: {alert_bg} !important;
+        border: 1px solid {alert_border} !important;
+    }}
+    div[data-testid="stAlert"] * {{
+        color: {alert_text} !important; 
     }}
 
     /* FORMAT THẺ CARD CHỈ SỐ */
@@ -189,9 +189,6 @@ def tao_sheet_tong_hop(thang_chon, chiso_chon):
         master[f"{tuan}_%"] = (master[f"{tuan}_Actual"] / master[f"{tuan}_Target"] * 100).replace([float('inf'), -float('inf')], 0).fillna(0)
         
     return master, col_kpi
-
-st.title("🎧 TRUNG TÂM QUẢN TRỊ HIỆU SUẤT SPOTIFY")
-st.markdown("---")
 
 tab_dashboard, tab_master, tab_nhap_kpi, tab_nhap_kq, tab_xoa_data = st.tabs([
     "📊 Dashboard", "📑 Sheet Tổng Hợp", "🎯 Nhập Mục Tiêu", "📥 Nhập Kết Quả", "🛠️ Quản Lý"
