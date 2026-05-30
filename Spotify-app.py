@@ -103,13 +103,6 @@ st.markdown(f"""
     .badge-green {{ background-color: rgba(29, 185, 84, 0.15) !important; color: #1DB954 !important; }}
     .badge-red {{ background-color: rgba(226, 33, 52, 0.15) !important; color: #E22134 !important; }}
 
-    /* ĐỒNG BỘ MÀU ĐƯỜNG KẺ NGANG (hr) THEO THEME */
-    hr {
-        border: none !important;
-        border-top: 1px solid {border_c} !important;
-        margin: 15px 0 !important;
-    }
-    
 </style>
 """, unsafe_allow_html=True)
 
