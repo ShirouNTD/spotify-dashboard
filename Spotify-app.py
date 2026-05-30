@@ -24,20 +24,21 @@ st.set_page_config(page_title="Spotify Performance Hub", layout="wide", page_ico
 st.sidebar.markdown("### 🎨 Tùy chỉnh Giao diện")
 theme_choice = st.sidebar.radio("Giao diện:", ["☀️ Light Mode", "🌙 Dark Mode"], horizontal=True, label_visibility="collapsed")
 
-# Biến toàn cục để toàn hệ thống (kể cả biểu đồ Plotly) đều nhận diện đúng
 is_light = "Light" in theme_choice 
 
 # Bơm màu theo công tắc của Boss
 if is_light:
     bg_main = "#FFFFFF"
     bg_sec = "#F8F9FA"
-    text_c = "#0C7A33"  # Xanh lá đậm sang trọng
+    text_c = "#0C7A33"  # Xanh lá
     border_c = "#E0E0E0"
+    alert_c = "#111827" # Chữ đen đậm cho ô báo lỗi/thông báo
 else:
     bg_main = "#0E1117"
     bg_sec = "#262730"
-    text_c = "#FAFAFA"  # Trắng sáng
+    text_c = "#FAFAFA"  # Trắng
     border_c = "rgba(29, 185, 84, 0.2)"
+    alert_c = "#FAFAFA" # Chữ trắng cho ô báo lỗi/thông báo
 
 # Bơm CSS ép tuyệt đối 
 st.markdown(f"""
@@ -50,28 +51,20 @@ st.markdown(f"""
     .stApp, [data-testid="stAppViewContainer"] {{ background-color: {bg_main} !important; background-image: none !important; }}
     [data-testid="stSidebar"] {{ background-color: {bg_sec} !important; background-image: none !important; }}
     
-    /* ẨN TẬN GỐC MENU DEPLOY ĐỂ KHÔNG HIỆN CHỮ RÁC KHI HOVER */
-    [data-testid="stToolbar"] {{ display: none !important; }}
-    #MainMenu {{ display: none !important; }}
-    footer {{ display: none !important; }}
-    
-    /* CHỈ LÀM TRONG SUỐT HEADER, GIỮ NGUYÊN HOÀN TOÀN NÚT MỞ SIDEBAR */
-    header[data-testid="stHeader"] {{ background-color: transparent !important; }}
+    /* === ĐOẠN CODE CHUẨN MÀ BOSS YÊU CẦU QUAY LẠI === */
+    #MainMenu {{ visibility: hidden; }}
+    [data-testid="stHeader"] {{ display: none !important; }}
+    [data-testid="stToolbar"] {{ visibility: hidden !important; }}
+    footer {{ visibility: hidden; }}
 
-    /* 🛑 TẮT LUÔN CÁC BONG BÓNG CHỮ (TOOLTIP) HIỆN LÊN KHI LIA CHUỘT VÀO MŨI TÊN */
-    div[data-testid="stTooltipContent"] {{ display: none !important; }}
-    
-    /* ĐẢM BẢO MŨI TÊN SIDEBAR LUÔN LÀ BIỂU TƯỢNG RÕ NÉT */
-    [data-testid="collapsedControl"] svg {{ fill: {text_c} !important; color: {text_c} !important; }}
-
-    /* ÉP MÀU CHỮ TRÁNH TÀNG HÌNH (ÁP DỤNG TOÀN CỤC) */
+    /* ÉP MÀU CHỮ TOÀN CỤC */
     .stMarkdown, .stText, p, h1, h2, h3, h4, h5, h6, label, li, span, div[data-testid="stMarkdownContainer"] {{
         color: {text_c} !important;
     }}
 
-    /* 🛡️ BẢO VỆ MÀU CHỮ TRONG CÁC Ô THÔNG BÁO (st.error, st.info, st.success) */
-    [data-testid="stAlert"] * {{
-        color: {'#111827' if is_light else '#FAFAFA'} !important; 
+    /* 🛡️ TRỊ DỨT ĐIỂM CHỮ XANH LÁ TRONG CÁC Ô ĐỎ (ERROR) & XANH (INFO) */
+    div[data-testid="stAlert"] *, div[data-testid="stAlert"] p, div[data-testid="stAlert"] span {{
+        color: {alert_c} !important; 
     }}
 
     /* FORMAT THẺ CARD CHỈ SỐ */
@@ -89,6 +82,7 @@ st.markdown(f"""
     .badge-red {{ background-color: rgba(226, 33, 52, 0.15) !important; color: #E22134 !important; }}
 </style>
 """, unsafe_allow_html=True)
+
 # ==========================================
 # KHỞI TẠO DATA
 # ==========================================
