@@ -26,31 +26,33 @@ with col_title:
     st.title("🎧 TRUNG TÂM QUẢN TRỊ HIỆU SUẤT SPOTIFY")
 with col_toggle:
     st.write("") # Tạo khoảng trống đẩy nút xuống một xíu cho cân đối
-    theme_choice = st.radio("Giao diện:", ["☀️ Light", "🌙 Dark"], horizontal=True, label_visibility="collapsed")
+    theme_choice = st.radio("Giao diện:", ["☀️ Light Mode", "🌙 Dark Mode"], horizontal=True, label_visibility="collapsed")
 
-st.markdown("---") # Đường kẻ ngang chia cách Header và các Tab
+st.markdown("---")
 
 is_light = "Light" in theme_choice 
 
-# Bơm màu theo công tắc
+# Bơm màu theo công tắc của Boss
 if is_light:
     bg_main = "#FFFFFF"
     bg_sec = "#F8F9FA"
     text_c = "#0C7A33"  # Xanh lá đậm
     border_c = "#E0E0E0"
-    alert_bg = "#FFF0E6"  # CAM PASTEL DỊU MẮT
-    alert_border = "#FFD8C4"
-    alert_text = "#111827" # Chữ đen xám
+    
+    # MÀU ĐẶC TRỊ CHO NÚT BẤM VÀ Ô CHỌN MULTISELECT (CAM PASTEL)
+    primary_bg = "#FFD1BA" 
+    primary_text = "#111827" # Chữ đen xám cho dễ đọc
 else:
     bg_main = "#0E1117"
     bg_sec = "#262730"
     text_c = "#FAFAFA"  # Trắng
     border_c = "rgba(29, 185, 84, 0.2)"
-    alert_bg = "rgba(226, 33, 52, 0.15)" # Giữ màu đỏ sậm của Dark mode
-    alert_border = "rgba(226, 33, 52, 0.3)"
-    alert_text = "#FAFAFA"
+    
+    # Dark mode giữ màu đỏ gốc cho ngầu
+    primary_bg = "#E22134" 
+    primary_text = "#FAFAFA"
 
-# Bơm CSS ép tuyệt đối (Đã xóa toàn bộ các lệnh can thiệp Sidebar)
+# Bơm CSS ép tuyệt đối
 st.markdown(f"""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;600;800&display=swap');
@@ -70,13 +72,23 @@ st.markdown(f"""
         color: {text_c} !important;
     }}
 
-    /* 🛡️ TRỊ DỨT ĐIỂM Ô THÔNG BÁO: ĐỔI MÀU NỀN PASTEL VÀ MÀU CHỮ */
-    div[data-testid="stAlert"] {{
-        background-color: {alert_bg} !important;
-        border: 1px solid {alert_border} !important;
+    /* 🎨 ĐỔI MÀU CÁC Ô CHỌN LỌC (MULTISELECT CHIPS) THÀNH CAM PASTEL */
+    span[data-baseweb="tag"] {{
+        background-color: {primary_bg} !important;
+        color: {primary_text} !important;
     }}
-    div[data-testid="stAlert"] * {{
-        color: {alert_text} !important; 
+    span[data-baseweb="tag"] span {{
+        color: {primary_text} !important;
+    }}
+    
+    /* 🎨 ĐỔI MÀU CÁC NÚT BẤM (BUTTON PRIMARY) THÀNH CAM PASTEL */
+    div.stButton > button[kind="primary"] {{
+        background-color: {primary_bg} !important;
+        color: {primary_text} !important;
+        border: none !important;
+    }}
+    div.stButton > button[kind="primary"] * {{
+        color: {primary_text} !important;
     }}
 
     /* FORMAT THẺ CARD CHỈ SỐ */
