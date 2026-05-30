@@ -14,7 +14,7 @@ if "rk_kq_thang" not in st.session_state:
     st.session_state.rk_kq_thang = 0
 if "rk_kpi" not in st.session_state:
     st.session_state.rk_kpi = 0
-
+    
 # ==========================================
 # 1. CẤU HÌNH GIAO DIỆN & CUSTOM THEME TOGGLE
 # ==========================================
