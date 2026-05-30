@@ -58,13 +58,19 @@ st.markdown(f"""
     /* CHỈ LÀM TRONG SUỐT HEADER, GIỮ NGUYÊN HOÀN TOÀN NÚT MỞ SIDEBAR */
     header[data-testid="stHeader"] {{ background-color: transparent !important; }}
 
+    /* 🛑 TẮT LUÔN CÁC BONG BÓNG CHỮ (TOOLTIP) HIỆN LÊN KHI LIA CHUỘT VÀO MŨI TÊN */
+    div[data-testid="stTooltipContent"] {{ display: none !important; }}
+    
+    /* ĐẢM BẢO MŨI TÊN SIDEBAR LUÔN LÀ BIỂU TƯỢNG RÕ NÉT */
+    [data-testid="collapsedControl"] svg {{ fill: {text_c} !important; color: {text_c} !important; }}
+
     /* ÉP MÀU CHỮ TRÁNH TÀNG HÌNH (ÁP DỤNG TOÀN CỤC) */
     .stMarkdown, .stText, p, h1, h2, h3, h4, h5, h6, label, li, span, div[data-testid="stMarkdownContainer"] {{
         color: {text_c} !important;
     }}
 
-    /* 🛡️ BẢO VỆ MÀU CHỮ TRONG CÁC Ô THÔNG BÁO (ERROR, INFO, SUCCESS, WARNING) */
-    [data-testid="stNotification"] * {{
+    /* 🛡️ BẢO VỆ MÀU CHỮ TRONG CÁC Ô THÔNG BÁO (st.error, st.info, st.success) */
+    [data-testid="stAlert"] * {{
         color: {'#111827' if is_light else '#FAFAFA'} !important; 
     }}
 
@@ -83,7 +89,6 @@ st.markdown(f"""
     .badge-red {{ background-color: rgba(226, 33, 52, 0.15) !important; color: #E22134 !important; }}
 </style>
 """, unsafe_allow_html=True)
-
 # ==========================================
 # KHỞI TẠO DATA
 # ==========================================
