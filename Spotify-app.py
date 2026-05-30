@@ -28,6 +28,8 @@ with col_toggle:
     theme_choice = st.radio("Theme:", ["☀️ Light", "🌙 Dark"], horizontal=True, label_visibility="collapsed")
 is_light = "Light" in theme_choice 
 
+alert_txt_color = '#111827' if is_light else '#FAFAFA'
+
 # CSS "Sát thủ" dẹp sạch vạch trắng và ép màu
 st.markdown(f"""
 <style>
@@ -52,6 +54,19 @@ st.markdown(f"""
     span[data-baseweb="tag"], button[kind="primary"] {{ 
         background-color: {'#FFD1BA' if is_light else '#E22134'} !important;
         color: {'#111827' if is_light else '#FAFAFA'} !important;
+    }}
+    /* 🛡️ TRỊ DỨT ĐIỂM CHỮ XANH LÁ TRONG CÁC Ô ĐỎ/XANH */
+    div[data-testid="stAlert"] {{
+        background-color: {alert_bg} !important;
+        border: 1px solid {alert_border} !important;
+    }}
+    div[data-testid="stAlert"] *, div[data-testid="stAlert"] p, div[data-testid="stAlert"] span {{
+        color: {alert_txt_color} !important; 
+    }}
+
+    /* FIX MÀU BỘ LỌC (SELECTBOX/RADIO) */
+    .stRadio label, .stSelectbox label, div[data-baseweb="select"] span {{
+        color: {text_c} !important;
     }}
     
 /* Ép màu chữ trong các bộ lọc (Selectbox, Radio) về màu tối khi ở Light Mode */
