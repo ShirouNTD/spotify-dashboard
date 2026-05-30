@@ -198,25 +198,27 @@ def tao_sheet_tong_hop(thang_chon, chiso_chon):
         master[f"{tuan}_Actual"] = master[f"{tuan}_Actual"].fillna(0)
         # Khắc phục lỗi chia cho 0
         master[f"{tuan}_%"] = (master[f"{tuan}_Actual"] / master[f"{tuan}_Target"].replace(0, pd.NA) * 100).fillna(0).replace([float('inf'), -float('inf')], 0)
-
 # ==========================================
     # ĐOẠN CODE THÊM DÒNG TỔNG CỘNG (TOTAL)
     # ==========================================
     if len(master) > 0:
         total_data = {}
         for col in master.columns:
-            if pd.api.types.is_numeric_dtype(master[col]):
-                total_data[col] = master[col].sum()
+            if col == "Kênh_Spotify":
+                total_data[col] = "🔥 TỔNG CỘNG"
             else:
-                if col == "Kênh_Spotify":
-                    total_data[col] = "🔥 TỔNG CỘNG"
-                else:
-                    total_data[col] = "-"
+                # VŨ KHÍ MỚI: Ép mọi dữ liệu thành số. Text/Khoảng trắng lỗi tự biến thành 0
+                total_data[col] = pd.to_numeric(master[col], errors='coerce').fillna(0).sum()
+        
+        # Rút gọn biến để code sạch và không bị lỗi
+        val_kpi = total_data.get(col_kpi, 0)
+        val_kq_tong = total_data.get("Kết quả tổng", 0)
+        val_kq_thang = total_data.get("Kết quả tháng", 0)
         
         # TÍNH LẠI % HOÀN THÀNH TỔNG ĐỂ KHÔNG BỊ CỘNG DỒN SAI SỐ
-        if total_data.get(col_kpi, 0) > 0:
-            total_data["% Hoàn thành"] = (total_data.get("Kết quả tổng", 0) / total_data[col_kpi]) * 100
-            total_data["% Hoàn thành tháng"] = (total_data.get("Kết quả tháng", 0) / total_data[col_kpi]) * 100
+        if val_kpi > 0:
+            total_data["% Hoàn thành"] = (val_kq_tong / val_kpi) * 100
+            total_data["% Hoàn thành tháng"] = (val_kq_thang / val_kpi) * 100
         else:
             total_data["% Hoàn thành"] = 0
             total_data["% Hoàn thành tháng"] = 0
@@ -226,8 +228,12 @@ def tao_sheet_tong_hop(thang_chon, chiso_chon):
             c_actual = f"{tuan}_Actual"
             c_target = f"{tuan}_Target"
             c_pct = f"{tuan}_%"
-            if total_data.get(c_target, 0) > 0:
-                total_data[c_pct] = (total_data.get(c_actual, 0) / total_data[c_target]) * 100
+            
+            val_t_target = total_data.get(c_target, 0)
+            val_t_actual = total_data.get(c_actual, 0)
+            
+            if val_t_target > 0:
+                total_data[c_pct] = (val_t_actual / val_t_target) * 100
             else:
                 total_data[c_pct] = 0
                 
