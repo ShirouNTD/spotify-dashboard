@@ -177,7 +177,8 @@ def tao_sheet_tong_hop(thang_chon, chiso_chon):
     thang_kq_sum.rename(columns={col_kq: "Kết quả tổng"}, inplace=True)
     master = master.merge(thang_kq_sum, on="Kênh_Spotify", how="left")
     master["Kết quả tổng"] = master["Kết quả tổng"].fillna(0)
-    master["% Hoàn thành"] = (master["Kết quả tổng"] / master[col_kpi] * 100).replace([float('inf'), -float('inf')], 0).fillna(0)
+    # Khắc phục lỗi chia cho 0
+    master["% Hoàn thành"] = (master["Kết quả tổng"] / master[col_kpi].replace(0, pd.NA) * 100).fillna(0).replace([float('inf'), -float('inf')], 0)
     
     # Kết quả chốt Final
     chot_thang = df_kq_thang[df_kq_thang["Tháng"] == thang_chon][["Kênh_Spotify", col_kq]]
@@ -185,9 +186,8 @@ def tao_sheet_tong_hop(thang_chon, chiso_chon):
     chot_thang = chot_thang.groupby("Kênh_Spotify")["Kết quả tháng"].sum().reset_index() 
     master = master.merge(chot_thang, on="Kênh_Spotify", how="left")
     master["Kết quả tháng"] = master["Kết quả tháng"].fillna(0)
-    master["% Hoàn thành tháng"] = (
-    master["Kết quả tháng"] / master[col_kpi].replace(0, pd.NA) * 100
-).fillna(0).replace([float('inf'), -float('inf')], 0)
+    # Khắc phục lỗi chia cho 0
+    master["% Hoàn thành tháng"] = (master["Kết quả tháng"] / master[col_kpi].replace(0, pd.NA) * 100).fillna(0).replace([float('inf'), -float('inf')], 0)
     
     # Trải chi tiết từng Tuần
     tuan_trong_thang = sorted([t for t in df_kq[df_kq["Tháng"] == thang_chon]["Tuần"].unique()])
@@ -196,7 +196,45 @@ def tao_sheet_tong_hop(thang_chon, chiso_chon):
         kq_tuan = df_kq[(df_kq["Tháng"] == thang_chon) & (df_kq["Tuần"] == tuan)][["Kênh_Spotify", col_kq]]
         master = master.merge(kq_tuan.rename(columns={col_kq: f"{tuan}_Actual"}), on="Kênh_Spotify", how="left")
         master[f"{tuan}_Actual"] = master[f"{tuan}_Actual"].fillna(0)
-        master[f"{tuan}_%"] = (master[f"{tuan}_Actual"] / master[f"{tuan}_Target"] * 100).replace([float('inf'), -float('inf')], 0).fillna(0)
+        # Khắc phục lỗi chia cho 0
+        master[f"{tuan}_%"] = (master[f"{tuan}_Actual"] / master[f"{tuan}_Target"].replace(0, pd.NA) * 100).fillna(0).replace([float('inf'), -float('inf')], 0)
+
+# ==========================================
+    # ĐOẠN CODE THÊM DÒNG TỔNG CỘNG (TOTAL)
+    # ==========================================
+    if len(master) > 0:
+        total_data = {}
+        for col in master.columns:
+            if pd.api.types.is_numeric_dtype(master[col]):
+                total_data[col] = master[col].sum()
+            else:
+                if col == "Kênh_Spotify":
+                    total_data[col] = "🔥 TỔNG CỘNG"
+                else:
+                    total_data[col] = "-"
+        
+        # TÍNH LẠI % HOÀN THÀNH TỔNG ĐỂ KHÔNG BỊ CỘNG DỒN SAI SỐ
+        if total_data.get(col_kpi, 0) > 0:
+            total_data["% Hoàn thành"] = (total_data.get("Kết quả tổng", 0) / total_data[col_kpi]) * 100
+            total_data["% Hoàn thành tháng"] = (total_data.get("Kết quả tháng", 0) / total_data[col_kpi]) * 100
+        else:
+            total_data["% Hoàn thành"] = 0
+            total_data["% Hoàn thành tháng"] = 0
+            
+        # Tính % tổng cho từng tuần (nếu có)
+        for tuan in tuan_trong_thang:
+            c_actual = f"{tuan}_Actual"
+            c_target = f"{tuan}_Target"
+            c_pct = f"{tuan}_%"
+            if total_data.get(c_target, 0) > 0:
+                total_data[c_pct] = (total_data.get(c_actual, 0) / total_data[c_target]) * 100
+            else:
+                total_data[c_pct] = 0
+                
+        # Ép thành DataFrame và chèn lên dòng ĐẦU TIÊN (index 0)
+        df_total = pd.DataFrame([total_data])
+        master = pd.concat([df_total, master], ignore_index=True)
+    # ==========================================
         
     return master, col_kpi
 
@@ -234,10 +272,10 @@ with tab_master:
     cols = ["Kênh", f"KPI {chiso_sheet}", "Kết quả tổng", "% Hoàn thành", "Kết quả tháng", "% Hoàn thành tháng"]
     tuan_cols = [c for c in df_display.columns if "Tuần" in c]
     df_display = df_display[cols + tuan_cols]
-    df_display.insert(0, "STT", range(1, len(df_display) + 1))
-
+    
+    # Đã bỏ cột STT thủ công
     df_clean = df_display.copy()
-    cols_to_drop = ["So_Tuan", "index"]
+    cols_to_drop = ["So_Tuan", "index", "STT"]
     for col in cols_to_drop:
         if col in df_clean.columns: df_clean = df_clean.drop(columns=[col])
 
@@ -250,6 +288,7 @@ with tab_master:
     }
     val_fmt = format_dict[chiso_sheet]
 
+    # Hiển thị bảng (bỏ hide_index để sử dụng Index 0, 1, 2...)
     st.dataframe(
         df_clean.style
         .format({
@@ -261,7 +300,7 @@ with tab_master:
             **{col: val_fmt for col in df_clean.columns if "KPI Tuần" in col},
             **{col: val_fmt for col in df_clean.columns if "Kết quả Tuần" in col},
             **{col: "{:.0f}%" for col in df_clean.columns if "% Tuần" in col}
-        }).hide(axis="index"), 
+        }), 
         use_container_width=True
     )
 
