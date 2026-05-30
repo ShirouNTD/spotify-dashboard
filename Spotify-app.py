@@ -87,8 +87,8 @@ st.markdown(f"""
   /* ÉP MÀU CHỮ CỰC MẠNH CHO OPTION DROPDOWN */
     li[role="option"] div[data-testid="stMarkdownContainer"] p,
     li[role="option"] span {{
-        color: {{'#111827' if is_light else '#FAFAFA'}} !important;
-        -webkit-text-fill-color: {{'#111827' if is_light else '#FAFAFA'}} !important;
+        color: {{'#111827' if is_light else '#000000'}} !important;
+        -webkit-text-fill-color: {{'#111827' if is_light else '#000000'}} !important;
     }}
 
     /* ÉP MÀU NỀN CỦA CÁI LI ĐÓ ĐỂ NÓ KHÔNG BỊ TRÙNG MÀU CHỮ */
