@@ -84,26 +84,21 @@ st.markdown(f"""
     .badge-green {{ background-color: rgba(29, 185, 84, 0.15) !important; color: #1DB954 !important; }}
     .badge-red {{ background-color: rgba(226, 33, 52, 0.15) !important; color: #E22134 !important; }}
 
-    /* ÉP MÀU DỨT ĐIỂM - CHỐNG MỌI CƠ CHẾ GHI ĐÈ */
-    
-    /* 1. Ép cả cái thùng chứa listbox */
-    div[role="listbox"],
-    div[data-baseweb="popover"] {{
-        background-color: {{'#FFFFFF' if is_light else '#262730'}} !important;
-        border: 1px solid {{'#CCCCCC' if is_light else '#444444'}} !important;
-    }}
-    
-    /* 2. Ép tất cả các phần tử con, cháu, chắt bên trong */
-    div[role="listbox"] * {{
-        color: {{'#000000' if is_light else '#FFFFFF'}} !important;
-        background-color: transparent !important;
-        -webkit-text-fill-color: {{'#000000' if is_light else '#FFFFFF'}} !important;
+  /* ÉP MÀU CHỮ CỰC MẠNH CHO OPTION DROPDOWN */
+    li[role="option"] div[data-testid="stMarkdownContainer"] p,
+    li[role="option"] span {{
+        color: {{'#111827' if is_light else '#FAFAFA'}} !important;
+        -webkit-text-fill-color: {{'#111827' if is_light else '#FAFAFA'}} !important;
     }}
 
-    /* 3. Đè màu lên trạng thái được chọn (Selected) và Di chuột (Hover) */
-    div[role="listbox"] div[role="option"]:hover,
-    div[role="option"][aria-selected="true"] {{
-        background-color: {{'#DDDDDD' if is_light else '#4A4A4A'}} !important;
+    /* ÉP MÀU NỀN CỦA CÁI LI ĐÓ ĐỂ NÓ KHÔNG BỊ TRÙNG MÀU CHỮ */
+    li[role="option"] {{
+        background-color: {{'#FFFFFF' if is_light else '#262730'}} !important;
+    }}
+
+    /* ÉP MÀU KHI HOVER ĐỂ DỄ NHÌN */
+    li[role="option"]:hover {{
+        background-color: {{'#E0E0E0' if is_light else '#404040'}} !important;
     }}
 </style>
 """, unsafe_allow_html=True)
