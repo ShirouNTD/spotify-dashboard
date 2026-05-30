@@ -96,6 +96,13 @@ st.markdown(f"""
     div[role="listbox"] div[role="option"]:hover {{
         background-color: {{'#F0F0F0' if is_light else '#3D3F47'}} !important;
     }}
+    /* Ép cứng màu chữ đen cho Dark Mode (nếu ngài muốn chữ hiện rõ trên nền xám) */
+    /* Hoặc đổi lại thành '#FAFAFA' nếu ngài vẫn muốn chữ trắng nhưng cần độ tương phản cao hơn */
+    
+    div[role="listbox"] div[role="option"], 
+    div[role="listbox"] div[role="option"] span {{
+        color: {'#111827' if is_light else '#111827'} !important;
+    }}
     
 </style>
 """, unsafe_allow_html=True)
