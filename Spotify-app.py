@@ -28,8 +28,6 @@ with col_toggle:
     st.write("") # Tạo khoảng trống đẩy nút xuống một xíu cho cân đối
     theme_choice = st.radio("Giao diện:", ["☀️ Light Mode", "🌙 Dark Mode"], horizontal=True, label_visibility="collapsed")
 
-st.markdown("---")
-
 is_light = "Light" in theme_choice 
 
 # Bơm màu theo công tắc của Boss
