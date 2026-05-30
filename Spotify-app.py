@@ -26,19 +26,19 @@ theme_choice = st.sidebar.radio("Giao diện:", ["☀️ Light Mode", "🌙 Dark
 
 is_light = "Light" in theme_choice 
 
-# Bơm màu theo công tắc của Boss
+# Bơm màu theo công tắc
 if is_light:
     bg_main = "#FFFFFF"
     bg_sec = "#F8F9FA"
     text_c = "#0C7A33"  # Xanh lá
     border_c = "#E0E0E0"
-    alert_c = "#111827" # Chữ đen đậm cho ô báo lỗi/thông báo
+    alert_c = "#111827" # CHỮ ĐEN CHO Ô BÁO LỖI (st.error, st.info)
 else:
     bg_main = "#0E1117"
     bg_sec = "#262730"
     text_c = "#FAFAFA"  # Trắng
     border_c = "rgba(29, 185, 84, 0.2)"
-    alert_c = "#FAFAFA" # Chữ trắng cho ô báo lỗi/thông báo
+    alert_c = "#FAFAFA" # Chữ trắng 
 
 # Bơm CSS ép tuyệt đối 
 st.markdown(f"""
@@ -51,23 +51,31 @@ st.markdown(f"""
     .stApp, [data-testid="stAppViewContainer"] {{ background-color: {bg_main} !important; background-image: none !important; }}
     [data-testid="stSidebar"] {{ background-color: {bg_sec} !important; background-image: none !important; }}
     
-   /* ẨN TOÀN BỘ MENU, NÚT DEPLOY VÀ HEADER MẶC ĐỊNH CỦA STREAMLIT */
+    /* === ẨN HEADER, NÚT DEPLOY TẬN GỐC === */
+    #MainMenu {{ visibility: hidden; }}
+    [data-testid="stHeader"] {{ display: none !important; }}
+    [data-testid="stToolbar"] {{ visibility: hidden !important; }}
+    footer {{ visibility: hidden; }}
 
-    #MainMenu {visibility: hidden;}
-
-    [data-testid="stHeader"] {display: none !important;}
-
-    [data-testid="stToolbar"] {visibility: hidden !important;}
-
-    footer {visibility: hidden;}
+    /* 🛑 TIÊU DIỆT CÁI BONG BÓNG CHỮ KHI HOVER VÀO MŨI TÊN SIDEBAR */
+    div[data-testid="stTooltipContent"], div[role="tooltip"] {{
+        display: none !important;
+        opacity: 0 !important;
+        visibility: hidden !important;
+    }}
 
     /* ÉP MÀU CHỮ TOÀN CỤC */
     .stMarkdown, .stText, p, h1, h2, h3, h4, h5, h6, label, li, span, div[data-testid="stMarkdownContainer"] {{
         color: {text_c} !important;
     }}
 
-    /* 🛡️ TRỊ DỨT ĐIỂM CHỮ XANH LÁ TRONG CÁC Ô ĐỎ (ERROR) & XANH (INFO) */
-    div[data-testid="stAlert"] *, div[data-testid="stAlert"] p, div[data-testid="stAlert"] span {{
+    /* 🛡️ SNIPER: BẮN THẲNG VÀO THẺ P VÀ SPAN TRONG Ô THÔNG BÁO ĐỂ ÉP RA MÀU ĐEN (LIGHT) HOẶC TRẮNG (DARK) */
+    div[data-testid="stAlert"] p, 
+    div[data-testid="stAlert"] span, 
+    div[data-testid="stAlert"] h1, 
+    div[data-testid="stAlert"] h2, 
+    div[data-testid="stAlert"] h3, 
+    div[data-testid="stAlert"] div[data-testid="stMarkdownContainer"] {{
         color: {alert_c} !important; 
     }}
 
