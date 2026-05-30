@@ -50,14 +50,12 @@ st.markdown(f"""
     .stApp, [data-testid="stAppViewContainer"] {{ background-color: {bg_main} !important; background-image: none !important; }}
     [data-testid="stSidebar"] {{ background-color: {bg_sec} !important; background-image: none !important; }}
 
-    /* ẨN TẬN GỐC MENU DEPLOY ĐỂ KHÔNG HIỆN CHỮ RÁC KHI HOVER */
-    [data-testid="stToolbar"] {{ display: none !important; }}
-    #MainMenu {{ display: none !important; }}
-    footer {{ display: none !important; }}
+    /* ẨN TOÀN BỘ MENU, NÚT DEPLOY VÀ HEADER MẶC ĐỊNH CỦA STREAMLIT */
+    #MainMenu {visibility: hidden;}
+    [data-testid="stHeader"] {display: none !important;}
+    [data-testid="stToolbar"] {visibility: hidden !important;}
+    footer {visibility: hidden;}
     
-    /* CHỈ LÀM TRONG SUỐT HEADER, GIỮ NGUYÊN HOÀN TOÀN NÚT MỞ SIDEBAR */
-    header[data-testid="stHeader"] {{ background-color: transparent !important; }}
-
     /* ÉP MÀU CHỮ TRÁNH TÀNG HÌNH */
     .stMarkdown, .stText, p, h1, h2, h3, h4, h5, h6, label, li, span, div[data-testid="stMarkdownContainer"] {{
         color: {text_c} !important;
