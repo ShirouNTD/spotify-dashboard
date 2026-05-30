@@ -30,22 +30,23 @@ is_light = "Light" in theme_choice
 # CSS "Sát thủ" dẹp sạch vạch trắng và ép màu
 st.markdown(f"""
 <style>
-    /* NHẬP FONT LEXEND TRỞ LẠI */
     @import url('https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;600;800&display=swap');
     
-    html, body, [class*="css"], [class*="st-"] {{ 
-        font-family: 'Lexend', sans-serif !important; 
-    }}
-
-    /* TẮT VẠCH TRẮNG & HEADER */
-    div[data-testid="stHeader"], hr {{ display: none !important; }}
+    html, body, [class*="css"], [class*="st-"] {{ font-family: 'Lexend', sans-serif !important; }}
     
-    /* MÀU NỀN & CHỮ TOÀN CỤC */
+    /* MÀU NỀN & CHỮ CHUNG */
     .stApp {{ background-color: {'#FFFFFF' if is_light else '#0E1117'} !important; }}
+    
+    /* ÉP MÀU CHỮ TOÀN CỤC (TRỪ CÁC PHẦN TỬ CẦN ĐÈ MÀU) */
     p, h1, h2, h3, h4, h5, h6, span, label, div {{ 
         color: {'#0C7A33' if is_light else '#FAFAFA'} !important; 
     }}
-    
+
+    /* ĐÈ MÀU RIÊNG CHO BỘ LỌC (SELECTBOX/RADIO) */
+    .stRadio label, .stSelectbox label, div[data-baseweb="select"] span, div[role="listbox"] div {{
+        color: {'#111827' if is_light else '#FAFAFA'} !important;
+    }}
+
     /* Ô THÔNG BÁO (ALERT) */
     div[data-testid="stAlert"] {{
         background-color: {'#FFF0E6' if is_light else 'rgba(226, 33, 52, 0.2)'} !important;
@@ -55,22 +56,9 @@ st.markdown(f"""
 
     /* NÚT BẤM & TAG */
     span[data-baseweb="tag"], button[kind="primary"] {{ 
-        background-color: {'#FFD1BA' if is_light else '#E22134'} !important;
+        background-color: {'#FFD1BA' if is_light else '#E22134'} !important; 
         color: {'#111827' if is_light else '#FAFAFA'} !important;
     }}
-
-/* FIX MÀU CHỮ BỘ LỌC (SELECTBOX/RADIO) - ĐẢM BẢO DARK MODE VẪN TRẮNG */
-    .stRadio label, .stSelectbox label, div[data-baseweb="select"] span, 
-    div[data-baseweb="select"] div, div[role="listbox"] div {
-        color: {'#111827' if is_light else '#FAFAFA'} !important;
-    }
-    
-    /* FIX NỀN CHO Ô LỌC KHI MỞ RA (Dropdown) */
-    div[role="listbox"] {
-        background-color: {'#FFFFFF' if is_light else '#262730'} !important;
-    }
-
-
 </style>
 """, unsafe_allow_html=True)
 
