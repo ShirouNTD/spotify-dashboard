@@ -442,30 +442,73 @@ with tab_nhap_kq:
                 st.session_state.rk_kq_thang += 1; st.rerun()
 
 # ==========================================
-# TAB 5: QUẢN LÝ DỮ LIỆU
+# TAB 5: QUẢN LÝ & XÓA DỮ LIỆU
 # ==========================================
 with tab_xoa_data:
-    if not danh_sach_kenh_master: st.info("Hệ thống chưa có dữ liệu kênh nào.")
-    else:
-        st.subheader("🛠️ Chỉnh Sửa Thông Tin Kênh Toàn Cục")
-        kenh_can_sua = st.selectbox("1. Chọn Kênh cần đổi tên / bật kiếm tiền:", danh_sach_kenh_master, key="edit_k")
-        col_e1, col_e2 = st.columns(2)
-        with col_e1: ten_kenh_moi = st.text_input("Tên kênh mới:", value=kenh_can_sua, key="edit_name").strip()
-        with col_e2: 
-            st.markdown("<br>", unsafe_allow_html=True)
-            bkt_moi = st.checkbox("✅ Kênh đã bật kiếm tiền", value=lay_trang_thai_kiem_tien(kenh_can_sua), key="edit_bkt")
-            
-        if st.button("💾 Lưu Thay Đổi Thông Tin", type="primary"):
-            if not ten_kenh_moi: st.error("⚠️ Tên kênh không được để trống!")
-            elif ten_kenh_moi != kenh_can_sua and ten_kenh_moi in danh_sach_kenh_master: st.error("⚠️ Tên kênh đã tồn tại!")
-            else:
-                for d_file, d_df in [(FILE_DU_LIEU, df), (FILE_KPI, df_kpi), (FILE_KQ_THANG, df_thang_chot)]:
-                    d_df.loc[d_df["Kênh_Spotify"] == kenh_can_sua, "Kênh_Spotify"] = ten_kenh_moi
-                    d_df.loc[d_df["Kênh_Spotify"] == ten_kenh_moi, "Bat_Kiem_Tien"] = bkt_moi
-                    d_df.to_csv(d_file, index=False)
-                st.session_state.toast_msg = (f"✅ Đã cập nhật kênh {ten_kenh_moi}!", "✅")
-                st.rerun()
+    st.header("🛠️ Quản Lý & Xóa Dữ Liệu")
+    st.markdown("Khu vực này giúp bạn dọn dẹp các dữ liệu nhập sai. Vui lòng kiểm tra kỹ trước khi bấm Xóa!")
 
+    # Chọn file cần thao tác
+    loai_dl = st.radio("Thư mục dữ liệu:", ["🎯 Mục tiêu (KPI)", "📥 Kết quả Tuần", "📥 Kết quả Tháng"], horizontal=True)
+
+    if loai_dl == "🎯 Mục tiêu (KPI)":
+        file_path = FILE_KPI
+    elif loai_dl == "📥 Kết quả Tuần":
+        file_path = FILE_DU_LIEU
+    else:
+        file_path = FILE_KQ_THANG
+
+    if os.path.exists(file_path):
+        df_delete = pd.read_csv(file_path)
+        
+        if len(df_delete) > 0:
+            # Hiển thị bảng để Boss xem trực quan
+            st.dataframe(df_delete, use_container_width=True)
+
+            st.markdown("---")
+            st.subheader("🗑️ Chon dòng cần xóa")
+            
+            # Tạo danh sách text dễ nhìn để Boss chọn (Ví dụ: Dòng 0: Kênh ABC - Tháng 1 - Tuần 1)
+            options = []
+            for idx, row in df_delete.iterrows():
+                kenh = row.get('Kênh_Spotify', 'Unknown')
+                thang = row.get('Tháng', '')
+                
+                if loai_dl == "📥 Kết quả Tuần":
+                    tuan = row.get('Tuần', '')
+                    info = f"Dòng {idx} | Kênh: {kenh} | {thang} | {tuan}"
+                else:
+                    info = f"Dòng {idx} | Kênh: {kenh} | {thang}"
+                    
+                options.append(info)
+
+            # Khung chọn dòng
+            dong_can_xoa = st.multiselect("Nhấp vào đây và chọn các dòng dữ liệu bị sai:", options)
+
+            # Nút Xóa
+            if st.button("🚨 XÓA CÁC DÒNG ĐÃ CHỌN", type="primary"):
+                if dong_can_xoa:
+                    # Trích xuất số Index (từ chữ "Dòng X |...")
+                    idx_to_drop = [int(val.split(" | ")[0].replace("Dòng ", "")) for val in dong_can_xoa]
+                    
+                    # Tiến hành xóa và lưu lại
+                    df_delete = df_delete.drop(idx_to_drop)
+                    df_delete.to_csv(file_path, index=False)
+                    
+                    st.success("✅ Đã xóa thành công! Đang tự động cập nhật lại hệ thống...")
+                    
+                    # Lệnh làm mới (reload) lại toàn bộ app
+                    try:
+                        st.rerun()
+                    except:
+                        st.experimental_rerun()
+                else:
+                    st.warning("⚠️ Boss chưa chọn dòng nào để xóa!")
+        else:
+            st.info("Bảng dữ liệu này hiện đang trống.")
+    else:
+        st.error(f"Lỗi: Không tìm thấy file gốc ({file_path}).")
+        
 # ==========================================
 # TAB 1: DASHBOARD CHÍNH 
 # ==========================================
