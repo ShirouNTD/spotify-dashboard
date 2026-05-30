@@ -185,7 +185,9 @@ def tao_sheet_tong_hop(thang_chon, chiso_chon):
     chot_thang = chot_thang.groupby("Kênh_Spotify")["Kết quả tháng"].sum().reset_index() 
     master = master.merge(chot_thang, on="Kênh_Spotify", how="left")
     master["Kết quả tháng"] = master["Kết quả tháng"].fillna(0)
-    master["% Hoàn thành tháng"] = (master["Kết quả tháng"] / master[col_kpi] * 100).replace([float('inf'), -float('inf')], 0).fillna(0)
+    master["% Hoàn thành tháng"] = (
+    master["Kết quả tháng"] / master[col_kpi].replace(0, pd.NA) * 100
+).fillna(0).replace([float('inf'), -float('inf')], 0)
     
     # Trải chi tiết từng Tuần
     tuan_trong_thang = sorted([t for t in df_kq[df_kq["Tháng"] == thang_chon]["Tuần"].unique()])
