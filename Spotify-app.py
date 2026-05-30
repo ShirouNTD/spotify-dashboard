@@ -15,6 +15,31 @@ if "rk_kq_thang" not in st.session_state:
 if "rk_kpi" not in st.session_state:
     st.session_state.rk_kpi = 0
 
+# ==========================================
+# 1. CẤU HÌNH GIAO DIỆN & CUSTOM THEME TOGGLE
+# ==========================================
+st.set_page_config(page_title="Spotify Performance Hub", layout="wide", page_icon="🎧", initial_sidebar_state="expanded")
+
+# TẠO CÔNG TẮC THEME ĐỘC QUYỀN TRÊN SIDEBAR
+st.sidebar.markdown("### 🎨 Tùy chỉnh Giao diện")
+theme_choice = st.sidebar.radio("Giao diện:", ["☀️ Light Mode", "🌙 Dark Mode"], horizontal=True, label_visibility="collapsed")
+
+# Biến toàn cục để toàn hệ thống (kể cả biểu đồ Plotly) đều nhận diện đúng
+is_light = "Light" in theme_choice 
+
+# Bơm màu theo công tắc của Boss
+if is_light:
+    bg_main = "#FFFFFF"
+    bg_sec = "#F8F9FA"
+    text_c = "#0C7A33"  # Xanh lá đậm sang trọng
+    border_c = "#E0E0E0"
+else:
+    bg_main = "#0E1117"
+    bg_sec = "#262730"
+    text_c = "#FAFAFA"  # Trắng sáng
+    border_c = "rgba(29, 185, 84, 0.2)"
+
+# Bơm CSS ép tuyệt đối 
 st.markdown(f"""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;600;800&display=swap');
@@ -39,7 +64,6 @@ st.markdown(f"""
     }}
 
     /* 🛡️ BẢO VỆ MÀU CHỮ TRONG CÁC Ô THÔNG BÁO (ERROR, INFO, SUCCESS, WARNING) */
-    /* Light Mode: Chữ Đen nhám / Dark Mode: Chữ Trắng để dễ đọc trên mọi nền màu */
     [data-testid="stNotification"] * {{
         color: {'#111827' if is_light else '#FAFAFA'} !important; 
     }}
