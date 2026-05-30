@@ -59,10 +59,18 @@ st.markdown(f"""
         color: {'#111827' if is_light else '#FAFAFA'} !important;
     }}
 
-    /* FIX BỘ LỌC (SELECTBOX/RADIO) */
-    .stRadio label, .stSelectbox label, div[data-baseweb="select"], div[data-baseweb="select"] span {{
+/* FIX MÀU CHỮ BỘ LỌC (SELECTBOX/RADIO) - ĐẢM BẢO DARK MODE VẪN TRẮNG */
+    .stRadio label, .stSelectbox label, div[data-baseweb="select"] span, 
+    div[data-baseweb="select"] div, div[role="listbox"] div {
         color: {'#111827' if is_light else '#FAFAFA'} !important;
-    }}
+    }
+    
+    /* FIX NỀN CHO Ô LỌC KHI MỞ RA (Dropdown) */
+    div[role="listbox"] {
+        background-color: {'#FFFFFF' if is_light else '#262730'} !important;
+    }
+
+
 </style>
 """, unsafe_allow_html=True)
 
