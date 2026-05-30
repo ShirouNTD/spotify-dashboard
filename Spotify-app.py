@@ -79,17 +79,23 @@ st.markdown(f"""
     .badge-green {{ background-color: rgba(29, 185, 84, 0.15) !important; color: #1DB954 !important; }}
     .badge-red {{ background-color: rgba(226, 33, 52, 0.15) !important; color: #E22134 !important; }}
 
-/* FIX DROP-DOWN MENU - GỌN VÀ KHÔNG LỖI */
+/* FIX DỨT ĐIỂM MÀU CHỮ TRONG DROPDOWN */
+    
+    /* 1. Nền của cái bảng sổ xuống */
     div[role="listbox"] {{
-        background-color: {bg_dropdown} !important;
+        background-color: {'#FFFFFF' if is_light else '#262730'} !important;
     }}
     
-    div[role="listbox"] div, div[role="listbox"] span {{
-        color: {text_dropdown} !important;
+    /* 2. Ép màu chữ ĐEN/TRẮNG cho các lựa chọn bên trong */
+    div[role="listbox"] div, 
+    div[role="listbox"] span,
+    div[role="option"] div {{
+        color: {'#111827' if is_light else '#FAFAFA'} !important;
     }}
     
+    /* 3. Đảm bảo chữ trong ô chính (ô hiển thị tháng) không bị trắng xóa */
     div[data-baseweb="select"] > div {{
-        color: {text_c} !important;
+        color: {'#111827' if is_light else '#FAFAFA'} !important;
     }}
 </style>
 """, unsafe_allow_html=True)
