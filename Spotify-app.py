@@ -97,6 +97,24 @@ st.markdown(f"""
     .text-danger, .text-danger * {{ color: #E22134 !important; }}
     .badge-green {{ background-color: rgba(29, 185, 84, 0.15) !important; color: #1DB954 !important; }}
     .badge-red {{ background-color: rgba(226, 33, 52, 0.15) !important; color: #E22134 !important; }}
+
+/* --- FIX LỖI CHỮ TRẮNG KHI MỞ DROP-DOWN --- */
+    
+    /* 1. Nền của cái bảng chọn sổ xuống */
+    div[role="listbox"] {
+        background-color: {'#FFFFFF' if is_light else '#262730'} !important;
+    }
+    
+    /* 2. Màu chữ của các option bên trong bảng chọn */
+    div[role="listbox"] div, 
+    div[role="listbox"] span {
+        color: {'#111827' if is_light else '#FAFAFA'} !important;
+    }
+
+    /* 3. Màu chữ của ô hiển thị kết quả (ví dụ: "Tháng 5") */
+    div[data-baseweb="select"] > div {
+        color: {'#111827' if is_light else '#FAFAFA'} !important;
+    }
  
 </style>
 """, unsafe_allow_html=True)
