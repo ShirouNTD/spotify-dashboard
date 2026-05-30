@@ -15,53 +15,62 @@ if "rk_kq_thang" not in st.session_state:
 if "rk_kpi" not in st.session_state:
     st.session_state.rk_kpi = 0
 
-# 1. CẤU HÌNH GIAO DIỆN
-
+# ==========================================
+# 1. CẤU HÌNH GIAO DIỆN & CUSTOM THEME TOGGLE
+# ==========================================
 st.set_page_config(page_title="Spotify Performance Hub", layout="wide", page_icon="🎧")
 
-# ==========================================
-# GIAO DIỆN NATIVE - OVERLAY KÍNH XANH
-# ==========================================
+# TẠO CÔNG TẮC THEME ĐỘC QUYỀN TRÊN SIDEBAR
+st.sidebar.markdown("### 🎨 Tùy chỉnh Giao diện")
+theme_choice = st.sidebar.radio("Giao diện:", ["☀️ Light Mode", "🌙 Dark Mode"], horizontal=True, label_visibility="collapsed")
 
-st.markdown("""
+# Biến toàn cục để toàn hệ thống (kể cả biểu đồ Plotly) đều nhận diện đúng
+is_light = "Light" in theme_choice 
+
+# Bơm màu theo công tắc của Boss
+if is_light:
+    bg_main = "#FFFFFF"
+    bg_sec = "#F8F9FA"
+    text_c = "#0C7A33"  # Xanh lá đậm sang trọng
+    border_c = "#E0E0E0"
+else:
+    bg_main = "#0E1117"
+    bg_sec = "#262730"
+    text_c = "#FAFAFA"  # Trắng sáng
+    border_c = "rgba(29, 185, 84, 0.2)"
+
+# Bơm CSS ép tuyệt đối (Dùng f-string của Python để chèn màu)
+st.markdown(f"""
 <style>
-/* Nhập Font Lexend từ Google Fonts */
     @import url('https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;600;800&display=swap');
-    /* Ép toàn bộ App dùng font Lexend */
-    html, body, [class*="css"], [class*="st-"], div, span, p, h1, h2, h3, h4, h5, h6 {
-        font-family: 'Lexend', sans-serif !important;
-    }
-    [data-testid="stAppViewContainer"] { 
-        background-color: var(--background-color) !important; 
-        background-image: linear-gradient(rgba(29, 185, 84, 0.07), rgba(29, 185, 84, 0.07)) !important;
-    }
-    [data-testid="stSidebar"] { 
-        background-color: var(--secondary-background-color) !important; 
-        background-image: linear-gradient(rgba(29, 185, 84, 0.12), rgba(29, 185, 84, 0.12)) !important;
-    }
-    [data-testid="stHeader"] { background-color: transparent !important; }
-    p, h1, h2, h3, h4, h5, h6, li, label, .stMarkdown, .stText, div[data-testid="stMarkdownContainer"] { color: var(--text-color) !important; }
-    .spotify-card {
-        background-color: var(--secondary-background-color) !important; 
-        background-image: linear-gradient(rgba(29, 185, 84, 0.03), rgba(29, 185, 84, 0.03)) !important;
-        border: 1px solid rgba(29, 185, 84, 0.2) !important; 
-        border-radius: 12px; padding: 15px; height: 100%; 
-        box-shadow: 0 4px 10px rgba(0,0,0,0.05); transition: transform 0.2s, box-shadow 0.2s;
-    }
-    .spotify-card:hover { transform: translateY(-3px); box-shadow: 0 6px 15px rgba(29,185,84,0.15); }
-    .spotify-label { font-size: 13px; font-weight: 600; color: var(--text-color) !important; opacity: 0.7; text-transform: uppercase; margin-bottom: 5px; }
-    .spotify-value { font-size: 26px; font-weight: 900; margin-bottom: 10px; color: var(--text-color) !important; }
-    .badge-green { background-color: rgba(29, 185, 84, 0.15) !important; color: #1DB954 !important; padding: 4px 8px; border-radius: 6px; font-size: 13px; font-weight: 800; border: 1px solid rgba(29, 185, 84, 0.3); }
-    .badge-red { background-color: rgba(226, 33, 52, 0.15) !important; color: #E22134 !important; padding: 4px 8px; border-radius: 6px; font-size: 13px; font-weight: 800; border: 1px solid rgba(226, 33, 52, 0.3); }
-    .text-success { color: #1DB954 !important; font-size: 18px; font-weight: bold; }
-    .text-danger { color: #E22134 !important; font-size: 18px; font-weight: bold; }
-    div.stButton > button[kind="primary"] { background-color: #1DB954 !important; color: white !important; border: none; border-radius: 20px; font-weight: bold; }
-    div.stButton > button[kind="primary"]:hover { background-color: #1ED760 !important; color: white !important; }
-    div.stButton > button * { color: white !important; }
+    
+    html, body, [class*="css"], [class*="st-"] {{ font-family: 'Lexend', sans-serif !important; }}
 
+    /* ÉP MÀU NỀN CỰC MẠNH */
+    .stApp, [data-testid="stAppViewContainer"] {{ background-color: {bg_main} !important; background-image: none !important; }}
+    [data-testid="stSidebar"] {{ background-color: {bg_sec} !important; background-image: none !important; }}
+    [data-testid="stHeader"] {{ background-color: transparent !important; }}
+
+    /* ÉP MÀU CHỮ TRÁNH TÀNG HÌNH */
+    .stMarkdown, .stText, p, h1, h2, h3, h4, h5, h6, label, li, span, div[data-testid="stMarkdownContainer"] {{
+        color: {text_c} !important;
+    }}
+
+    /* FORMAT THẺ CARD CHỈ SỐ */
+    .spotify-card {{
+        background-color: {bg_sec} !important;
+        border: 1px solid {border_c} !important;
+        border-radius: 12px; padding: 15px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    }}
+
+    /* BẢO VỆ CÁC MÀU XANH ĐỎ TRONG BẢNG XẾP HẠNG KHÔNG BỊ ĐÈ */
+    .text-success, .text-success * {{ color: #1DB954 !important; }}
+    .text-danger, .text-danger * {{ color: #E22134 !important; }}
+    .badge-green {{ background-color: rgba(29, 185, 84, 0.15) !important; color: #1DB954 !important; }}
+    .badge-red {{ background-color: rgba(226, 33, 52, 0.15) !important; color: #E22134 !important; }}
 </style>
-""", unsafe_allow_html=True) 
-
+""", unsafe_allow_html=True)
 
 # ==========================================
 # KHỞI TẠO DATA
@@ -487,8 +496,7 @@ with tab_dashboard:
                     colors = (palette * (len(df_plot_w) // len(palette) + 1))[:len(df_plot_w)]
 
                     fig_pie_w = px.pie(df_plot_w, values=cot_tieu_chi_w, names="Kênh_Spotify", hole=0.4, title=f"Tỷ Trọng theo {tieu_chi_chon_w}", color_discrete_sequence=colors)
-                    is_light = st.get_option("theme.base") == "light"
-                    fig_pie_w.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', showlegend=True, legend=dict(orientation="h", yanchor="top", y=-0.2, xanchor="center", x=0.5), font=dict(color="#1B5E20" if is_light else "#E0E0E0") )
+                    fig_pie_w.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', showlegend=True, legend=dict(orientation="h", yanchor="top", y=-0.2, xanchor="center", x=0.5), font=dict(color=text_c))
                     fig_pie_w.update_traces(textinfo='percent', textfont_color="white", textfont_size=12, textposition='inside')
                     st.plotly_chart(fig_pie_w, use_container_width=True)
 
@@ -590,7 +598,6 @@ with tab_dashboard:
                     colors = (palette * (len(df_plot_m) // len(palette) + 1))[:len(df_plot_m)]
 
                     fig_pie_m = px.pie(df_plot_m, values=cot_tieu_chi_m, names="Kênh_Spotify", hole=0.4, title=f"Tỷ Trọng theo {tieu_chi_chon_m}", color_discrete_sequence=colors)
-                    is_light = st.get_option("theme.base") == "light"
-                    fig_pie_m.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', showlegend=True, legend=dict(orientation="h", yanchor="top", y=-0.2, xanchor="center", x=0.5), font=dict(color="#1B5E20" if is_light else "#E0E0E0") )
+                    fig_pie_m.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', showlegend=True, legend=dict(orientation="h", yanchor="top", y=-0.2, xanchor="center", x=0.5), font=dict(color=text_c))
                     fig_pie_m.update_traces(textinfo='percent', textfont_color="white", textfont_size=12, textposition='inside')
                     st.plotly_chart(fig_pie_m, use_container_width=True)
