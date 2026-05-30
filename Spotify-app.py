@@ -448,7 +448,6 @@ with tab_xoa_data:
     st.header("🛠️ Quản Lý & Xóa Dữ Liệu")
     st.markdown("Khu vực này giúp bạn dọn dẹp các dữ liệu nhập sai. Vui lòng kiểm tra kỹ trước khi bấm Xóa!")
 
-    # Chọn file cần thao tác
     loai_dl = st.radio("Thư mục dữ liệu:", ["🎯 Mục tiêu (KPI)", "📥 Kết quả Tuần", "📥 Kết quả Tháng"], horizontal=True)
 
     if loai_dl == "🎯 Mục tiêu (KPI)":
@@ -462,37 +461,36 @@ with tab_xoa_data:
         df_delete = pd.read_csv(file_path)
         
         if len(df_delete) > 0:
-            # Hiển thị bảng để Boss xem trực quan
             st.dataframe(df_delete, use_container_width=True)
 
             st.markdown("---")
-            st.subheader("🗑️ Chon dòng cần xóa")
+            st.subheader("🗑️ Chọn dòng cần xóa")
             
-            # Tạo danh sách text dễ nhìn để Boss chọn (Ví dụ: Dòng 0: Kênh ABC - Tháng 1 - Tuần 1)
-            options = []
+            # CÁCH MỚI BẤT TỬ: Dùng Dictionary (Từ điển) để ánh xạ ID ẩn
+            options_dict = {}
             for idx, row in df_delete.iterrows():
                 kenh = row.get('Kênh_Spotify', 'Unknown')
                 thang = row.get('Tháng', '')
                 
                 if loai_dl == "📥 Kết quả Tuần":
                     tuan = row.get('Tuần', '')
-                    info = f"Dòng {idx} | Kênh: {kenh} | {thang} | {tuan}"
+                    # Giao diện gọn gàng hơn
+                    info = f"Dòng {idx}: {kenh} - {thang} - {tuan}"
                 else:
-                    info = f"Dòng {idx} | Kênh: {kenh} | {thang}"
+                    info = f"Dòng {idx}: {kenh} - {thang}"
                     
-                options.append(info)
+                # Map cái chuỗi hiển thị với cái Index thực sự
+                options_dict[info] = idx
 
-            # Khung chọn dòng
-            dong_can_xoa = st.multiselect("Nhấp vào đây và chọn các dòng dữ liệu bị sai:", options)
+            # Khung chọn dòng (hiển thị danh sách các key của dictionary)
+            dong_can_xoa = st.multiselect("Nhấp vào đây và chọn các dòng dữ liệu bị sai:", list(options_dict.keys()))
 
-            # Nút Xóa
             if st.button("🚨 XÓA CÁC DÒNG ĐÃ CHỌN", type="primary"):
                 if dong_can_xoa:
-                    # Trích xuất số Index (từ chữ "Dòng X |...")
-                    idx_to_drop = [int(val.split(" | ")[0].replace("Dòng ", "")) for val in dong_can_xoa]
+                    # Truy xuất thẳng Index từ Dictionary, KHÔNG CẦN CẮT CHUỖI NỮA
+                    idx_to_drop = [options_dict[val] for val in dong_can_xoa]
                     
-                    # CHIẾN THUẬT MỚI: Dùng màng lọc (Lọc giữ lại những index KHÔNG nằm trong danh sách xóa)
-                    # Cách này bất tử với lỗi KeyError
+                    # Màng lọc bất tử
                     df_delete = df_delete[~df_delete.index.isin(idx_to_drop)]
                     
                     # Tiến hành lưu lại
@@ -500,7 +498,6 @@ with tab_xoa_data:
                     
                     st.success("✅ Đã xóa thành công! Đang tự động cập nhật lại hệ thống...")
                     
-                    # Lệnh làm mới (reload) lại toàn bộ app
                     import time
                     time.sleep(1) # Dừng 1 giây để Boss kịp nhìn thấy thông báo màu xanh
                     try:
@@ -509,6 +506,10 @@ with tab_xoa_data:
                         st.experimental_rerun()
                 else:
                     st.warning("⚠️ Boss chưa chọn dòng nào để xóa!")
+        else:
+            st.info("Bảng dữ liệu này hiện đang trống.")
+    else:
+        st.error(f"Lỗi: Không tìm thấy file gốc ({file_path}).")
         
 # ==========================================
 # TAB 1: DASHBOARD CHÍNH 
