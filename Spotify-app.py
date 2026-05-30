@@ -534,14 +534,22 @@ with tab_dashboard:
 
                     fig_pie_w = px.pie(df_plot_w, values=cot_tieu_chi_w, names="Kênh_Spotify", hole=0.4, title=f"Tỷ Trọng theo {tieu_chi_chon_w}", color_discrete_sequence=colors)
                     fig_pie_w.update_traces(textinfo='percent', textfont_color="white", textfont_size=12, textposition='inside')
+                    # Xác định màu chữ tùy theo Theme
+                    chart_text_color = '#FAFAFA' if not is_light else '#0C7A33'
+
                     fig_pie_w.update_layout(
                         paper_bgcolor='rgba(0,0,0,0)', 
                         plot_bgcolor='rgba(0,0,0,0)', 
-                        font=dict(color='#FAFAFA' if not is_light else '#0C7A33'),
-                        legend=dict(font=dict(color='#FAFAFA' if st.get_option("theme.base") == "dark" else '#0C7A33'))
+                        font=dict(color=chart_text_color), # Đổi màu text trong biểu đồ
+                        legend=dict(
+                            font=dict(color=chart_text_color), # Đổi màu chữ chú thích
+                            orientation="h", yanchor="top", y=-0.2, xanchor="center", x=0.5
+                        )
                     )
+                    
+                    # QUAN TRỌNG: Thêm theme=None để giữ nguyên màu
                     st.plotly_chart(fig_pie_w, use_container_width=True, theme=None)
-
+                    
     else:
         # DASHBOARD THÁNG (FINAL)
         if df_thang_chot.empty: st.info("Hệ thống chưa có dữ liệu chốt THÁNG nào.")
@@ -594,15 +602,19 @@ with tab_dashboard:
                 fig_vs_m = go.Figure()
                 fig_vs_m.add_trace(go.Scatter(x=df_trend_m["Tháng"], y=df_trend_m[cot_kq_m], mode='lines+markers+text', name='Kết Quả Tháng', line=dict(color='#1DB954', width=3)))
                 fig_vs_m.add_trace(go.Scatter(x=df_trend_m["Tháng"], y=df_trend_m[cot_kpi_m], mode='lines+markers', name='Mục Tiêu Tháng', line=dict(color='#E22134', width=3, dash='dash')))
-                fig_vs.update_layout(
+                # Xác định màu chữ tùy theo Theme của Boss
+                chart_text_color = '#FAFAFA' if not is_light else '#0C7A33'
+
+                fig_vs_m.update_layout(
                     paper_bgcolor='rgba(0,0,0,0)', 
                     plot_bgcolor='rgba(0,0,0,0)', 
-                    font=dict(color='#FAFAFA' if not is_light else '#0C7A33'),
-                    xaxis=dict(gridcolor='#808080' if st.get_option("theme.base") == "dark" else '#E0E0E0', 
-                               tickfont=dict(color='#FAFAFA' if st.get_option("theme.base") == "dark" else '#0C7A33')),
-                    yaxis=dict(gridcolor='#808080' if st.get_option("theme.base") == "dark" else '#E0E0E0', 
-               tickfont=dict(color='#FAFAFA' if st.get_option("theme.base") == "dark" else '#0C7A33'))
+                    font=dict(color=chart_text_color), # Màu chữ chung
+                    xaxis=dict(tickfont=dict(color=chart_text_color), title_font=dict(color=chart_text_color)), # Màu trục X
+                    yaxis=dict(tickfont=dict(color=chart_text_color), title_font=dict(color=chart_text_color)), # Màu trục Y
+                    legend=dict(font=dict(color=chart_text_color)) # Màu chú thích
                 )
+
+                # QUAN TRỌNG: Thêm theme=None vào đây để Streamlit không đè màu lên
                 st.plotly_chart(fig_vs_m, use_container_width=True, theme=None)
 
                 # --- 🏅 3. BẢNG XẾP HẠNG TOP KÊNH (THÁNG FINAL - FORMAT V30) ---
@@ -649,10 +661,19 @@ with tab_dashboard:
 
                     fig_pie_m = px.pie(df_plot_m, values=cot_tieu_chi_m, names="Kênh_Spotify", hole=0.4, title=f"Tỷ Trọng theo {tieu_chi_chon_m}", color_discrete_sequence=colors)
                     fig_pie_m.update_traces(textinfo='percent', textfont_color="white", textfont_size=12, textposition='inside')
-                    fig_pie_w.update_layout(
+                    # Xác định màu chữ tùy theo Theme
+                    chart_text_color = '#FAFAFA' if not is_light else '#0C7A33'
+
+                    fig_pie_,.update_layout(
                         paper_bgcolor='rgba(0,0,0,0)', 
                         plot_bgcolor='rgba(0,0,0,0)', 
-                        font=dict(color='#FAFAFA' if not is_light else '#0C7A33'),
-                        legend=dict(font=dict(color='#FAFAFA' if st.get_option("theme.base") == "dark" else '#0C7A33'))
+                        font=dict(color=chart_text_color), # Đổi màu text trong biểu đồ
+                        legend=dict(
+                            font=dict(color=chart_text_color), # Đổi màu chữ chú thích
+                            orientation="h", yanchor="top", y=-0.2, xanchor="center", x=0.5
+                        )
                     )
-                    st.plotly_chart(fig_pie_m, use_container_width=True, theme=None)
+                    
+                    # QUAN TRỌNG: Thêm theme=None để giữ nguyên màu
+                    st.plotly_chart(fig_pie_,, use_container_width=True, theme=None)
+                    
