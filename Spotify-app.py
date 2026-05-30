@@ -475,19 +475,27 @@ with tab_dashboard:
                 fig_vs = go.Figure()
                 fig_vs.add_trace(go.Scatter(x=df_trend["Tuần"], y=df_trend[cot_kq], mode='lines+markers+text', name='Kết Quả', textposition="top center", line=dict(color='#1DB954', width=3)))
                 fig_vs.add_trace(go.Scatter(x=df_trend["Tuần"], y=df_trend["Đường_Mục_Tiêu"], mode='lines+markers', name='Mục Tiêu', line=dict(color='#E22134', width=3, dash='dash')))
-                # Xác định màu chữ tùy theo Theme của Boss
-                chart_text_color = '#FAFAFA' if not is_light else '#0C7A33'
+                # Xác định màu đường gióng ngang (nét đứt) dựa trên Theme
+                grid_line_color = 'rgba(255, 255, 255, 0.2)' if not is_light else '#E0E0E0'
 
+                # Áp dụng cho cả fig_vs và fig_vs_m
                 fig_vs.update_layout(
                     paper_bgcolor='rgba(0,0,0,0)', 
-                    plot_bgcolor='rgba(0,0,0,0)', 
-                    font=dict(color=chart_text_color), # Màu chữ chung
-                    xaxis=dict(tickfont=dict(color=chart_text_color), title_font=dict(color=chart_text_color)), # Màu trục X
-                    yaxis=dict(tickfont=dict(color=chart_text_color), title_font=dict(color=chart_text_color)), # Màu trục Y
-                    legend=dict(font=dict(color=chart_text_color)) # Màu chú thích
+                    plot_bgcolor='rgba(0,0,0,0)',
+                    # Giữ nguyên phần font color đã làm ở Phần 1
+                    font=dict(color=chart_text_color),
+                    xaxis=dict(
+                        gridcolor=grid_line_color, 
+                        griddash='dot', # NÉT ĐỨT
+                        tickfont=dict(color=chart_text_color)
+                    ),
+                    yaxis=dict(
+                        gridcolor=grid_line_color, 
+                        griddash='dot', # NÉT ĐỨT
+                        rangemode='tozero', # BẮT ĐẦU TỪ 0
+                        tickfont=dict(color=chart_text_color)
+                    )
                 )
-
-                # QUAN TRỌNG: Thêm theme=None vào đây để Streamlit không đè màu lên
                 st.plotly_chart(fig_vs, use_container_width=True, theme=None)
 
                 # --- 🏅 3. BẢNG XẾP HẠNG TOP KÊNH (TUẦN - FORMAT V30) ---
