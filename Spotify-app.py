@@ -490,15 +490,15 @@ with tab_dashboard:
                 fig_vs = go.Figure()
                 fig_vs.add_trace(go.Scatter(x=df_trend["Tuần"], y=df_trend[cot_kq], mode='lines+markers+text', name='Kết Quả', textposition="top center", line=dict(color='#1DB954', width=3)))
                 fig_vs.add_trace(go.Scatter(x=df_trend["Tuần"], y=df_trend["Đường_Mục_Tiêu"], mode='lines+markers', name='Mục Tiêu', line=dict(color='#E22134', width=3, dash='dash')))
-               fig_vs.update_layout(
-    paper_bgcolor='rgba(0,0,0,0)', 
-    plot_bgcolor='rgba(0,0,0,0)', 
-    font=dict(color=text_c),
-    xaxis=dict(gridcolor=border_c, tickfont=dict(color=text_c), title_font=dict(color=text_c)),
-    yaxis=dict(gridcolor=border_c, tickfont=dict(color=text_c), title_font=dict(color=text_c)),
-    legend=dict(font=dict(color=text_c))
-)
-st.plotly_chart(fig_vs, use_container_width=True, theme=None)
+                fig_vs.update_layout(
+                    paper_bgcolor='rgba(0,0,0,0)', 
+                    plot_bgcolor='rgba(0,0,0,0)', 
+                    font=dict(color=text_c),
+                    xaxis=dict(gridcolor=border_c, tickfont=dict(color=text_c), title_font=dict(color=text_c)),
+                    yaxis=dict(gridcolor=border_c, tickfont=dict(color=text_c), title_font=dict(color=text_c)),
+                    legend=dict(font=dict(color=text_c))
+                )
+                st.plotly_chart(fig_vs, use_container_width=True, theme=None)
 
                 # --- 🏅 3. BẢNG XẾP HẠNG TOP KÊNH (TUẦN - FORMAT V30) ---
                 st.markdown("---")
@@ -545,16 +545,16 @@ st.plotly_chart(fig_vs, use_container_width=True, theme=None)
                     fig_pie_w = px.pie(df_plot_w, values=cot_tieu_chi_w, names="Kênh_Spotify", hole=0.4, title=f"Tỷ Trọng theo {tieu_chi_chon_w}", color_discrete_sequence=colors)
                     fig_pie_w.update_traces(textinfo='percent', textfont_color="white", textfont_size=12, textposition='inside')
                     fig_pie_w.update_layout(
-    paper_bgcolor='rgba(0,0,0,0)', 
-    plot_bgcolor='rgba(0,0,0,0)', 
-    showlegend=True, 
-    legend=dict(
-        orientation="h", yanchor="top", y=-0.2, xanchor="center", x=0.5, 
-        font=dict(color=text_c)
-    ), 
-    font=dict(color=text_c)
-)
-st.plotly_chart(fig_pie_w, use_container_width=True, theme=None)
+                        paper_bgcolor='rgba(0,0,0,0)', 
+                        plot_bgcolor='rgba(0,0,0,0)', 
+                        showlegend=True, 
+                        legend=dict(
+                            orientation="h", yanchor="top", y=-0.2, xanchor="center", x=0.5, 
+                            font=dict(color=text_c)
+                        ), 
+                        font=dict(color=text_c)
+                    )
+                    st.plotly_chart(fig_pie_w, use_container_width=True, theme=None)
 
     else:
         # DASHBOARD THÁNG (FINAL)
@@ -609,14 +609,14 @@ st.plotly_chart(fig_pie_w, use_container_width=True, theme=None)
                 fig_vs_m.add_trace(go.Scatter(x=df_trend_m["Tháng"], y=df_trend_m[cot_kq_m], mode='lines+markers+text', name='Kết Quả Tháng', line=dict(color='#1DB954', width=3)))
                 fig_vs_m.add_trace(go.Scatter(x=df_trend_m["Tháng"], y=df_trend_m[cot_kpi_m], mode='lines+markers', name='Mục Tiêu Tháng', line=dict(color='#E22134', width=3, dash='dash')))
                 fig_vs_m.update_layout(
-    paper_bgcolor='rgba(0,0,0,0)', 
-    plot_bgcolor='rgba(0,0,0,0)', 
-    font=dict(color=text_c),
-    xaxis=dict(gridcolor=border_c, tickfont=dict(color=text_c), title_font=dict(color=text_c)),
-    yaxis=dict(gridcolor=border_c, tickfont=dict(color=text_c), title_font=dict(color=text_c)),
-    legend=dict(font=dict(color=text_c))
-)
-st.plotly_chart(fig_vs_m, use_container_width=True, theme=None)
+                    paper_bgcolor='rgba(0,0,0,0)', 
+                    plot_bgcolor='rgba(0,0,0,0)', 
+                    font=dict(color=text_c),
+                    xaxis=dict(gridcolor=border_c, tickfont=dict(color=text_c), title_font=dict(color=text_c)),
+                    yaxis=dict(gridcolor=border_c, tickfont=dict(color=text_c), title_font=dict(color=text_c)),
+                    legend=dict(font=dict(color=text_c))
+                )
+                st.plotly_chart(fig_vs_m, use_container_width=True, theme=None)
 
                 # --- 🏅 3. BẢNG XẾP HẠNG TOP KÊNH (THÁNG FINAL - FORMAT V30) ---
                 st.markdown("---")
@@ -663,13 +663,13 @@ st.plotly_chart(fig_vs_m, use_container_width=True, theme=None)
                     fig_pie_m = px.pie(df_plot_m, values=cot_tieu_chi_m, names="Kênh_Spotify", hole=0.4, title=f"Tỷ Trọng theo {tieu_chi_chon_m}", color_discrete_sequence=colors)
                     fig_pie_m.update_traces(textinfo='percent', textfont_color="white", textfont_size=12, textposition='inside')
                     fig_pie_m.update_layout(
-    paper_bgcolor='rgba(0,0,0,0)', 
-    plot_bgcolor='rgba(0,0,0,0)', 
-    showlegend=True, 
-    legend=dict(
-        orientation="h", yanchor="top", y=-0.2, xanchor="center", x=0.5, 
-        font=dict(color=text_c)
-    ), 
-    font=dict(color=text_c)
-)
-st.plotly_chart(fig_pie_m, use_container_width=True, theme=None)
+                        paper_bgcolor='rgba(0,0,0,0)', 
+                        plot_bgcolor='rgba(0,0,0,0)', 
+                        showlegend=True, 
+                        legend=dict(
+                            orientation="h", yanchor="top", y=-0.2, xanchor="center", x=0.5, 
+                            font=dict(color=text_c)
+                        ), 
+                        font=dict(color=text_c)
+                    )
+                    st.plotly_chart(fig_pie_m, use_container_width=True, theme=None)
