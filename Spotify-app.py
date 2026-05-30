@@ -18,7 +18,7 @@ if "rk_kpi" not in st.session_state:
 # ==========================================
 # 1. CẤU HÌNH GIAO DIỆN & CUSTOM THEME TOGGLE
 # ==========================================
-st.set_page_config(page_title="Spotify Performance Hub", layout="wide", page_icon="🎧")
+st.set_page_config(page_title="Spotify Performance Hub", layout="wide", page_icon="🎧", initial_sidebar_state="expanded")
 
 # TẠO CÔNG TẮC THEME ĐỘC QUYỀN TRÊN SIDEBAR
 st.sidebar.markdown("### 🎨 Tùy chỉnh Giao diện")
@@ -39,7 +39,7 @@ else:
     text_c = "#FAFAFA"  # Trắng sáng
     border_c = "rgba(29, 185, 84, 0.2)"
 
-# Bơm CSS ép tuyệt đối (Dùng f-string của Python để chèn màu)
+# Bơm CSS ép tuyệt đối (Chú ý đã dùng {{ }} cho CSS để không bị lỗi Python)
 st.markdown(f"""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;600;800&display=swap');
@@ -49,7 +49,12 @@ st.markdown(f"""
     /* ÉP MÀU NỀN CỰC MẠNH */
     .stApp, [data-testid="stAppViewContainer"] {{ background-color: {bg_main} !important; background-image: none !important; }}
     [data-testid="stSidebar"] {{ background-color: {bg_sec} !important; background-image: none !important; }}
-    [data-testid="stHeader"] {{ background-color: transparent !important; }}
+    
+    /* ẨN MENU DEPLOY MẶC ĐỊNH NHƯNG GIỮ LẠI NÚT MỞ SIDEBAR */
+    #MainMenu {{ visibility: hidden; }}
+    [data-testid="stToolbar"] {{ visibility: hidden !important; }}
+    header[data-testid="stHeader"] {{ background-color: transparent !important; }}
+    footer {{ visibility: hidden; }}
 
     /* ÉP MÀU CHỮ TRÁNH TÀNG HÌNH */
     .stMarkdown, .stText, p, h1, h2, h3, h4, h5, h6, label, li, span, div[data-testid="stMarkdownContainer"] {{
@@ -69,13 +74,6 @@ st.markdown(f"""
     .text-danger, .text-danger * {{ color: #E22134 !important; }}
     .badge-green {{ background-color: rgba(29, 185, 84, 0.15) !important; color: #1DB954 !important; }}
     .badge-red {{ background-color: rgba(226, 33, 52, 0.15) !important; color: #E22134 !important; }}
-
-    /* ẨN TOÀN BỘ MENU, NÚT DEPLOY VÀ HEADER MẶC ĐỊNH CỦA STREAMLIT */
-    #MainMenu {visibility: hidden;}
-    [data-testid="stHeader"] {display: none !important;}
-    [data-testid="stToolbar"] {visibility: hidden !important;}
-    footer {visibility: hidden;}
-    
 </style>
 """, unsafe_allow_html=True)
 
