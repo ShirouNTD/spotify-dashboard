@@ -434,10 +434,11 @@ with tab_dashboard:
                 fig_vs.update_layout(
                     paper_bgcolor='rgba(0,0,0,0)', 
                     plot_bgcolor='rgba(0,0,0,0)', 
-                    font=dict(color=text_c),
-                    xaxis=dict(gridcolor=border_c, tickfont=dict(color=text_c), title_font=dict(color=text_c)),
-                    yaxis=dict(gridcolor=border_c, tickfont=dict(color=text_c), title_font=dict(color=text_c)),
-                    legend=dict(font=dict(color=text_c))
+                    font=dict(color='#FAFAFA' if not is_light else '#0C7A33'),
+                    xaxis=dict(gridcolor='#808080' if st.get_option("theme.base") == "dark" else '#E0E0E0', 
+                               tickfont=dict(color='#FAFAFA' if st.get_option("theme.base") == "dark" else '#0C7A33')),
+                    yaxis=dict(gridcolor='#808080' if st.get_option("theme.base") == "dark" else '#E0E0E0', 
+                               tickfont=dict(color='#FAFAFA' if st.get_option("theme.base") == "dark" else '#0C7A33'))
                 )
                 st.plotly_chart(fig_vs, use_container_width=True, theme=None)
 
@@ -488,12 +489,8 @@ with tab_dashboard:
                     fig_pie_w.update_layout(
                         paper_bgcolor='rgba(0,0,0,0)', 
                         plot_bgcolor='rgba(0,0,0,0)', 
-                        showlegend=True, 
-                        legend=dict(
-                            orientation="h", yanchor="top", y=-0.2, xanchor="center", x=0.5, 
-                            font=dict(color=text_c)
-                        ), 
-                        font=dict(color=text_c)
+                        font=dict(color='#FAFAFA' if not is_light else '#0C7A33'),
+                        legend=dict(font=dict(color='#FAFAFA' if st.get_option("theme.base") == "dark" else '#0C7A33'))
                     )
                     st.plotly_chart(fig_pie_w, use_container_width=True, theme=None)
 
@@ -549,13 +546,14 @@ with tab_dashboard:
                 fig_vs_m = go.Figure()
                 fig_vs_m.add_trace(go.Scatter(x=df_trend_m["Tháng"], y=df_trend_m[cot_kq_m], mode='lines+markers+text', name='Kết Quả Tháng', line=dict(color='#1DB954', width=3)))
                 fig_vs_m.add_trace(go.Scatter(x=df_trend_m["Tháng"], y=df_trend_m[cot_kpi_m], mode='lines+markers', name='Mục Tiêu Tháng', line=dict(color='#E22134', width=3, dash='dash')))
-                fig_vs_m.update_layout(
+                fig_vs.update_layout(
                     paper_bgcolor='rgba(0,0,0,0)', 
                     plot_bgcolor='rgba(0,0,0,0)', 
-                    font=dict(color=text_c),
-                    xaxis=dict(gridcolor=border_c, tickfont=dict(color=text_c), title_font=dict(color=text_c)),
-                    yaxis=dict(gridcolor=border_c, tickfont=dict(color=text_c), title_font=dict(color=text_c)),
-                    legend=dict(font=dict(color=text_c))
+                    font=dict(color='#FAFAFA' if not is_light else '#0C7A33'),
+                    xaxis=dict(gridcolor='#808080' if st.get_option("theme.base") == "dark" else '#E0E0E0', 
+                               tickfont=dict(color='#FAFAFA' if st.get_option("theme.base") == "dark" else '#0C7A33')),
+                    yaxis=dict(gridcolor='#808080' if st.get_option("theme.base") == "dark" else '#E0E0E0', 
+               tickfont=dict(color='#FAFAFA' if st.get_option("theme.base") == "dark" else '#0C7A33'))
                 )
                 st.plotly_chart(fig_vs_m, use_container_width=True, theme=None)
 
@@ -603,14 +601,10 @@ with tab_dashboard:
 
                     fig_pie_m = px.pie(df_plot_m, values=cot_tieu_chi_m, names="Kênh_Spotify", hole=0.4, title=f"Tỷ Trọng theo {tieu_chi_chon_m}", color_discrete_sequence=colors)
                     fig_pie_m.update_traces(textinfo='percent', textfont_color="white", textfont_size=12, textposition='inside')
-                    fig_pie_m.update_layout(
+                    fig_pie_w.update_layout(
                         paper_bgcolor='rgba(0,0,0,0)', 
                         plot_bgcolor='rgba(0,0,0,0)', 
-                        showlegend=True, 
-                        legend=dict(
-                            orientation="h", yanchor="top", y=-0.2, xanchor="center", x=0.5, 
-                            font=dict(color=text_c)
-                        ), 
-                        font=dict(color=text_c)
+                        font=dict(color='#FAFAFA' if not is_light else '#0C7A33'),
+                        legend=dict(font=dict(color='#FAFAFA' if st.get_option("theme.base") == "dark" else '#0C7A33'))
                     )
                     st.plotly_chart(fig_pie_m, use_container_width=True, theme=None)
