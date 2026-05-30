@@ -53,6 +53,16 @@ st.markdown(f"""
         background-color: {'#FFD1BA' if is_light else '#E22134'} !important;
         color: {'#111827' if is_light else '#FAFAFA'} !important;
     }}
+    
+/* Ép màu chữ trong các bộ lọc (Selectbox, Radio) về màu tối khi ở Light Mode */
+.stRadio label, .stSelectbox label, div[data-baseweb="select"] span {
+    color: {'#111827' if is_light else '#FAFAFA'} !important;
+}
+/* Đảm bảo chữ bên trong ô chọn cũng không bị trắng xóa trên nền sáng */
+div[data-baseweb="select"] {
+    color: {'#111827' if is_light else '#FAFAFA'} !important;
+}
+    
 </style>
 """, unsafe_allow_html=True)
 
