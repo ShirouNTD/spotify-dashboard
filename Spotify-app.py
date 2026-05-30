@@ -81,23 +81,22 @@ st.markdown(f"""
 
 /* FIX DỨT ĐIỂM MÀU CHỮ TRONG DROPDOWN */
     
-    /* 1. Nền của cái bảng sổ xuống */
-    div[role="listbox"] {{
+    /* 1. Nền của bảng chọn */
+    div[role="listbox"] {
         background-color: {'#FFFFFF' if is_light else '#262730'} !important;
-    }}
+    }
     
-    /* 2. Ép màu chữ ĐEN cho các lựa chọn bên trong khi ở Dark Mode */
-    /* Ngài đổi thành '#111827' (Đen) để nó nổi bật trên nền xám của Dark Mode */
-    div[role="listbox"] div, 
-    div[role="listbox"] span,
-    div[role="option"] div {{
-        color: {'#111827' if is_light else '#111827'} !important;
-    }}
+    /* 2. Ép màu chữ ĐEN cho các mục option (luôn nhìn thấy được trên mọi nền) */
+    div[role="listbox"] div[role="option"], 
+    div[role="listbox"] div[role="option"] span {
+        color: {'#111827' if is_light else '#FAFAFA'} !important;
+    }
+
+    /* 3. Đảm bảo trạng thái Hover (khi di chuột vào) cũng không bị mất màu */
+    div[role="listbox"] div[role="option"]:hover {
+        background-color: {'#F0F0F0' if is_light else '#3D3F47'} !important;
+    }
     
-    /* 3. Đảm bảo chữ trong ô chính (ô hiển thị tháng) không bị trắng xóa */
-    div[data-baseweb="select"] > div {{
-        color: {'#111827' if is_light else '#111827'} !important;
-    }}
 </style>
 """, unsafe_allow_html=True)
 
