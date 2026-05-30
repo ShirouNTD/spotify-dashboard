@@ -103,6 +103,18 @@ st.markdown(f"""
     div[role="listbox"] div[role="option"] span {{
         color: {'#111827' if is_light else '#111827'} !important;
     }}
+
+    /* 1. Ép nền của cái listbox thành màu Xám nhạt hoặc Trắng để làm nổi chữ trắng */
+    div[role="listbox"] {{
+        background-color: {'#FFFFFF' if is_light else '#E0E0E0'} !important;
+    }}
+    
+    /* 2. Ép chữ thành màu đen đậm để luôn đọc được trên cái nền vừa đổi ở trên */
+    div[role="listbox"] div[role="option"], 
+    div[role="listbox"] div[role="option"] span {{
+        color: #111827 !important;
+        -webkit-text-fill-color: #111827 !important;
+    }}
     
 </style>
 """, unsafe_allow_html=True)
