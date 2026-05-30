@@ -205,7 +205,7 @@ def tao_sheet_tong_hop(thang_chon, chiso_chon):
         total_data = {}
         for col in master.columns:
             if col == "Kênh_Spotify":
-                total_data[col] = "🔥 TỔNG CỘNG"
+                total_data[col] = "Total các kênh"
             else:
                 # VŨ KHÍ MỚI: Ép mọi dữ liệu thành số. Text/Khoảng trắng lỗi tự biến thành 0
                 total_data[col] = pd.to_numeric(master[col], errors='coerce').fillna(0).sum()
