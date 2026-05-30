@@ -82,20 +82,20 @@ st.markdown(f"""
 /* FIX DỨT ĐIỂM MÀU CHỮ TRONG DROPDOWN */
     
     /* 1. Nền của bảng chọn */
-    div[role="listbox"] {
-        background-color: {'#FFFFFF' if is_light else '#262730'} !important;
-    }
+    div[role="listbox"] {{
+        background-color: {{'#FFFFFF' if is_light else '#262730'}} !important;
+    }}
     
     /* 2. Ép màu chữ ĐEN cho các mục option (luôn nhìn thấy được trên mọi nền) */
     div[role="listbox"] div[role="option"], 
-    div[role="listbox"] div[role="option"] span {
-        color: {'#111827' if is_light else '#FAFAFA'} !important;
-    }
+    div[role="listbox"] div[role="option"] span {{
+        color: {{'#111827' if is_light else '#FAFAFA'}} !important;
+    }}
 
     /* 3. Đảm bảo trạng thái Hover (khi di chuột vào) cũng không bị mất màu */
-    div[role="listbox"] div[role="option"]:hover {
-        background-color: {'#F0F0F0' if is_light else '#3D3F47'} !important;
-    }
+    div[role="listbox"] div[role="option"]:hover {{
+        background-color: {{'#F0F0F0' if is_light else '#3D3F47'}} !important;
+    }}
     
 </style>
 """, unsafe_allow_html=True)
