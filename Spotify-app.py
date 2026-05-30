@@ -84,16 +84,23 @@ st.markdown(f"""
     .badge-green {{ background-color: rgba(29, 185, 84, 0.15) !important; color: #1DB954 !important; }}
     .badge-red {{ background-color: rgba(226, 33, 52, 0.15) !important; color: #E22134 !important; }}
 
-    /* DROPDOWN - ĐÃ GỘP VÀ LÀM SẠCH */
-    div[role="listbox"] {{ 
-        background-color: {'#FFFFFF' if is_light else '#262730'} !important; 
+    /* FIX CẤP ĐỘ 3: PHÁ ĐẢO MÀU */
+    div[role="listbox"] {{
+        /* Ép nền cực đậm để làm nổi chữ trắng */
+        background-color: {{'#111827' if is_light else '#000000'}} !important; 
+        border: 1px solid #444 !important;
     }}
+    
     div[role="listbox"] div[role="option"], 
-    div[role="listbox"] div[role="option"] span {{ 
-        color: {'#111827' if is_light else '#FAFAFA'} !important; 
+    div[role="listbox"] div[role="option"] span {{
+        /* Ép chữ trắng */
+        color: #FFFFFF !important;
+        background-color: transparent !important;
     }}
-    div[role="listbox"] div[role="option"]:hover {{ 
-        background-color: {'#F0F0F0' if is_light else '#3D3F47'} !important; 
+
+    div[role="listbox"] div[role="option"]:hover {{
+        /* Ép màu khi di chuột vào */
+        background-color: {{'#333333' if is_light else '#444444'}} !important;
     }}
 </style>
 """, unsafe_allow_html=True)
