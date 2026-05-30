@@ -90,12 +90,12 @@ st.markdown(f"""
     div[role="listbox"] div, 
     div[role="listbox"] span,
     div[role="option"] div {{
-        color: {'#111827' if is_light else '#FAFAFA'} !important;
+        color: {'#111827' if is_light else '#111827'} !important;
     }}
     
     /* 3. Đảm bảo chữ trong ô chính (ô hiển thị tháng) không bị trắng xóa */
     div[data-baseweb="select"] > div {{
-        color: {'#111827' if is_light else '#FAFAFA'} !important;
+        color: {'#111827' if is_light else '#111827'} !important;
     }}
 </style>
 """, unsafe_allow_html=True)
