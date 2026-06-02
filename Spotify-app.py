@@ -727,7 +727,30 @@ with tab_nhap_kq:
 # TAB 5: QUẢN LÝ & XÓA DỮ LIỆU
 # ==========================================
 with tab_xoa_data:
-    st.header("🛠️ Quản Lý & Xóa Dữ Liệu")
+    st.header("🛠️ Quản Lý & Bảo Hiểm Dữ Liệu")
+    
+    col_a, col_b = st.columns(2)
+    with col_a:
+        st.subheader("💾 Backup dữ liệu")
+        if st.button("Tải file MasterData về máy"):
+            with open(FILE_DU_LIEU, "rb") as file:
+                st.download_button(label="Click để tải MasterData", data=file, file_name=FILE_DU_LIEU)
+        if st.button("Tải file Tháng về máy"):
+            with open(FILE_KQ_THANG, "rb") as file:
+                st.download_button(label="Click để tải MonthlyData", data=file, file_name=FILE_KQ_THANG)
+                
+    with col_b:
+        st.subheader("📥 Restore dữ liệu")
+        uploaded_file = st.file_uploader("Chọn file CSV cũ để khôi phục:", type=['csv'])
+        if uploaded_file is not None:
+            if st.button("Xác nhận ghi đè dữ liệu"):
+                # Xác định file nào dựa trên tên
+                target_file = FILE_DU_LIEU if "master" in uploaded_file.name else FILE_KQ_THANG
+                with open(target_file, "wb") as f:
+                    f.write(uploaded_file.getbuffer())
+                st.success("✅ Đã khôi phục dữ liệu thành công! App sẽ tự làm mới...")
+                st.rerun()
+    
     st.markdown("Khu vực này giúp bạn dọn dẹp các dữ liệu nhập sai. Vui lòng kiểm tra kỹ trước khi bấm Xóa!")
 
     loai_dl = st.radio("Thư mục dữ liệu:", ["🎯 Mục tiêu (KPI)", "📥 Kết quả Tuần", "📥 Kết quả Tháng"], horizontal=True)
