@@ -728,50 +728,54 @@ with tab_nhap_kq:
 # ==========================================
 with tab_xoa_data:
     st.header("🛠️ Quản Lý & Xóa Dữ Liệu")
-    st.markdown("Khu vực này đọc thẳng từ Google Sheets. Vui lòng kiểm tra kỹ trước khi bấm Xóa!")
+    st.markdown("Khu vực này giúp bạn dọn dẹp các dữ liệu nhập sai. Vui lòng kiểm tra kỹ trước khi bấm Xóa!")
 
     loai_dl = st.radio("Thư mục dữ liệu:", ["🎯 Mục tiêu (KPI)", "📥 Kết quả Tuần", "📥 Kết quả Tháng"], horizontal=True)
 
     if loai_dl == "🎯 Mục tiêu (KPI)":
-        ws_delete = ws_kpi
-        df_delete = get_df(ws_kpi, "kpi")
+        file_path = FILE_KPI
     elif loai_dl == "📥 Kết quả Tuần":
-        ws_delete = ws_master
-        df_delete = get_df(ws_master, "master")
+        file_path = FILE_DU_LIEU
     else:
-        ws_delete = ws_monthly
-        df_delete = get_df(ws_monthly, "monthly")
+        file_path = FILE_KQ_THANG
 
-    if not df_delete.empty:
-        st.dataframe(df_delete, use_container_width=True)
-
-        st.markdown("---")
-        st.subheader("🗑️ Chọn dòng cần xóa")
+    if os.path.exists(file_path):
+        df_delete = pd.read_csv(file_path)
         
-        options_dict = {}
-        for idx, row in df_delete.iterrows():
-            kenh = row.get('Kênh_Spotify', 'Unknown')
-            thang = row.get('Tháng', '')
-            if loai_dl == "📥 Kết quả Tuần":
-                tuan = row.get('Tuần', '')
-                info = f"Dòng {idx}: {kenh} - {thang} - {tuan}"
-            else:
-                info = f"Dòng {idx}: {kenh} - {thang}"
+        if len(df_delete) > 0:
+            st.dataframe(df_delete, use_container_width=True)
+
+            st.markdown("---")
+            st.subheader("🗑️ Chọn dòng cần xóa")
+            
+            options_dict = {}
+            for idx, row in df_delete.iterrows():
+                kenh = row.get('Kênh_Spotify', 'Unknown')
+                thang = row.get('Tháng', '')
                 
-            options_dict[info] = idx
+                if loai_dl == "📥 Kết quả Tuần":
+                    tuan = row.get('Tuần', '')
+                    info = f"Dòng {idx}: {kenh} - {thang} - {tuan}"
+                else:
+                    info = f"Dòng {idx}: {kenh} - {thang}"
+                    
+                options_dict[info] = idx
 
-        dong_can_xoa = st.multiselect("Nhấp vào đây và chọn các dòng dữ liệu bị sai:", list(options_dict.keys()))
+            dong_can_xoa = st.multiselect("Nhấp vào đây và chọn các dòng dữ liệu bị sai:", list(options_dict.keys()))
 
-        if st.button("🚨 XÓA CÁC DÒNG ĐÃ CHỌN", type="primary"):
-            if dong_can_xoa:
-                idx_to_drop = [options_dict[val] for val in dong_can_xoa]
-                df_delete = df_delete[~df_delete.index.isin(idx_to_drop)]
-                save_df(ws_delete, df_delete)
-                st.success("✅ Đã xóa trên Google Sheets! Đang làm mới...")
-                import time
-                time.sleep(1) 
-                st.rerun()
-            else:
-                st.warning("⚠️ Boss chưa chọn dòng nào để xóa!")
+            if st.button("🚨 XÓA CÁC DÒNG ĐÃ CHỌN", type="primary"):
+                if dong_can_xoa:
+                    idx_to_drop = [options_dict[val] for val in dong_can_xoa]
+                    df_delete = df_delete[~df_delete.index.isin(idx_to_drop)]
+                    df_delete.to_csv(file_path, index=False)
+                    st.success("✅ Đã xóa thành công! Đang tự động cập nhật lại hệ thống...")
+                    import time
+                    time.sleep(1) 
+                    try: st.rerun()
+                    except: st.experimental_rerun()
+                else:
+                    st.warning("⚠️ Boss chưa chọn dòng nào để xóa!")
+        else:
+            st.info("Bảng dữ liệu này hiện đang trống.")
     else:
-        st.info("Bảng dữ liệu này trên Google Sheets hiện đang trống.")
+        st.error(f"Lỗi: Không tìm thấy file gốc ({file_path}).")
