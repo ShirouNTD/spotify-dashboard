@@ -728,54 +728,29 @@ with tab_nhap_kq:
 # ==========================================
 with tab_xoa_data:
     st.header("🛠️ Quản Lý & Xóa Dữ Liệu")
-    st.markdown("Khu vực này giúp bạn dọn dẹp các dữ liệu nhập sai. Vui lòng kiểm tra kỹ trước khi bấm Xóa!")
+    st.markdown("Khu vực quản lý dữ liệu nhập tay trong phiên làm việc.")
 
-    loai_dl = st.radio("Thư mục dữ liệu:", ["🎯 Mục tiêu (KPI)", "📥 Kết quả Tuần", "📥 Kết quả Tháng"], horizontal=True)
+    # Boss kiểm tra xem bản cũ ngài đặt tên biến lưu KPI trong st.session_state là gì nhé
+    # Đoạn dưới đây giả định tên biến cũ là st.session_state.df_kpi hoặc kpi_list
+    
+    loai_dl = st.radio("Chọn bảng dữ liệu để chỉnh sửa:", ["🎯 Mục tiêu (KPI)", "📥 Kết quả"], horizontal=True)
 
     if loai_dl == "🎯 Mục tiêu (KPI)":
-        file_path = FILE_KPI
-    elif loai_dl == "📥 Kết quả Tuần":
-        file_path = FILE_DU_LIEU
-    else:
-        file_path = FILE_KQ_THANG
-
-    if os.path.exists(file_path):
-        df_delete = pd.read_csv(file_path)
-        
-        if len(df_delete) > 0:
+        # Thay 'df_kpi' bằng đúng tên biến chứa bảng KPI bản cũ của ngài nếu chạy lỗi
+        if "df_kpi" in st.session_state and not st.session_state.df_kpi.empty:
+            df_delete = st.session_state.df_kpi.copy()
             st.dataframe(df_delete, use_container_width=True)
-
-            st.markdown("---")
-            st.subheader("🗑️ Chọn dòng cần xóa")
             
-            options_dict = {}
-            for idx, row in df_delete.iterrows():
-                kenh = row.get('Kênh_Spotify', 'Unknown')
-                thang = row.get('Tháng', '')
-                
-                if loai_dl == "📥 Kết quả Tuần":
-                    tuan = row.get('Tuần', '')
-                    info = f"Dòng {idx}: {kenh} - {thang} - {tuan}"
-                else:
-                    info = f"Dòng {idx}: {kenh} - {thang}"
-                    
-                options_dict[info] = idx
-
-            dong_can_xoa = st.multiselect("Nhấp vào đây và chọn các dòng dữ liệu bị sai:", list(options_dict.keys()))
-
+            dong_can_xoa = st.multiselect("Chọn các dòng dữ liệu bị sai tháng:", df_delete.index)
+            
             if st.button("🚨 XÓA CÁC DÒNG ĐÃ CHỌN", type="primary"):
                 if dong_can_xoa:
-                    idx_to_drop = [options_dict[val] for val in dong_can_xoa]
-                    df_delete = df_delete[~df_delete.index.isin(idx_to_drop)]
-                    df_delete.to_csv(file_path, index=False)
-                    st.success("✅ Đã xóa thành công! Đang tự động cập nhật lại hệ thống...")
+                    st.session_state.df_kpi = df_delete.drop(dong_can_xoa)
+                    st.success("✅ Đã xóa thành công! Đang làm mới...")
                     import time
-                    time.sleep(1) 
-                    try: st.rerun()
-                    except: st.experimental_rerun()
+                    time.sleep(0.5)
+                    st.rerun()
                 else:
                     st.warning("⚠️ Boss chưa chọn dòng nào để xóa!")
         else:
-            st.info("Bảng dữ liệu này hiện đang trống.")
-    else:
-        st.error(f"Lỗi: Không tìm thấy file gốc ({file_path}).")
+            st.info("Bảng dữ liệu KPI hiện đang trống hoặc chưa được khởi tạo.")
