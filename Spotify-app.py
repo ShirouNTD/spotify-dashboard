@@ -732,6 +732,7 @@ with tab_xoa_data:
 
     loai_dl = st.radio("Thư mục dữ liệu:", ["🎯 Mục tiêu (KPI)", "📥 Kết quả Tuần", "📥 Kết quả Tháng"], horizontal=True)
 
+    # Phân luồng file dựa trên lựa chọn
     if loai_dl == "🎯 Mục tiêu (KPI)":
         file_path = FILE_KPI
     elif loai_dl == "📥 Kết quả Tuần":
@@ -739,6 +740,7 @@ with tab_xoa_data:
     else:
         file_path = FILE_KQ_THANG
 
+    # Kiểm tra xem file có tồn tại không
     if os.path.exists(file_path):
         df_delete = pd.read_csv(file_path)
         
@@ -748,6 +750,7 @@ with tab_xoa_data:
             st.markdown("---")
             st.subheader("🗑️ Chọn dòng cần xóa")
             
+            # Tạo dictionary để map thông tin dễ đọc với index thực tế
             options_dict = {}
             for idx, row in df_delete.iterrows():
                 kenh = row.get('Kênh_Spotify', 'Unknown')
@@ -763,16 +766,22 @@ with tab_xoa_data:
 
             dong_can_xoa = st.multiselect("Nhấp vào đây và chọn các dòng dữ liệu bị sai:", list(options_dict.keys()))
 
+            # Xử lý nút xóa
             if st.button("🚨 XÓA CÁC DÒNG ĐÃ CHỌN", type="primary"):
                 if dong_can_xoa:
                     idx_to_drop = [options_dict[val] for val in dong_can_xoa]
                     df_delete = df_delete[~df_delete.index.isin(idx_to_drop)]
+                    
+                    # Lưu ngược lại vào file CSV
                     df_delete.to_csv(file_path, index=False)
+                    
                     st.success("✅ Đã xóa thành công! Đang tự động cập nhật lại hệ thống...")
                     import time
                     time.sleep(1) 
-                    try: st.rerun()
-                    except: st.experimental_rerun()
+                    try: 
+                        st.rerun()
+                    except AttributeError: 
+                        st.experimental_rerun()
                 else:
                     st.warning("⚠️ Boss chưa chọn dòng nào để xóa!")
         else:
