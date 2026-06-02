@@ -1,17 +1,12 @@
 [gcp_service_account]
-google_credentials = '''
-{
-  "type": "service_account",
-  "project_id": "intrepid-axle-456902-s4",
-  "private_key_id": "be6e3e718dc5e133d87674b8072584d1b3da64e8",
-  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDnKmIKI1GvWovl\nV58IBCZkYU40wpC4Md/PN1x1iGlo59Xn7HXVfDzPyl/K/b0hJctDvzTLa138bSr5\nbLHhNUb6UaYCYQLAzM4OG3p20OgNbw4HHI0YT14SJXH3T1Gkq8UR0ZmiKVB78EL0\nfQszs52M2+Kg93KO2CC6yJdVJiJnvhT4eRhrMT7O3TLNU6bJrrIhvhLyqk3ot2SC\nEX6YomWjtTw/rMrQZj7ZpiZP/AunzADXy1BkrtE99luTlJAcfU10+zZJCUcpmi/W\ndzSi0qwLTk+jQpQRTrnhVQZiDBXRVjpA8yO2mtRvuB9ztyrBZgS7yfNmBQ+uJq4j\nwBCPiha7AgMBAAECggEACeMxs1OkaaGFV1IX9Byn/xDRwAb3GrHOFrZm/C38Aufb\nqeJe0zqk/TxKPEv9xskE4zPD+ylvU93gLIVTgcRTcgnZAG620plP/PbRllBu2dg/\nW4WDRsq/mtDC3vxOYS0/A3lEHtVb4xk5O+zh9EcBUlDmENLUsbsZLJ6/flMLE1sk\nscGg6UYo5sCt1SdKOsjKi5HtsLWYfLh5QBQBC75P6omaYTge3AyzzTG/VXwfjNND\nzJEo/NHfnt+lx+jMxpOcIkkFIM7O6VhunxVhZpjaXboORK7vy+I6y7uhfkAJnBcd\nvzuc6KnTMS9M/PFA94I4KeSdGaihOGkV5RAGkEInfQKBgQD7d5Gg7sYwtccVShL/\nox8hwwr1RxbZCtfL8+8IecQtqJ+xegPoNBo3nTY+3J9oGBOkJYkKtROCZs+BEANt\njff4hpM4y9hI1eZ54ORrVCcwIWM27dGrxp77KOOr3WIpZfhIqgLLrLdDJVW3a31r\nvP0NJ1XEtdAr6COhMUPWaVXC/wKBgQDrVSE+wF94nyjnwKw+qu9VhgCcsOxAnW6J\nseVK5q99wHd++hh6PZorry7RKUknKnUTDs45JVKK2Vl6tWCju35m+kOyQLG2LmEj\n+XB29uIRyVZrXeMUwMxUIc704lCmjyFwumqR4hhteZXC1TqPqAR6dDibxEbz52i2\noZvYOPt4RQKBgC2Wcp8zSljAS5QvdpxDjTxIqK7osVqtnYuK8HWf5ZHFdRXuodCx\nyWL1rETfKELtwnnKmDqJszy7uLiUF5r/1smGVCBCzDYAGSVVQPO4MNaH5v2pRY6X\nlnC/6+5XVxlcNBOwRot4B00z8oMrCHTEsTd2PxVHRLMBBZyOWtb/B54vAoGBAICb\nEkL/0GzT1f/ovHi243qCc70ttr6NCoZ3UI5BSTBYyTT8KfpLxgAPiW9Gt7KOslJK\n6goyykwVAaBclMaFxUszg2Fbl4KvD+kf/QUWYG9F71NXiKyjvEZR/462S0rqt2Sq\ni2jT/XN+WYiTDKDLOj9NWk5N0lSiZwg/gzKD2XFdAoGBALvW0R8mSOZEa0eVzM0A\nX8KCQkhkKwzrvbukWzPZV13ryHekK+XH4XJm6hxGBZP7smt0wAkocf6lV14ZA6G1\nqtmMMtTejrMy7p5ccfxcSCgOwDPH5oTDLwfR7X+oPfCU+nd4AUUH98R9kGfJThq6\nzfOwHP4Dc0pRINmxolG5TBSv\n-----END PRIVATE KEY-----\n",
-  "client_email": "spotify-bot@intrepid-axle-456902-s4.iam.gserviceaccount.com",
-  "client_id": "106183990176403951035",
-  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-  "token_uri": "https://oauth2.googleapis.com/token",
-  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
-  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/spotify-bot%40intrepid-axle-456902-s4.iam.gserviceaccount.com",
-  "universe_domain": "googleapis.com"
-}
-
-'''
+type = "service_account"
+project_id = "intrepid-axle-456902-s4"
+private_key_id = "be6e3e718dc5e133d87674b8072584d1b3da64e8"
+private_key = "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDnKmIKI1GvWovlV58IBCZkYU40wpC4Md/PN1x1iGlo59Xn7HXVfDzPyl/K/b0hJctDvzTLa138bSr5bLHhNUb6UaYCYQLAzM4OG3p20OgNbw4HHI0YT14SJXH3T1Gkq8UR0ZmiKVB78EL0fQszs52M2+Kg93KO2CC6yJdVJiJnvhT4eRhrMT7O3TLNU6bJrrIhvhLyqk3ot2SCEX6YomWjtTw/rMrQZj7ZpiZP/AunzADXy1BkrtE99luTlJAcfU10+zZJCUcpmi/WdzSi0qwLTk+jQpQRTrnhVQZiDBXRVjpA8yO2mtRvuB9ztyrBZgS7yfNmBQ+uJq4jwBCPiha7AgMBAAECggEACeMxs1OkaaGFV1IX9Byn/xDRwAb3GrHOFrZm/C38AufbqeJe0zqk/TxKPEv9xskE4zPD+ylvU93gLIVTgcRTcgnZAG620plP/PbRllBu2dg/W4WDRsq/mtDC3vxOYS0/A3lEHtVb4xk5O+zh9EcBUlDmENLUsbsZLJ6/flMLE1skscGg6UYo5sCt1SdKOsjKi5HtsLWYfLh5QBQBC75P6omaYTge3AyzzTG/VXwfjNNDzJEo/NHfnt+lx+jMxpOcIkkFIM7O6VhunxVhZpjaXboORK7vy+I6y7uhfkAJnBcdvzuc6KnTMS9M/PFA94I4KeSdGaihOGkV5RAGkEInfQKBgQD7d5Gg7sYwtccVShL/ox8hwwr1RxbZCtfL8+8IecQtqJ+xegPoNBo3nTY+3J9oGBOkJYkKtROCZs+BEANtjff4hpM4y9hI1eZ54ORrVCcwIWM27dGrxp77KOOr3WIpZfhIqgLLrLdDJVW3a31rvP0NJ1XEtdAr6COhMUPWaVXC/wKBgQDrVSE+wF94nyjnwKw+qu9VhgCcsOxAnW6JseVK5q99wHd++hh6PZorry7RKUknKnUTDs45JVKK2Vl6tWCju35m+kOyQLG2LmEj+XB29uIRyVZrXeMUwMxUIc704lCmjyFwumqR4hhteZXC1TqPqAR6dDibxEbz52i2oZvYOPt4RQKBgC2Wcp8zSljAS5QvdpxDjTxIqK7osVqtnYuK8HWf5ZHFdRXuodCxyWL1rETfKELtwnnKmDqJszy7uLiUF5r/1smGVCBCzDYAGSVVQPO4MNaH5v2pRY6XlnC/6+5XVxlcNBOwRot4B00z8oMrCHTEsTd2PxVHRLMBBZyOWtb/B54vAoGBAICbEkL/0GzT1f/ovHi243qCc70ttr6NCoZ3UI5BSTBYyTT8KfpLxgAPiW9Gt7KOslJK6goyykwVAaBclMaFxUszg2Fbl4KvD+kf/QUWYG9F71NXiKyjvEZR/462S0rqt2Sqi2jT/XN+WYiTDKDLOj9NWk5N0lSiZwg/gzKD2XFdAoGBALvW0R8mSOZEa0eVzM0AX8KCQkhkKwzrvbukWzPZV13ryHekK+XH4XJm6hxGBZP7smt0wAkocf6lV14ZA6G1qtmMMtTejrMy7p5ccfxcSCgOwDPH5oTDLwfR7X+oPfCU+nd4AUUH98R9kGfJThq6zfOwHP4Dc0pRINmxolG5TBSv\n-----END PRIVATE KEY-----\n"
+client_email = "spotify-bot@intrepid-axle-456902-s4.iam.gserviceaccount.com"
+client_id = "106183990176403951035"
+auth_uri = "https://accounts.google.com/o/oauth2/auth"
+token_uri = "https://oauth2.googleapis.com/token"
+auth_provider_x509_cert_url = "https://www.googleapis.com/oauth2/v1/certs"
+client_x509_cert_url = "https://www.googleapis.com/robot/v1/metadata/x509/spotify-bot%40intrepid-axle-456902-s4.iam.gserviceaccount.com"
+universe_domain = "googleapis.com"
