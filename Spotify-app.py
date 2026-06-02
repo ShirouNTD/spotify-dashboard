@@ -795,7 +795,6 @@ with tab_xoa_data:
                     import time
                     time.sleep(1) 
                     try: st.rerun()
-                    except: st.experimental_rerun()
                 else:
                     st.warning("⚠️ Boss chưa chọn dòng nào để xóa!")
         else:
