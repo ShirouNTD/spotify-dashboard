@@ -2,9 +2,8 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
+import os
 from datetime import datetime
-import gspread
-from google.oauth2.service_account import Credentials
 
 # ==========================================
 # KHỞI TẠO SESSION STATE
@@ -73,106 +72,63 @@ st.markdown(f"""
 
     li[role="option"] div[data-testid="stMarkdownContainer"] p,
     li[role="option"] span {{
-        color: {'#111827' if is_light else '#000000'} !important;
-        -webkit-text-fill-color: {'#111827' if is_light else '#000000'} !important;
+        color: {{'#111827' if is_light else '#000000'}} !important;
+        -webkit-text-fill-color: {{'#111827' if is_light else '#000000'}} !important;
     }}
     li[role="option"] {{
-        background-color: {'#FFFFFF' if is_light else '#262730'} !important;
+        background-color: {{'#FFFFFF' if is_light else '#262730'}} !important;
     }}
     li[role="option"]:hover {{
-        background-color: {'#E0E0E0' if is_light else '#404040'} !important;
+        background-color: {{'#E0E0E0' if is_light else '#404040'}} !important;
     }}
 </style>
 """, unsafe_allow_html=True)
 
 # ==========================================
-# 2. KHỞI TẠO GOOGLE SHEETS
+# KHỞI TẠO DATA
 # ==========================================
-SHEET_URL = "https://docs.google.com/spreadsheets/d/1PHIBBS9-JUexTfty0T4xp9qs-ukcxQFtByKpk7b8elY/edit"
+FILE_DU_LIEU = "spotify_master_data.csv" 
+FILE_KQ_THANG = "spotify_monthly_data.csv" 
+FILE_KPI = "spotify_channel_kpi.csv" 
 
-import json # Boss nhớ thêm import này ở đầu file nhé!
-
-@st.cache_resource
-def get_gspread_client():
-    scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
-    
-    # Đọc từ Secrets
-    creds_dict = st.secrets["gcp_service_account"]
-    
-    # Nếu nó là string, ép nó sang dict
-    if isinstance(creds_dict, str):
-        creds_dict = json.loads(creds_dict)
+def khoi_tao_he_thong_db():
+    if not os.path.exists(FILE_DU_LIEU): 
+        pd.DataFrame(columns=["Tháng", "Tuần", "Kênh_Spotify", "Doanh_Thu_USD", "Luot_Play", "So_Gio_Nghe", "So_Tap_Upload", "Bat_Kiem_Tien", "Thoi_Gian_Nhap", "Link_Dan_Chung"]).to_csv(FILE_DU_LIEU, index=False)
+    else:
+        df_hien_tai = pd.read_csv(FILE_DU_LIEU)
+        changed = False
+        if "Bat_Kiem_Tien" not in df_hien_tai.columns: df_hien_tai["Bat_Kiem_Tien"] = False; changed = True
+        if "Link_Dan_Chung" not in df_hien_tai.columns: df_hien_tai["Link_Dan_Chung"] = ""; changed = True
+        if changed: df_hien_tai.to_csv(FILE_DU_LIEU, index=False)
+            
+    if not os.path.exists(FILE_KPI): 
+        pd.DataFrame(columns=["Tháng", "Kênh_Spotify", "KPI_Doanh_Thu", "KPI_Luot_Play", "KPI_So_Gio", "KPI_So_Tap", "So_Tuan", "Bat_Kiem_Tien"]).to_csv(FILE_KPI, index=False)
+    else:
+        df_kpi_hien_tai = pd.read_csv(FILE_KPI)
+        if "Bat_Kiem_Tien" not in df_kpi_hien_tai.columns: df_kpi_hien_tai["Bat_Kiem_Tien"] = False; df_kpi_hien_tai.to_csv(FILE_KPI, index=False)
         
-    creds = Credentials.from_service_account_info(creds_dict, scopes=scope)
-    return gspread.authorize(creds)
-    
-try:
-    client = get_gspread_client()
-    sheet = client.open_by_url(SHEET_URL)
-    ws_master = sheet.worksheet("MasterData")
-    ws_monthly = sheet.worksheet("MonthlyData")
-    ws_kpi = sheet.worksheet("KPI")
-except Exception as e:
-    st.error(f"❌ Lỗi kết nối Google Sheets! Vui lòng kiểm tra lại API Key. Chi tiết lỗi: {e}")
-    st.stop()
+    if not os.path.exists(FILE_KQ_THANG): 
+        pd.DataFrame(columns=["Năm", "Tháng", "Kênh_Spotify", "Doanh_Thu_USD", "Luot_Play", "So_Gio_Nghe", "So_Tap_Upload", "Bat_Kiem_Tien", "Thoi_Gian_Nhap", "Link_Dan_Chung"]).to_csv(FILE_KQ_THANG, index=False)
+    else:
+        df_thang_hien_tai = pd.read_csv(FILE_KQ_THANG)
+        changed = False
+        if "Bat_Kiem_Tien" not in df_thang_hien_tai.columns: df_thang_hien_tai["Bat_Kiem_Tien"] = False; changed = True
+        if "Link_Dan_Chung" not in df_thang_hien_tai.columns: df_thang_hien_tai["Link_Dan_Chung"] = ""; changed = True
+        if changed: df_thang_hien_tai.to_csv(FILE_KQ_THANG, index=False)
 
-def get_df(ws, sheet_type):
-    data = ws.get_all_values()
-    if not data:
-        return pd.DataFrame()
-    headers = data[0]
-    df = pd.DataFrame(data[1:], columns=headers) if len(data) > 1 else pd.DataFrame(columns=headers)
-    
-    # Ép kiểu dữ liệu an toàn
-    if df.empty: return df
-    if sheet_type in ["master", "monthly"]:
-        df["Doanh_Thu_USD"] = pd.to_numeric(df.get("Doanh_Thu_USD", 0), errors='coerce').fillna(0).astype(float)
-        df["Luot_Play"] = pd.to_numeric(df.get("Luot_Play", 0), errors='coerce').fillna(0).astype(int)
-        df["So_Gio_Nghe"] = pd.to_numeric(df.get("So_Gio_Nghe", 0), errors='coerce').fillna(0).astype(float)
-        df["So_Tap_Upload"] = pd.to_numeric(df.get("So_Tap_Upload", 0), errors='coerce').fillna(0).astype(int)
-        if "Bat_Kiem_Tien" in df.columns:
-            df["Bat_Kiem_Tien"] = df["Bat_Kiem_Tien"].astype(str).str.lower().map({"true": True, "false": False, "1": True, "0": False}).fillna(False)
-        if "Năm" in df.columns:
-            df["Năm"] = pd.to_numeric(df["Năm"], errors='coerce').fillna(datetime.now().year).astype(int)
-    elif sheet_type == "kpi":
-        df["KPI_Doanh_Thu"] = pd.to_numeric(df.get("KPI_Doanh_Thu", 0), errors='coerce').fillna(0).astype(float)
-        df["KPI_Luot_Play"] = pd.to_numeric(df.get("KPI_Luot_Play", 0), errors='coerce').fillna(0).astype(int)
-        df["KPI_So_Gio"] = pd.to_numeric(df.get("KPI_So_Gio", 0), errors='coerce').fillna(0).astype(float)
-        df["KPI_So_Tap"] = pd.to_numeric(df.get("KPI_So_Tap", 0), errors='coerce').fillna(0).astype(int)
-        df["So_Tuan"] = pd.to_numeric(df.get("So_Tuan", 4), errors='coerce').fillna(4).astype(int)
-        if "Bat_Kiem_Tien" in df.columns:
-            df["Bat_Kiem_Tien"] = df["Bat_Kiem_Tien"].astype(str).str.lower().map({"true": True, "false": False, "1": True, "0": False}).fillna(False)
-    return df
+khoi_tao_he_thong_db()
+df = pd.read_csv(FILE_DU_LIEU)
+df_thang_chot = pd.read_csv(FILE_KQ_THANG)
+df_kpi = pd.read_csv(FILE_KPI)
 
-def save_df(ws, df):
-    ws.clear()
-    df_out = df.copy()
-    # Ép text để chống lỗi đồng bộ
-    for col in df_out.columns:
-        if df_out[col].dtype == bool:
-            df_out[col] = df_out[col].astype(str)
-    df_out = df_out.fillna("")
-    data = [df_out.columns.tolist()] + df_out.astype(str).values.tolist()
-    # Cấu trúc update bất tử cho gspread
-    try:
-        ws.update(values=data, range_name="A1")
-    except TypeError:
-        ws.update("A1", data) # Hỗ trợ tương thích ngược
-
-df = get_df(ws_master, "master")
-df_thang_chot = get_df(ws_monthly, "monthly")
-df_kpi = get_df(ws_kpi, "kpi")
-
-danh_sach_kenh_master = list(set(df.get("Kênh_Spotify", pd.Series()).dropna().unique()) | set(df_kpi.get("Kênh_Spotify", pd.Series()).dropna().unique()) | set(df_thang_chot.get("Kênh_Spotify", pd.Series()).dropna().unique()))
+danh_sach_kenh_master = list(set(df["Kênh_Spotify"].dropna().unique()) | set(df_kpi["Kênh_Spotify"].dropna().unique()) | set(df_thang_chot["Kênh_Spotify"].dropna().unique()))
 danh_sach_kenh_master.sort()
 
 def lay_trang_thai_kiem_tien(ten_kenh):
-    if not df_kpi.empty and "Kênh_Spotify" in df_kpi.columns:
-        kpi_match = df_kpi[df_kpi["Kênh_Spotify"] == ten_kenh]
-        if not kpi_match.empty: return bool(kpi_match.iloc[-1]["Bat_Kiem_Tien"])
-    if not df.empty and "Kênh_Spotify" in df.columns:
-        df_match = df[df["Kênh_Spotify"] == ten_kenh]
-        if not df_match.empty: return bool(df_match.iloc[-1]["Bat_Kiem_Tien"])
+    kpi_match = df_kpi[df_kpi["Kênh_Spotify"] == ten_kenh]
+    if not kpi_match.empty: return bool(kpi_match.iloc[-1]["Bat_Kiem_Tien"])
+    df_match = df[df["Kênh_Spotify"] == ten_kenh]
+    if not df_match.empty: return bool(df_match.iloc[-1]["Bat_Kiem_Tien"])
     return False
 
 def make_card(label, value, pct=None):
@@ -189,10 +145,10 @@ def make_card(label, value, pct=None):
     """
 
 def tao_sheet_tong_hop(thang_chon, chiso_chon):
-    df_kq = get_df(ws_master, "master")
+    df_kq = pd.read_csv(FILE_DU_LIEU)
     if "Link_Dan_Chung" not in df_kq.columns: df_kq["Link_Dan_Chung"] = ""
-    df_kpi_sheet = get_df(ws_kpi, "kpi")
-    df_kq_thang = get_df(ws_monthly, "monthly")
+    df_kpi = pd.read_csv(FILE_KPI)
+    df_kq_thang = pd.read_csv(FILE_KQ_THANG)
     if "Link_Dan_Chung" not in df_kq_thang.columns: df_kq_thang["Link_Dan_Chung"] = ""
     
     map_col = {
@@ -205,39 +161,28 @@ def tao_sheet_tong_hop(thang_chon, chiso_chon):
     col_kq = map_col[chiso_chon]["kq"]
     col_kpi = map_col[chiso_chon]["kpi"]
     
-    if df_kpi_sheet.empty: return pd.DataFrame(), col_kpi
-
-    kpi_thang = df_kpi_sheet[df_kpi_sheet["Tháng"] == thang_chon]
+    kpi_thang = df_kpi[df_kpi["Tháng"] == thang_chon]
     master = pd.DataFrame(danh_sach_kenh_master, columns=["Kênh_Spotify"])
     master = master.merge(kpi_thang[["Kênh_Spotify", col_kpi, "So_Tuan"]], on="Kênh_Spotify", how="left")
     master[col_kpi] = master[col_kpi].fillna(0)
     
-    if not df_kq.empty:
-        thang_kq_sum = df_kq[df_kq["Tháng"] == thang_chon].groupby("Kênh_Spotify")[col_kq].sum().reset_index()
-        thang_kq_sum.rename(columns={col_kq: "Kết quả tổng"}, inplace=True)
-        master = master.merge(thang_kq_sum, on="Kênh_Spotify", how="left")
-    else:
-        master["Kết quả tổng"] = 0
-        
+    thang_kq_sum = df_kq[df_kq["Tháng"] == thang_chon].groupby("Kênh_Spotify")[col_kq].sum().reset_index()
+    thang_kq_sum.rename(columns={col_kq: "Kết quả tổng"}, inplace=True)
+    master = master.merge(thang_kq_sum, on="Kênh_Spotify", how="left")
     master["Kết quả tổng"] = master["Kết quả tổng"].fillna(0)
     master["% Hoàn thành"] = (master["Kết quả tổng"] / master[col_kpi].replace(0, pd.NA) * 100).fillna(0).replace([float('inf'), -float('inf')], 0)
     
-    if not df_kq_thang.empty:
-        chot_thang = df_kq_thang[df_kq_thang["Tháng"] == thang_chon][["Kênh_Spotify", col_kq, "Link_Dan_Chung"]]
-        chot_thang = chot_thang.groupby("Kênh_Spotify").agg({
-            col_kq: "sum",
-            "Link_Dan_Chung": lambda x: " | ".join(x.dropna().astype(str).loc[x != ""])
-        }).reset_index()
-        chot_thang.rename(columns={col_kq: "Kết quả tháng", "Link_Dan_Chung": "Dẫn chứng tháng"}, inplace=True)
-        master = master.merge(chot_thang, on="Kênh_Spotify", how="left")
-    else:
-        master["Kết quả tháng"] = 0
-        master["Dẫn chứng tháng"] = ""
-
-    master["Kết quả tháng"] = master.get("Kết quả tháng", 0).fillna(0)
+    chot_thang = df_kq_thang[df_kq_thang["Tháng"] == thang_chon][["Kênh_Spotify", col_kq, "Link_Dan_Chung"]]
+    chot_thang = chot_thang.groupby("Kênh_Spotify").agg({
+        col_kq: "sum",
+        "Link_Dan_Chung": lambda x: " | ".join(x.dropna().astype(str).loc[x != ""])
+    }).reset_index()
+    chot_thang.rename(columns={col_kq: "Kết quả tháng", "Link_Dan_Chung": "Dẫn chứng tháng"}, inplace=True)
+    master = master.merge(chot_thang, on="Kênh_Spotify", how="left")
+    master["Kết quả tháng"] = master["Kết quả tháng"].fillna(0)
     master["% Hoàn thành tháng"] = (master["Kết quả tháng"] / master[col_kpi].replace(0, pd.NA) * 100).fillna(0).replace([float('inf'), -float('inf')], 0)
     
-    tuan_trong_thang = sorted([t for t in df_kq["Tuần"].unique()]) if not df_kq.empty else []
+    tuan_trong_thang = sorted([t for t in df_kq[df_kq["Tháng"] == thang_chon]["Tuần"].unique()])
     for tuan in tuan_trong_thang:
         master[f"{tuan}_Target"] = (master[col_kpi] / master["So_Tuan"]).fillna(0)
         kq_tuan = df_kq[(df_kq["Tháng"] == thang_chon) & (df_kq["Tuần"] == tuan)][["Kênh_Spotify", col_kq, "Link_Dan_Chung"]]
@@ -247,9 +192,12 @@ def tao_sheet_tong_hop(thang_chon, chiso_chon):
         }).reset_index()
         kq_tuan.rename(columns={col_kq: f"{tuan}_Actual", "Link_Dan_Chung": f"{tuan}_Link"}, inplace=True)
         master = master.merge(kq_tuan, on="Kênh_Spotify", how="left")
-        master[f"{tuan}_Actual"] = master.get(f"{tuan}_Actual", 0).fillna(0)
+        master[f"{tuan}_Actual"] = master[f"{tuan}_Actual"].fillna(0)
         master[f"{tuan}_%"] = (master[f"{tuan}_Actual"] / master[f"{tuan}_Target"].replace(0, pd.NA) * 100).fillna(0).replace([float('inf'), -float('inf')], 0)
         
+    # ==========================================
+    # ĐOẠN CODE THÊM DÒNG TỔNG CỘNG (TOTAL)
+    # ==========================================
     if len(master) > 0:
         total_data = {}
         for col in master.columns:
@@ -281,6 +229,7 @@ def tao_sheet_tong_hop(thang_chon, chiso_chon):
             else:
                 total_data[c_pct] = 0
                 
+        # Link dòng tổng hiển thị là NA không link được
         if "Dẫn chứng tháng" in master.columns: total_data["Dẫn chứng tháng"] = "NA"
         for tuan in tuan_trong_thang:
             if f"{tuan}_Link" in master.columns: total_data[f"{tuan}_Link"] = "NA"
@@ -294,6 +243,7 @@ def tao_sheet_tong_hop(thang_chon, chiso_chon):
 tab_dashboard, tab_master, tab_nhap_kpi, tab_nhap_kq, tab_xoa_data = st.tabs([
     "📊 Dashboard", "📑 Sheet Tổng Hợp", "🎯 Nhập Mục Tiêu", "📥 Nhập Kết Quả", "🛠️ Quản Lý"
 ])
+
 
 # ==========================================
 # TAB 1: DASHBOARD CHÍNH 
@@ -376,6 +326,7 @@ with tab_dashboard:
                 )
                 st.plotly_chart(fig_vs, use_container_width=True, theme=None)
 
+                # --- 🏅 3. BẢNG XẾP HẠNG TOP KÊNH (TUẦN - FORMAT V30) ---
                 st.markdown("---")
                 st.markdown(f"### 🏅 3. Bảng Xếp Hạng Kênh Theo {chiso_chon}")
                 tuan_co_data = list(df_final["Tuần"].unique()); tuan_co_data.sort(key=lambda x: int(x.replace("Tuần ", "")) if "Tuần " in x else 0)
@@ -398,6 +349,7 @@ with tab_dashboard:
                         st.error(f"⚠️ **TOP 5 THẤP NHẤT**")
                         for idx, row in bot_5.iterrows(): st.markdown(f"**🔻 {row['Kênh_Spotify']}** ➔ <span class='text-danger'>{fmt(row[cot_kq])}</span>", unsafe_allow_html=True); st.markdown("")
 
+                # --- 🍩 4. BIỂU ĐỒ DONUT (BÁO CÁO TUẦN) ---
                 st.markdown("### 🍩 4. Phân Tích Cơ Cấu & Tỷ Trọng (Tuần)")
                 col_sl1_w, col_sl2_w = st.columns(2)
                 with col_sl1_w:
@@ -430,9 +382,11 @@ with tab_dashboard:
                             orientation="h", yanchor="top", y=-0.2, xanchor="center", x=0.5
                         )
                     )
+                    
                     st.plotly_chart(fig_pie_w, use_container_width=True, theme=None)
                     
     else:
+        # DASHBOARD THÁNG (FINAL)
         if df_thang_chot.empty: st.info("Hệ thống chưa có dữ liệu chốt THÁNG nào.")
         else:
             col_loc1_m, col_loc_thang_m, col_loc2_m, col_loc3_m = st.columns([1.2, 1.2, 2, 1.2])
@@ -494,8 +448,10 @@ with tab_dashboard:
                     yaxis=dict(tickfont=dict(color=chart_text_color), title_font=dict(color=chart_text_color)), 
                     legend=dict(font=dict(color=chart_text_color)) 
                 )
+
                 st.plotly_chart(fig_vs_m, use_container_width=True, theme=None)
 
+                # --- 🏅 3. BẢNG XẾP HẠNG TOP KÊNH (THÁNG FINAL - FORMAT V30) ---
                 st.markdown("---")
                 st.markdown(f"### 🏅 3. Bảng Xếp Hạng Kênh Theo {chiso_chon_m} (Tháng Final)")
                 thang_co_data = list(df_final_m["Tháng"].unique()); thang_co_data.sort(key=lambda x: int(x.replace("Tháng ", "")) if "Tháng " in x else 0)
@@ -507,7 +463,7 @@ with tab_dashboard:
                     df_rank_m = df_rank_m.sort_values(by=cot_kq_m, ascending=False).reset_index(drop=True); df_rank_m[cot_kq_m] = df_rank_m[cot_kq_m].round(2)
 
                     top_5_m = df_rank_m.head(5)
-                    bot_5_m = pd.DataFrame(columns=["Kênh_Spotify", cot_kq_m]) if len(df_rank_m) <= 5 else df_rank_m[~df_rank_m["Kênh_Spotify"].isin(top_5_m["Kênh_Spotify"])].tail(5).sort_values(by=cot_kq_m, ascending=True)
+                    bot_5_m = pd.DataFrame(columns=["Kênh_Spotify", cot_kq_m]) if len(df_rank_m) <= 5 else df_rank_m[~df_rank_m["Kênh_Spotify"].isin(top_5_m_m["Kênh_Spotify"])].tail(5).sort_values(by=cot_kq_m, ascending=True)
 
                     def fmt_m(val): return f"${val:,.2f}" if chiso_chon_m == "Doanh Thu" else (f"{val:,.1f}h" if chiso_chon_m == "Giờ Nghe" else f"{val:,.0f}")
                     col_top_m, col_bot_m = st.columns(2)
@@ -518,6 +474,7 @@ with tab_dashboard:
                         st.error(f"⚠️ **TOP 5 THẤP NHẤT**")
                         for idx, row in bot_5_m.iterrows(): st.markdown(f"**🔻 {row['Kênh_Spotify']}** ➔ <span class='text-danger'>{fmt_m(row[cot_kq_m])}</span>", unsafe_allow_html=True); st.markdown("")
 
+                # --- 🍩 4. BIỂU ĐỒ DONUT (BÁO CÁO THÁNG) ---
                 st.markdown("### 🍩 4. Phân Tích Cơ Cấu & Tỷ Trọng (Tháng Final)")
                 col_sl1_m, col_sl2_m = st.columns(2)
                 with col_sl1_m:
@@ -550,6 +507,7 @@ with tab_dashboard:
                             orientation="h", yanchor="top", y=-0.2, xanchor="center", x=0.5
                         )
                     )
+                    
                     st.plotly_chart(fig_pie_m, use_container_width=True, theme=None)
 
 
@@ -558,71 +516,68 @@ with tab_dashboard:
 # ==========================================
 with tab_master:
     st.header("📑 Sheet Tổng Hợp Hiệu Suất")
-    if df.empty and df_kpi.empty:
-        st.info("Nhà kho đang trống. Hãy nhập Mục Tiêu và Kết Quả để hiện bảng.")
-    else:
-        col1, col2 = st.columns(2)
-        with col1:
-            chon_thang = st.selectbox("📅 Chọn tháng:", [f"Tháng {i}" for i in range(1, 13)])
-        with col2:
-            chiso_sheet = st.selectbox("🛠️ Chọn chỉ số hiển thị:", ["Doanh Thu", "Lượt Play", "Giờ Nghe", "Số Tập Upload"])
-        
-        df_raw, col_kpi_name = tao_sheet_tong_hop(chon_thang, chiso_sheet)
-        if not df_raw.empty:
-            df_display = df_raw.copy()
-            
-            rename_map = { "Kênh_Spotify": "Kênh", col_kpi_name: f"KPI {chiso_sheet}" }
-            for col in df_display.columns:
-                if "Tuần" in col:
-                    if "_Target" in col: rename_map[col] = col.replace("Tuần ", "KPI Tuần ").replace("_Target", "")
-                    elif "_Actual" in col: rename_map[col] = col.replace("Tuần ", "Kết quả Tuần ").replace("_Actual", "")
-                    elif "_%" in col: rename_map[col] = col.replace("Tuần ", "% Tuần ").replace("_%", "")
-                    elif "_Link" in col: rename_map[col] = col.replace("Tuần ", "Dẫn chứng Tuần ").replace("_Link", "")
-            
-            df_display = df_display.rename(columns=rename_map)
-            
-            cols = ["Kênh", f"KPI {chiso_sheet}", "Kết quả tổng", "% Hoàn thành", "Kết quả tháng", "% Hoàn thành tháng", "Dẫn chứng tháng"]
-            cols = [c for c in cols if c in df_display.columns]
-            tuan_cols = [c for c in df_display.columns if "Tuần" in c]
-            df_display = df_display[cols + tuan_cols]
-            
-            df_clean = df_display.copy()
-            cols_to_drop = ["So_Tuan", "index", "STT"]
-            for col in cols_to_drop:
-                if col in df_clean.columns: df_clean = df_clean.drop(columns=[col])
+    
+    col1, col2 = st.columns(2)
+    with col1:
+        chon_thang = st.selectbox("📅 Chọn tháng:", [f"Tháng {i}" for i in range(1, 13)])
+    with col2:
+        chiso_sheet = st.selectbox("🛠️ Chọn chỉ số hiển thị:", ["Doanh Thu", "Lượt Play", "Giờ Nghe", "Số Tập Upload"])
+    
+    df_raw, col_kpi_name = tao_sheet_tong_hop(chon_thang, chiso_sheet)
+    df_display = df_raw.copy()
+    
+    rename_map = { "Kênh_Spotify": "Kênh", col_kpi_name: f"KPI {chiso_sheet}" }
+    for col in df_display.columns:
+        if "Tuần" in col:
+            if "_Target" in col: rename_map[col] = col.replace("Tuần ", "KPI Tuần ").replace("_Target", "")
+            elif "_Actual" in col: rename_map[col] = col.replace("Tuần ", "Kết quả Tuần ").replace("_Actual", "")
+            elif "_%" in col: rename_map[col] = col.replace("Tuần ", "% Tuần ").replace("_%", "")
+            elif "_Link" in col: rename_map[col] = col.replace("Tuần ", "Dẫn chứng Tuần ").replace("_Link", "")
+    
+    df_display = df_display.rename(columns=rename_map)
+    
+    cols = ["Kênh", f"KPI {chiso_sheet}", "Kết quả tổng", "% Hoàn thành", "Kết quả tháng", "% Hoàn thành tháng", "Dẫn chứng tháng"]
+    cols = [c for c in cols if c in df_display.columns]
+    tuan_cols = [c for c in df_display.columns if "Tuần" in c]
+    df_display = df_display[cols + tuan_cols]
+    
+    df_clean = df_display.copy()
+    cols_to_drop = ["So_Tuan", "index", "STT"]
+    for col in cols_to_drop:
+        if col in df_clean.columns: df_clean = df_clean.drop(columns=[col])
 
-            format_dict = {
-                "Doanh Thu": "${:,.0f}",
-                "Lượt Play": "{:,.0f}",
-                "Giờ Nghe": "{:,.0f}h",
-                "Số Tập Upload": "{:,.0f}"
-            }
-            val_fmt = format_dict[chiso_sheet]
-            
-            col_config = {}
-            for c in df_clean.columns:
-                if "Dẫn chứng" in c:
-                    col_config[c] = st.column_config.LinkColumn(
-                        "🔗 " + c,
-                        display_text="Xem dẫn chứng",
-                        help="Bấm vào để xem nguồn số liệu"
-                    )
-
-            st.dataframe(
-                df_clean.style
-                .format({
-                    f"KPI {chiso_sheet}": val_fmt, 
-                    "Kết quả tổng": val_fmt, 
-                    "% Hoàn thành": "{:.0f}%",
-                    "Kết quả tháng": val_fmt, 
-                    "% Hoàn thành tháng": "{:.0f}%",
-                    **{col: val_fmt for col in df_clean.columns if "KPI Tuần" in col},
-                    **{col: val_fmt for col in df_clean.columns if "Kết quả Tuần" in col},
-                    **{col: "{:.0f}%" for col in df_clean.columns if "% Tuần" in col}
-                }), 
-                use_container_width=True,
-                column_config=col_config
+    format_dict = {
+        "Doanh Thu": "${:,.0f}",
+        "Lượt Play": "{:,.0f}",
+        "Giờ Nghe": "{:,.0f}h",
+        "Số Tập Upload": "{:,.0f}"
+    }
+    val_fmt = format_dict[chiso_sheet]
+    
+    col_config = {}
+    for c in df_clean.columns:
+        if "Dẫn chứng" in c:
+            col_config[c] = st.column_config.LinkColumn(
+                "🔗 " + c,
+                display_text="Xem dẫn chứng",
+                help="Bấm vào để xem nguồn số liệu"
             )
+
+    st.dataframe(
+        df_clean.style
+        .format({
+            f"KPI {chiso_sheet}": val_fmt, 
+            "Kết quả tổng": val_fmt, 
+            "% Hoàn thành": "{:.0f}%",
+            "Kết quả tháng": val_fmt, 
+            "% Hoàn thành tháng": "{:.0f}%",
+            **{col: val_fmt for col in df_clean.columns if "KPI Tuần" in col},
+            **{col: val_fmt for col in df_clean.columns if "Kết quả Tuần" in col},
+            **{col: "{:.0f}%" for col in df_clean.columns if "% Tuần" in col}
+        }), 
+        use_container_width=True,
+        column_config=col_config
+    )
 
 # ==========================================
 # TAB 3: NHẬP MỤC TIÊU 
@@ -644,7 +599,7 @@ with tab_nhap_kpi:
             
         bkt_kpi = st.checkbox("✅ Kênh đã bật kiếm tiền", value=trang_thai_mac_dinh, key=f"bkt_{lua_chon_kenh_kpi}_{rk_kpi}")
         
-    kpi_cu = df_kpi[(df_kpi["Tháng"] == thang_kpi) & (df_kpi["Kênh_Spotify"] == kenh_kpi)] if not df_kpi.empty and "Kênh_Spotify" in df_kpi.columns else pd.DataFrame()
+    kpi_cu = df_kpi[(df_kpi["Tháng"] == thang_kpi) & (df_kpi["Kênh_Spotify"] == kenh_kpi)]
     if not kpi_cu.empty and kenh_kpi:
         v_w = int(kpi_cu.iloc[0]["So_Tuan"]) if pd.notna(kpi_cu.iloc[0]["So_Tuan"]) else 4
         v_dt = float(kpi_cu.iloc[0]["KPI_Doanh_Thu"])
@@ -667,13 +622,9 @@ with tab_nhap_kpi:
     if st.button("Lưu KPI & Cấu Hình Kênh", type="primary", use_container_width=True):
         if not kenh_kpi: st.error("⚠️ Vui lòng nhập Tên Kênh!")
         else:
+            df_kpi_filtered = df_kpi[~((df_kpi["Tháng"] == thang_kpi) & (df_kpi["Kênh_Spotify"] == kenh_kpi))]
             kpi_moi = pd.DataFrame([{ "Tháng": thang_kpi, "Kênh_Spotify": kenh_kpi, "KPI_Doanh_Thu": float(dt_kpi), "KPI_Luot_Play": int(play_kpi), "KPI_So_Gio": float(gio_kpi), "KPI_So_Tap": int(tap_kpi), "So_Tuan": int(so_tuan_kpi), "Bat_Kiem_Tien": bkt_kpi }])
-            if not df_kpi.empty and "Kênh_Spotify" in df_kpi.columns:
-                df_kpi_filtered = df_kpi[~((df_kpi["Tháng"] == thang_kpi) & (df_kpi["Kênh_Spotify"] == kenh_kpi))]
-                new_kpi_df = pd.concat([df_kpi_filtered, kpi_moi], ignore_index=True)
-            else:
-                new_kpi_df = kpi_moi
-            save_df(ws_kpi, new_kpi_df)
+            pd.concat([df_kpi_filtered, kpi_moi], ignore_index=True).to_csv(FILE_KPI, index=False)
             st.session_state.rk_kpi += 1; st.rerun()
 
 # ==========================================
@@ -694,7 +645,7 @@ with tab_nhap_kq:
             kenh_kq = "" if not danh_sach_kenh_master else st.selectbox("Chọn Kênh Báo Cáo:", danh_sach_kenh_master, key=f"c_kq_{rk}")
             trang_thai_bkt_kq = lay_trang_thai_kiem_tien(kenh_kq) if kenh_kq else False
             
-            kq_cu = df[(df["Tháng"] == thang_kq) & (df["Tuần"] == tuan_kq) & (df["Kênh_Spotify"] == kenh_kq)] if not df.empty and "Kênh_Spotify" in df.columns else pd.DataFrame()
+            kq_cu = df[(df["Tháng"] == thang_kq) & (df["Tuần"] == tuan_kq) & (df["Kênh_Spotify"] == kenh_kq)]
             if not kq_cu.empty and kenh_kq:
                 v_dt_kq, v_p_kq, v_g_kq, v_t_kq = float(kq_cu.iloc[0]["Doanh_Thu_USD"]), int(kq_cu.iloc[0]["Luot_Play"]), float(kq_cu.iloc[0]["So_Gio_Nghe"]), int(kq_cu.iloc[0]["So_Tap_Upload"])
                 v_link_kq = str(kq_cu.iloc[0].get("Link_Dan_Chung", ""))
@@ -716,6 +667,7 @@ with tab_nhap_kq:
         if st.button("Lưu Kết Quả Tuần", type="primary", use_container_width=True):
             if not kenh_kq: st.error("⚠️ Bạn chưa chọn Kênh Spotify!")
             else:
+                df_filtered = df[~((df["Tháng"] == thang_kq) & (df["Tuần"] == tuan_kq) & (df["Kênh_Spotify"] == kenh_kq))]
                 du_lieu_moi = pd.DataFrame([{
                     "Tháng": thang_kq, "Tuần": tuan_kq, "Kênh_Spotify": kenh_kq,
                     "Doanh_Thu_USD": float(dt_kq), "Luot_Play": int(play_kq),
@@ -724,12 +676,7 @@ with tab_nhap_kq:
                     "Thoi_Gian_Nhap": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                     "Link_Dan_Chung": link_dan_chung_tuan
                 }])
-                if not df.empty and "Kênh_Spotify" in df.columns:
-                    df_filtered = df[~((df["Tháng"] == thang_kq) & (df["Tuần"] == tuan_kq) & (df["Kênh_Spotify"] == kenh_kq))]
-                    new_df = pd.concat([df_filtered, du_lieu_moi], ignore_index=True)
-                else:
-                    new_df = du_lieu_moi
-                save_df(ws_master, new_df)
+                pd.concat([df_filtered, du_lieu_moi], ignore_index=True).to_csv(FILE_DU_LIEU, index=False)
                 st.session_state.rk_kq += 1; st.rerun()
                 
     else:
@@ -742,7 +689,7 @@ with tab_nhap_kq:
             kenh_kq_m = "" if not danh_sach_kenh_master else st.selectbox("Chọn Kênh Báo Cáo:", danh_sach_kenh_master, key=f"c_m_{rk_m}")
             trang_thai_bkt_m = lay_trang_thai_kiem_tien(kenh_kq_m) if kenh_kq_m else False
             
-            kq_cu_m = df_thang_chot[(df_thang_chot["Năm"] == nam_kq_m) & (df_thang_chot["Tháng"] == thang_kq_m) & (df_thang_chot["Kênh_Spotify"] == kenh_kq_m)] if not df_thang_chot.empty and "Kênh_Spotify" in df_thang_chot.columns else pd.DataFrame()
+            kq_cu_m = df_thang_chot[(df_thang_chot["Năm"] == nam_kq_m) & (df_thang_chot["Tháng"] == thang_kq_m) & (df_thang_chot["Kênh_Spotify"] == kenh_kq_m)]
             if not kq_cu_m.empty and kenh_kq_m:
                 v_dt_m, v_p_m, v_g_m, v_t_m = float(kq_cu_m.iloc[0]["Doanh_Thu_USD"]), int(kq_cu_m.iloc[0]["Luot_Play"]), float(kq_cu_m.iloc[0]["So_Gio_Nghe"]), int(kq_cu_m.iloc[0]["So_Tap_Upload"])
                 v_link_m = str(kq_cu_m.iloc[0].get("Link_Dan_Chung", ""))
@@ -764,6 +711,7 @@ with tab_nhap_kq:
         if st.button("Lưu Chốt Số Tháng", type="primary", use_container_width=True):
             if not kenh_kq_m: st.error("⚠️ Vui lòng chọn Tên Kênh!")
             else:
+                df_kq_m_filter = df_thang_chot[~((df_thang_chot["Năm"] == nam_kq_m) & (df_thang_chot["Tháng"] == thang_kq_m) & (df_thang_chot["Kênh_Spotify"] == kenh_kq_m))]
                 du_lieu_moi_m = pd.DataFrame([{
                     "Năm": nam_kq_m, "Tháng": thang_kq_m, "Kênh_Spotify": kenh_kq_m,
                     "Doanh_Thu_USD": float(dt_kq_m), "Luot_Play": int(play_kq_m),
@@ -772,12 +720,7 @@ with tab_nhap_kq:
                     "Thoi_Gian_Nhap": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                     "Link_Dan_Chung": link_dan_chung_thang
                 }])
-                if not df_thang_chot.empty and "Kênh_Spotify" in df_thang_chot.columns:
-                    df_kq_m_filter = df_thang_chot[~((df_thang_chot["Năm"] == nam_kq_m) & (df_thang_chot["Tháng"] == thang_kq_m) & (df_thang_chot["Kênh_Spotify"] == kenh_kq_m))]
-                    new_df_m = pd.concat([df_kq_m_filter, du_lieu_moi_m], ignore_index=True)
-                else:
-                    new_df_m = du_lieu_moi_m
-                save_df(ws_monthly, new_df_m)
+                pd.concat([df_kq_m_filter, du_lieu_moi_m], ignore_index=True).to_csv(FILE_KQ_THANG, index=False)
                 st.session_state.rk_kq_thang += 1; st.rerun()
 
 # ==========================================
@@ -785,50 +728,54 @@ with tab_nhap_kq:
 # ==========================================
 with tab_xoa_data:
     st.header("🛠️ Quản Lý & Xóa Dữ Liệu")
-    st.markdown("Khu vực này đọc thẳng từ Google Sheets. Vui lòng kiểm tra kỹ trước khi bấm Xóa!")
+    st.markdown("Khu vực này giúp bạn dọn dẹp các dữ liệu nhập sai. Vui lòng kiểm tra kỹ trước khi bấm Xóa!")
 
     loai_dl = st.radio("Thư mục dữ liệu:", ["🎯 Mục tiêu (KPI)", "📥 Kết quả Tuần", "📥 Kết quả Tháng"], horizontal=True)
 
     if loai_dl == "🎯 Mục tiêu (KPI)":
-        ws_delete = ws_kpi
-        df_delete = get_df(ws_kpi, "kpi")
+        file_path = FILE_KPI
     elif loai_dl == "📥 Kết quả Tuần":
-        ws_delete = ws_master
-        df_delete = get_df(ws_master, "master")
+        file_path = FILE_DU_LIEU
     else:
-        ws_delete = ws_monthly
-        df_delete = get_df(ws_monthly, "monthly")
+        file_path = FILE_KQ_THANG
 
-    if not df_delete.empty:
-        st.dataframe(df_delete, use_container_width=True)
-
-        st.markdown("---")
-        st.subheader("🗑️ Chọn dòng cần xóa")
+    if os.path.exists(file_path):
+        df_delete = pd.read_csv(file_path)
         
-        options_dict = {}
-        for idx, row in df_delete.iterrows():
-            kenh = row.get('Kênh_Spotify', 'Unknown')
-            thang = row.get('Tháng', '')
-            if loai_dl == "📥 Kết quả Tuần":
-                tuan = row.get('Tuần', '')
-                info = f"Dòng {idx}: {kenh} - {thang} - {tuan}"
-            else:
-                info = f"Dòng {idx}: {kenh} - {thang}"
+        if len(df_delete) > 0:
+            st.dataframe(df_delete, use_container_width=True)
+
+            st.markdown("---")
+            st.subheader("🗑️ Chọn dòng cần xóa")
+            
+            options_dict = {}
+            for idx, row in df_delete.iterrows():
+                kenh = row.get('Kênh_Spotify', 'Unknown')
+                thang = row.get('Tháng', '')
                 
-            options_dict[info] = idx
+                if loai_dl == "📥 Kết quả Tuần":
+                    tuan = row.get('Tuần', '')
+                    info = f"Dòng {idx}: {kenh} - {thang} - {tuan}"
+                else:
+                    info = f"Dòng {idx}: {kenh} - {thang}"
+                    
+                options_dict[info] = idx
 
-        dong_can_xoa = st.multiselect("Nhấp vào đây và chọn các dòng dữ liệu bị sai:", list(options_dict.keys()))
+            dong_can_xoa = st.multiselect("Nhấp vào đây và chọn các dòng dữ liệu bị sai:", list(options_dict.keys()))
 
-        if st.button("🚨 XÓA CÁC DÒNG ĐÃ CHỌN", type="primary"):
-            if dong_can_xoa:
-                idx_to_drop = [options_dict[val] for val in dong_can_xoa]
-                df_delete = df_delete[~df_delete.index.isin(idx_to_drop)]
-                save_df(ws_delete, df_delete)
-                st.success("✅ Đã xóa trên Google Sheets! Đang làm mới...")
-                import time
-                time.sleep(1) 
-                st.rerun()
-            else:
-                st.warning("⚠️ Boss chưa chọn dòng nào để xóa!")
+            if st.button("🚨 XÓA CÁC DÒNG ĐÃ CHỌN", type="primary"):
+                if dong_can_xoa:
+                    idx_to_drop = [options_dict[val] for val in dong_can_xoa]
+                    df_delete = df_delete[~df_delete.index.isin(idx_to_drop)]
+                    df_delete.to_csv(file_path, index=False)
+                    st.success("✅ Đã xóa thành công! Đang tự động cập nhật lại hệ thống...")
+                    import time
+                    time.sleep(1) 
+                    try: st.rerun()
+                    except: st.experimental_rerun()
+                else:
+                    st.warning("⚠️ Boss chưa chọn dòng nào để xóa!")
+        else:
+            st.info("Bảng dữ liệu này hiện đang trống.")
     else:
-        st.info("Bảng dữ liệu này trên Google Sheets hiện đang trống.")
+        st.error(f"Lỗi: Không tìm thấy file gốc ({file_path}).")
