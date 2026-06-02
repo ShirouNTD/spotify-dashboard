@@ -724,33 +724,61 @@ with tab_nhap_kq:
                 st.session_state.rk_kq_thang += 1; st.rerun()
 
 # ==========================================
-# TAB 5: QUẢN LÝ & XÓA DỮ LIỆU
+# TAB 5: QUẢN LÝ & XÓA DỮ LIỆU (BẢN TẠM)
 # ==========================================
 with tab_xoa_data:
     st.header("🛠️ Quản Lý & Xóa Dữ Liệu")
-    st.markdown("Khu vực quản lý dữ liệu nhập tay trong phiên làm việc.")
+    st.markdown("⚠️ *Dữ liệu đang được lưu tạm thời. Nhấn F5 sẽ mất toàn bộ.*")
 
-    # Boss kiểm tra xem bản cũ ngài đặt tên biến lưu KPI trong st.session_state là gì nhé
-    # Đoạn dưới đây giả định tên biến cũ là st.session_state.df_kpi hoặc kpi_list
-    
-    loai_dl = st.radio("Chọn bảng dữ liệu để chỉnh sửa:", ["🎯 Mục tiêu (KPI)", "📥 Kết quả"], horizontal=True)
+    loai_dl = st.radio("Thư mục dữ liệu:", ["🎯 Mục tiêu (KPI)", "📥 Kết quả Tuần", "📥 Kết quả Tháng"], horizontal=True)
 
+    # 1. Xác định đang tương tác với biến nào trong session_state
     if loai_dl == "🎯 Mục tiêu (KPI)":
-        # Thay 'df_kpi' bằng đúng tên biến chứa bảng KPI bản cũ của ngài nếu chạy lỗi
-        if "df_kpi" in st.session_state and not st.session_state.df_kpi.empty:
-            df_delete = st.session_state.df_kpi.copy()
-            st.dataframe(df_delete, use_container_width=True)
-            
-            dong_can_xoa = st.multiselect("Chọn các dòng dữ liệu bị sai tháng:", df_delete.index)
-            
-            if st.button("🚨 XÓA CÁC DÒNG ĐÃ CHỌN", type="primary"):
-                if dong_can_xoa:
-                    st.session_state.df_kpi = df_delete.drop(dong_can_xoa)
-                    st.success("✅ Đã xóa thành công! Đang làm mới...")
-                    import time
-                    time.sleep(0.5)
-                    st.rerun()
-                else:
-                    st.warning("⚠️ Boss chưa chọn dòng nào để xóa!")
-        else:
-            st.info("Bảng dữ liệu KPI hiện đang trống hoặc chưa được khởi tạo.")
+        state_key = "df_kpi"
+    elif loai_dl == "📥 Kết quả Tuần":
+        state_key = "df"
+    else:
+        state_key = "df_thang_chot"
+
+    # Khởi tạo DataFrame rỗng nếu biến chưa từng tồn tại để tránh lỗi
+    if state_key not in st.session_state:
+        st.session_state[state_key] = pd.DataFrame()
+
+    df_delete = st.session_state[state_key]
+
+    # 2. Hiển thị và xử lý xóa
+    if not df_delete.empty:
+        st.dataframe(df_delete, use_container_width=True)
+        st.markdown("---")
+        st.subheader("🗑️ Chọn dòng cần xóa")
+        
+        # Tạo danh sách hiển thị tên để Boss dễ chọn thay vì chỉ hiện số Index
+        options_dict = {}
+        for idx, row in df_delete.iterrows():
+            kenh = row.get('Kênh_Spotify', 'Unknown')
+            thang = row.get('Tháng', '')
+            if loai_dl == "📥 Kết quả Tuần":
+                tuan = row.get('Tuần', '')
+                info = f"Dòng {idx}: {kenh} - {thang} - {tuan}"
+            else:
+                info = f"Dòng {idx}: {kenh} - {thang}"
+                
+            options_dict[info] = idx
+
+        dong_can_xoa = st.multiselect("Nhấp vào đây và chọn các dòng dữ liệu bị sai:", list(options_dict.keys()))
+
+        if st.button("🚨 XÓA CÁC DÒNG ĐÃ CHỌN", type="primary"):
+            if dong_can_xoa:
+                # Lấy danh sách index thật cần xóa
+                idx_to_drop = [options_dict[val] for val in dong_can_xoa]
+                # Cập nhật lại session_state và reset index cho gọn
+                st.session_state[state_key] = df_delete.drop(index=idx_to_drop).reset_index(drop=True)
+                
+                st.success("✅ Đã xóa thành công! Đang làm mới...")
+                import time
+                time.sleep(1) 
+                st.rerun()
+            else:
+                st.warning("⚠️ Boss chưa chọn dòng nào để xóa!")
+    else:
+        st.info("Bảng dữ liệu này hiện đang trống. Hãy nhập dữ liệu ở các tab trước!")
