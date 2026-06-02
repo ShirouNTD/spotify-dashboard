@@ -90,10 +90,20 @@ st.markdown(f"""
 # ==========================================
 SHEET_URL = "https://docs.google.com/spreadsheets/d/1PHIBBS9-JUexTfty0T4xp9qs-ukcxQFtByKpk7b8elY/edit"
 
+import json # Boss nhớ thêm import này ở đầu file nhé!
+
 @st.cache_resource
 def get_gspread_client():
     scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
-    creds = Credentials.from_service_account_file('credentials.json', scopes=scope)
+    
+    # Đọc từ Secrets
+    creds_dict = st.secrets["gcp_service_account"]
+    
+    # Nếu nó là string, ép nó sang dict
+    if isinstance(creds_dict, str):
+        creds_dict = json.loads(creds_dict)
+        
+    creds = Credentials.from_service_account_info(creds_dict, scopes=scope)
     return gspread.authorize(creds)
     
 try:
