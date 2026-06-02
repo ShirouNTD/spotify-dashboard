@@ -93,9 +93,7 @@ SHEET_URL = "https://docs.google.com/spreadsheets/d/1PHIBBS9-JUexTfty0T4xp9qs-uk
 @st.cache_resource
 def get_gspread_client():
     scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
-    # Sửa từ 'creds_dict = st.secrets["gcp_service_account"]' thành:
-    creds_dict = dict(st.secrets["gcp_service_account"]) 
-    creds = Credentials.from_service_account_info(creds_dict, scopes=scope)
+    creds = Credentials.from_service_account_file('credentials.json', scopes=scope)
     return gspread.authorize(creds)
     
 try:
