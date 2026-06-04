@@ -803,12 +803,54 @@ with tab_xoa_data:
     else:
         st.error(f"Lỗi: Không tìm thấy file gốc ({file_path}).")
 
-# --- PHẦN 2: TẢI LÊN (RESTORE) ---
+# ==========================================
+# TAB 6: BACKUP & RESTORE DỮ LIỆU
+# ==========================================
+with tab_backup:
+    st.header("💾 Backup & Khôi Phục Dữ Liệu")
+    st.error("⚠️ LƯU Ý: Máy chủ Streamlit có thể tự reset. Hãy tải dữ liệu về máy sau khi nhập xong!")
+
+    col1, col2 = st.columns(2)
+
+    # --- PHẦN 1: TẢI VỀ (BACKUP) ---
+    with col1:
+        st.subheader("⬇️ Tải dữ liệu về máy")
+        
+        # Hàm đọc file an toàn
+        def read_file(path):
+            import os
+            if os.path.exists(path):
+                with open(path, "rb") as f:
+                    return f.read()
+            return None
+
+        # Nút tải MasterData
+        data_master = read_file(FILE_DU_LIEU)
+        if data_master:
+            st.download_button("📥 Tải MasterData (Kết quả Tuần)", data=data_master, file_name="MasterData.csv", mime="text/csv", use_container_width=True)
+        else:
+            st.button("📥 MasterData (Đang trống)", disabled=True, use_container_width=True)
+        
+        # Nút tải MonthlyData
+        data_month = read_file(FILE_KQ_THANG)
+        if data_month:
+            st.download_button("📥 Tải MonthlyData (Kết quả Tháng)", data=data_month, file_name="MonthlyData.csv", mime="text/csv", use_container_width=True)
+        else:
+            st.button("📥 MonthlyData (Đang trống)", disabled=True, use_container_width=True)
+            
+        # Nút tải KPI
+        data_kpi = read_file(FILE_KPI)
+        if data_kpi:
+            st.download_button("📥 Tải KPI (Mục tiêu)", data=data_kpi, file_name="KPI.csv", mime="text/csv", use_container_width=True)
+        else:
+            st.button("📥 KPI (Đang trống)", disabled=True, use_container_width=True)
+
+    # --- PHẦN 2: TẢI LÊN (RESTORE) TÍCH HỢP MULTI-UPLOAD ---
     with col2:
         st.subheader("⬆️ Khôi phục dữ liệu")
         st.markdown("Boss có thể **kéo thả nhiều file CSV cùng lúc** vào đây để hệ thống nạp đủ data!")
         
-        # Bật tính năng accept_multiple_files = True
+        # Cho phép chọn nhiều file
         uploaded_files = st.file_uploader("Upload các file CSV (MasterData, MonthlyData, KPI):", type=['csv'], accept_multiple_files=True)
         
         if uploaded_files:
@@ -823,7 +865,7 @@ with tab_xoa_data:
                     elif "KPI" in file.name or "Mục tiêu" in file.name:
                         target_path = FILE_KPI
                     else:
-                        continue # Bỏ qua nếu tên file không liên quan
+                        continue # Bỏ qua nếu tên file không chứa các từ khóa trên
                         
                     # Tiến hành lưu đè file
                     with open(target_path, "wb") as f:
@@ -839,4 +881,4 @@ with tab_xoa_data:
                     except AttributeError:
                         st.experimental_rerun()
                 else:
-                    st.error("❌ Không tìm thấy file hợp lệ. Vui lòng đặt tên file có chứa chữ 'MasterData', 'MonthlyData' hoặc 'KPI'.")
+                    st.error("❌ Không tìm thấy file hợp lệ. Vui lòng kiểm tra lại tên file.")
