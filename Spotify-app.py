@@ -245,8 +245,8 @@ def tao_sheet_tong_hop(thang_chon, chiso_chon):
     return master, col_kpi
 
 # TABS
-tab_dashboard, tab_master, tab_nhap_kpi, tab_nhap_kq, tab_xoa_data, tab_backup = st.tabs([
-    "📊 Dashboard", "📑 Sheet Tổng Hợp", "🎯 Nhập Mục Tiêu", "📥 Nhập Kết Quả", "🛠️ Quản Lý", "💾 Backup"
+tab_dashboard, tab_master, tab_nhap_kpi, tab_nhap_kq, tab_xoa_data, tab_backup, tab_huong_dan = st.tabs([
+    "📊 Dashboard", "📑 Sheet Tổng Hợp", "🎯 Nhập Mục Tiêu", "📥 Nhập Kết Quả", "🛠️ Quản Lý", "💾 Backup", "🔄 Hướng Dẫn"
 ])
 
 
@@ -891,3 +891,39 @@ with tab_backup:
                         st.experimental_rerun()
                 else:
                     st.error("❌ Không tìm thấy file hợp lệ. Vui lòng kiểm tra lại tên file.")
+
+
+# ==========================================
+# TAB 7: HƯỚNG DẪN CONVERT EXCEL SANG CSV
+# ==========================================
+with tab_huong_dan:
+    st.header("🔄 Hướng Dẫn Convert Dữ Liệu")
+    st.info("Khu vực này hướng dẫn cách chuyển đổi file Excel (.xlsx) gốc thành định dạng CSV chuẩn để upload vào hệ thống. Bất cứ ai có link công cụ cũng có thể tự thực hiện.")
+    
+    st.markdown("""
+    ### 🚀 Các bước thực hiện:
+    
+    **Bước 1: Truy cập công cụ chuyển đổi tự động**
+    * Mở đường link Google Colab dưới đây (đã được cấu hình sẵn hệ thống tự động bóc tách): 
+    👉 [**NHẤN VÀO ĐÂY ĐỂ MỞ TOOL CONVERT (GOOGLE COLAB)**](https://colab.research.google.com/drive/1Qk4zOFsObtJAdCsUc-PV7CO6BF01NY7u?usp=sharing)
+    
+    **Bước 2: Tải file Excel gốc lên Colab**
+    * Tại giao diện Google Colab, nhìn sang thanh menu bên trái, chọn biểu tượng **Thư mục (Files)** 📁.
+    * Kéo thả file Excel của bạn (ví dụ: `Spotify_Performance_DB.xlsx`) vào khoảng trống, hoặc bấm biểu tượng mũi tên tải lên 📄.
+    * *(Lưu ý: Tên file Excel tải lên phải giữ nguyên như gốc để công cụ nhận diện).*
+    
+    **Bước 3: Chạy tiến trình Convert**
+    * Ở giữa màn hình Colab sẽ có một khối chứa mã code.
+    * Đưa chuột vào góc trái trên cùng của khối code đó, bấm vào nút **Play (Hình tam giác ▶️)** để chạy.
+    * Đợi 1-2 giây cho đến khi hệ thống báo dòng chữ `🎉 HOÀN TẤT!` ở bên dưới.
+    
+    **Bước 4: Tải file CSV về máy tính**
+    * Nhìn lại sang thanh menu thư mục bên trái, bấm biểu tượng **Làm mới (Refresh 🔄)** ở ngay trên danh sách file.
+    * Sẽ xuất hiện 2 file mới sinh ra là `MasterData.csv` và `KPI.csv`.
+    * Bấm vào **dấu 3 chấm ⋮** ở cuối tên mỗi file ➡️ Chọn **Download (Tải xuống)**.
+    
+    **Bước 5: Upload vào hệ thống Dashboard**
+    * Quay lại trang Web Dashboard này.
+    * Chuyển sang Tab **"💾 Backup"**.
+    * Tại mục **Khôi phục dữ liệu**, kéo thả cả 2 file CSV vừa tải về vào khung Upload và bấm **Xác nhận**. Hệ thống sẽ tự động cập nhật biểu đồ!
+    """)
