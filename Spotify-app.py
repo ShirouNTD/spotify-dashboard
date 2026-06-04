@@ -262,7 +262,11 @@ with tab_dashboard:
             
             df_thang = df if thang_chon_db == "Tất cả các tháng" else df[df["Tháng"] == thang_chon_db]
             with col_loc_tuan:
-                tuan_hien_co = list(df_thang["Tuần"].unique()); tuan_hien_co.sort(key=lambda x: int(x.replace("Tuần ", "")) if "Tuần " in x else 0)
+                try:
+                tuan_hien_co = list(df_thang["Tuần"].dropna().unique())
+                tuan_hien_co.sort(key=lambda x: int(str(x).replace("Tuần ", "")) if "Tuần " in str(x) else 0)
+                except KeyError:
+                    tuan_hien_co = []
                 tuan_chon = st.multiselect("📅 Lọc theo Tuần:", options=tuan_hien_co, default=tuan_hien_co, key="loc_tuan_w")
 
             danh_sach_kenh_hien_co = list(df_thang["Kênh_Spotify"].unique())
