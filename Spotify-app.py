@@ -280,20 +280,20 @@ with tab_dashboard:
             
             kenh_hien_thi_cuoi_cung = [k for k in kenh_duoc_chon if (loc_bkt == "Tất cả") or (loc_bkt == "Đã bật" and lay_trang_thai_kiem_tien(k)) or (loc_bkt == "Chưa bật" and not lay_trang_thai_kiem_tien(k))]
 
-            # 1. Bọc thép: Khai báo biến trước khi kiểm tra để chống sập
+            # 1. Bọc thép: Gán vào biến ảo "_" để chặn Streamlit in linh tinh ra màn hình
             try:
-                tuan_chon
+                _ = tuan_chon
             except NameError:
                 tuan_chon = []
-        
+                
             try:
-                kenh_hien_thi_cuoi_cung
+                _ = kenh_hien_thi_cuoi_cung
             except NameError:
                 kenh_hien_thi_cuoi_cung = []
 
-    # 2. Logic kiểm tra và lọc dữ liệu
-            if not kenh_hien_thi_cuoi_cung or not tuan_chon: 
-                st.warning("⚠️ App chưa có đủ dữ liệu Kênh hoặc Tuần! Boss hãy kéo xuống Tab 'Backup' để Upload file nhé.")
+            # 2. Logic kiểm tra hiển thị
+            if len(kenh_hien_thi_cuoi_cung) == 0 or len(tuan_chon) == 0: 
+                st.warning("⚠️ App đang chờ lệnh! Boss vui lòng đảm bảo đã chọn ít nhất 1 Kênh VÀ 1 Tuần ở bộ lọc phía trên nhé.")
             else:
                 df_final = df_thang[df_thang["Kênh_Spotify"].isin(kenh_hien_thi_cuoi_cung) & df_thang["Tuần"].isin(tuan_chon)]
                 df_kpi_filter = df_kpi[df_kpi["Kênh_Spotify"].isin(kenh_hien_thi_cuoi_cung)]
