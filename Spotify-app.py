@@ -280,16 +280,25 @@ with tab_dashboard:
             
             kenh_hien_thi_cuoi_cung = [k for k in kenh_duoc_chon if (loc_bkt == "Tất cả") or (loc_bkt == "Đã bật" and lay_trang_thai_kiem_tien(k)) or (loc_bkt == "Chưa bật" and not lay_trang_thai_kiem_tien(k))]
 
-            if not kenh_hien_thi_cuoi_cung or not tuan_chon: st.warning(f"⚠️ Vui lòng chọn ít nhất 1 Kênh và 1 Tuần!")
-            try: tuan_chon
-            except NameError: tuan_chon = []
-    
-            try: kenh_hien_thi_cuoi_cung
-            except NameError: kenh_hien_thi_cuoi_cung = []    
+            # 1. Bọc thép: Khai báo biến trước khi kiểm tra để chống sập
+            try:
+                tuan_chon
+            except NameError:
+                tuan_chon = []
+        
+            try:
+                kenh_hien_thi_cuoi_cung
+            except NameError:
+                kenh_hien_thi_cuoi_cung = []
+
+    # 2. Logic kiểm tra và lọc dữ liệu
+            if not kenh_hien_thi_cuoi_cung or not tuan_chon: 
+                st.warning("⚠️ App chưa có đủ dữ liệu Kênh hoặc Tuần! Boss hãy kéo xuống Tab 'Backup' để Upload file nhé.")
             else:
                 df_final = df_thang[df_thang["Kênh_Spotify"].isin(kenh_hien_thi_cuoi_cung) & df_thang["Tuần"].isin(tuan_chon)]
                 df_kpi_filter = df_kpi[df_kpi["Kênh_Spotify"].isin(kenh_hien_thi_cuoi_cung)]
-                if thang_chon_db != "Tất cả các tháng": df_kpi_filter = df_kpi_filter[df_kpi_filter["Tháng"] == thang_chon_db]
+                if thang_chon_db != "Tất cả các tháng": 
+                    df_kpi_filter = df_kpi_filter[df_kpi_filter["Tháng"] == thang_chon_db]
                     
                 so_tuan_chon = len(tuan_chon)
                 target_dt = (df_kpi_filter["KPI_Doanh_Thu"] / df_kpi_filter["So_Tuan"].fillna(4)).sum() * so_tuan_chon if len(tuan_chon) < len(tuan_hien_co) else df_kpi_filter["KPI_Doanh_Thu"].sum()
