@@ -240,8 +240,8 @@ def tao_sheet_tong_hop(thang_chon, chiso_chon):
     return master, col_kpi
 
 # TABS
-tab_dashboard, tab_master, tab_nhap_kpi, tab_nhap_kq, tab_xoa_data = st.tabs([
-    "📊 Dashboard", "📑 Sheet Tổng Hợp", "🎯 Nhập Mục Tiêu", "📥 Nhập Kết Quả", "🛠️ Quản Lý"
+tab_dashboard, tab_master, tab_nhap_kpi, tab_nhap_kq, tab_xoa_data, tab_backup = st.tabs([
+    "📊 Dashboard", "📑 Sheet Tổng Hợp", "🎯 Nhập Mục Tiêu", "📥 Nhập Kết Quả", "🛠️ Quản Lý", "💾 Backup"
 ])
 
 
@@ -788,3 +788,73 @@ with tab_xoa_data:
             st.info("Bảng dữ liệu này hiện đang trống.")
     else:
         st.error(f"Lỗi: Không tìm thấy file gốc ({file_path}).")
+
+# ==========================================
+# TAB 6: BACKUP & RESTORE DỮ LIỆU
+# ==========================================
+with tab_backup:
+    st.header("💾 Backup & Khôi Phục Dữ Liệu")
+    st.error("⚠️ LƯU Ý: Máy chủ Streamlit có thể tự reset. Hãy tải dữ liệu về máy sau khi nhập xong!")
+
+    col1, col2 = st.columns(2)
+
+    # --- PHẦN 1: TẢI VỀ (BACKUP) ---
+    with col1:
+        st.subheader("⬇️ Tải dữ liệu về máy")
+        
+        # Hàm đọc file an toàn
+        def read_file(path):
+            if os.path.exists(path):
+                with open(path, "rb") as f:
+                    return f.read()
+            return None
+
+        # Nút tải MasterData
+        data_master = read_file(FILE_DU_LIEU)
+        if data_master:
+            st.download_button("📥 Tải MasterData (Kết quả Tuần)", data=data_master, file_name="MasterData.csv", mime="text/csv", use_container_width=True)
+        else:
+            st.button("📥 MasterData (Đang trống)", disabled=True, use_container_width=True)
+        
+        # Nút tải MonthlyData
+        data_month = read_file(FILE_KQ_THANG)
+        if data_month:
+            st.download_button("📥 Tải MonthlyData (Kết quả Tháng)", data=data_month, file_name="MonthlyData.csv", mime="text/csv", use_container_width=True)
+        else:
+            st.button("📥 MonthlyData (Đang trống)", disabled=True, use_container_width=True)
+            
+        # Nút tải KPI
+        data_kpi = read_file(FILE_KPI)
+        if data_kpi:
+            st.download_button("📥 Tải KPI (Mục tiêu)", data=data_kpi, file_name="KPI.csv", mime="text/csv", use_container_width=True)
+        else:
+            st.button("📥 KPI (Đang trống)", disabled=True, use_container_width=True)
+
+    # --- PHẦN 2: TẢI LÊN (RESTORE) ---
+    with col2:
+        st.subheader("⬆️ Khôi phục dữ liệu")
+        
+        loai_file = st.selectbox("1. Chọn loại file cần khôi phục:", ["Kết quả Tuần (MasterData)", "Kết quả Tháng (MonthlyData)", "Mục tiêu (KPI)"])
+        uploaded_file = st.file_uploader("2. Upload file CSV tương ứng từ máy lên:", type=['csv'])
+        
+        if uploaded_file is not None:
+            if st.button("🚀 XÁC NHẬN KHÔI PHỤC", type="primary", use_container_width=True):
+                # Map loại file ngài chọn với tên file lưu trên hệ thống
+                if loai_file == "Kết quả Tuần (MasterData)":
+                    target_path = FILE_DU_LIEU
+                elif loai_file == "Kết quả Tháng (MonthlyData)":
+                    target_path = FILE_KQ_THANG
+                else:
+                    target_path = FILE_KPI
+                    
+                # Tiến hành ghi đè file
+                with open(target_path, "wb") as f:
+                    f.write(uploaded_file.getbuffer())
+                    
+                st.success(f"✅ Đã khôi phục {loai_file} thành công! Web đang tự động làm mới...")
+                import time
+                time.sleep(1)
+                try:
+                    st.rerun()
+                except AttributeError:
+                    st.experimental_rerun()
