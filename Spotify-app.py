@@ -281,6 +281,11 @@ with tab_dashboard:
             kenh_hien_thi_cuoi_cung = [k for k in kenh_duoc_chon if (loc_bkt == "Tất cả") or (loc_bkt == "Đã bật" and lay_trang_thai_kiem_tien(k)) or (loc_bkt == "Chưa bật" and not lay_trang_thai_kiem_tien(k))]
 
             if not kenh_hien_thi_cuoi_cung or not tuan_chon: st.warning(f"⚠️ Vui lòng chọn ít nhất 1 Kênh và 1 Tuần!")
+            try: tuan_chon
+            except NameError: tuan_chon = []
+    
+            try: kenh_hien_thi_cuoi_cung
+            except NameError: kenh_hien_thi_cuoi_cung = []    
             else:
                 df_final = df_thang[df_thang["Kênh_Spotify"].isin(kenh_hien_thi_cuoi_cung) & df_thang["Tuần"].isin(tuan_chon)]
                 df_kpi_filter = df_kpi[df_kpi["Kênh_Spotify"].isin(kenh_hien_thi_cuoi_cung)]
