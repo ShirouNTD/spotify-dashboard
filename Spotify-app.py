@@ -165,6 +165,11 @@ def tao_sheet_tong_hop(thang_chon, chiso_chon):
     master = pd.DataFrame(danh_sach_kenh_master, columns=["Kênh_Spotify"])
     master = master.merge(kpi_thang[["Kênh_Spotify", col_kpi, "So_Tuan"]], on="Kênh_Spotify", how="left")
     master[col_kpi] = master[col_kpi].fillna(0)
+
+# Bọc thép chống sập web nếu thiếu cột
+    if col_kq not in df_kq.columns:
+        st.error(f"Lỗi: File MasterData đang thiếu cột '{col_kq}'. Vui lòng upload file chuẩn!")
+        return pd.DataFrame(), col_kpi
     
     thang_kq_sum = df_kq[df_kq["Tháng"] == thang_chon].groupby("Kênh_Spotify")[col_kq].sum().reset_index()
     thang_kq_sum.rename(columns={col_kq: "Kết quả tổng"}, inplace=True)
