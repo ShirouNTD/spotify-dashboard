@@ -261,22 +261,29 @@ with tab_dashboard:
         if df.empty: st.info("Hệ thống chưa có dữ liệu kết quả TUẦN nào.")
         else:
             col_loc1, col_loc_tuan, col_loc2, col_loc3 = st.columns([1.2, 1.2, 2, 1.2])
+            
             with col_loc1:
                 thang_hien_co = list(df["Tháng"].unique())
                 thang_chon_db = st.selectbox("📅 Lọc theo Tháng:", ["Tất cả các tháng"] + thang_hien_co, index=(len(thang_hien_co)), key="loc_thang_w")
             
             df_thang = df if thang_chon_db == "Tất cả các tháng" else df[df["Tháng"] == thang_chon_db]
+            
             with col_loc_tuan:
-                try:
+                if not df_thang.empty and "Tuần" in df_thang.columns:
                     tuan_hien_co = list(df_thang["Tuần"].dropna().unique())
                     tuan_hien_co.sort(key=lambda x: int(str(x).replace("Tuần ", "")) if "Tuần " in str(x) else 0)
-                except KeyError:
+                else:
                     tuan_hien_co = []
-                    tuan_chon = st.multiselect("📅 Lọc theo Tuần:", options=tuan_hien_co, default=tuan_hien_co, key="loc_tuan_w")
+                tuan_chon = st.multiselect("🗓️ Chọn Tuần hiển thị:", options=tuan_hien_co, default=tuan_hien_co, key="loc_tuan_w")
 
-            danh_sach_kenh_hien_co = list(df_thang["Kênh_Spotify"].unique())
-            with col_loc2: kenh_duoc_chon = st.multiselect("🎧 Lọc theo Kênh:", options=danh_sach_kenh_hien_co, default=danh_sach_kenh_hien_co, key="loc_kenh_w")
-            with col_loc3: loc_bkt = st.selectbox("🚦 Kiếm Tiền:", ["Tất cả", "Đã bật", "Chưa bật"], key="loc_bkt_w")
+            with col_loc2: 
+                danh_sach_kenh_hien_co = list(df_thang["Kênh_Spotify"].unique())
+                kenh_duoc_chon = st.multiselect("🎧 Lọc theo Kênh:", options=danh_sach_kenh_hien_co, default=danh_sach_kenh_hien_co, key="loc_kenh_w")
+                
+            with col_loc3: 
+                loc_bkt = st.selectbox("🚦 Kiếm Tiền:", ["Tất cả", "Đã bật", "Chưa bật"], key="loc_bkt_w")
+            
+            kenh_hien_thi_cuoi_cung = [k for k in kenh_duoc_chon if (loc_bkt == "Tất cả") or (loc_bkt == "Đã bật" and lay_trang_thai_kiem_tien(k)) or (loc_bkt == "Chưa bật" and not lay_trang_thai_kiem_tien(k))]
             
             kenh_hien_thi_cuoi_cung = [k for k in kenh_duoc_chon if (loc_bkt == "Tất cả") or (loc_bkt == "Đã bật" and lay_trang_thai_kiem_tien(k)) or (loc_bkt == "Chưa bật" and not lay_trang_thai_kiem_tien(k))]
 
