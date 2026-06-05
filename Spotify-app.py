@@ -285,16 +285,6 @@ with tab_dashboard:
             
             kenh_hien_thi_cuoi_cung = [k for k in kenh_duoc_chon if (loc_bkt == "Tất cả") or (loc_bkt == "Đã bật" and lay_trang_thai_kiem_tien(k)) or (loc_bkt == "Chưa bật" and not lay_trang_thai_kiem_tien(k))]
             
-            kenh_hien_thi_cuoi_cung = [k for k in kenh_duoc_chon if (loc_bkt == "Tất cả") or (loc_bkt == "Đã bật" and lay_trang_thai_kiem_tien(k)) or (loc_bkt == "Chưa bật" and not lay_trang_thai_kiem_tien(k))]
-
-# === TRIỆU HỒI LẠI BỘ LỌC TUẦN BỊ MẤT ===
-            if not df_thang.empty and "Tuần" in df_thang.columns:
-                tuan_hien_co = list(df_thang["Tuần"].dropna().unique())
-                tuan_hien_co.sort(key=lambda x: int(str(x).replace("Tuần ", "")) if "Tuần " in str(x) else 0)
-            else:
-                tuan_hien_co = []
-            
-            tuan_chon = st.multiselect("🗓️ Chọn Tuần hiển thị:", options=tuan_hien_co, default=tuan_hien_co)
             # ========================================
             
             # 1. Bọc thép: Gán vào biến ảo "_" để chặn Streamlit in linh tinh ra màn hình
