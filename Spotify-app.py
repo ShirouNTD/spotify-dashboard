@@ -455,7 +455,7 @@ with tab_master:
     </style>
     """
     st.markdown(css + f'<div class="table-container">{html_table}</div>', unsafe_allow_html=True)
-    st.download_button(label="📥 Xuất Excel (Sheet này)", data=df_display.to_csv(index=False).encode('utf-8-sig'), file_name=f"BaoCao_{thang_chon}_{chiso_sheet}.csv", mime='text/csv')
+    st.download_button(label="📥 Xuất Excel (Sheet này)", data=df_display.to_csv(index=False).encode('utf-8-sig'), file_name=f"BaoCao_{chon_thang}_{chiso_sheet}.csv", mime='text/csv')
 
 # ==========================================
 # TAB 3: NHẬP KPI
