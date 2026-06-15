@@ -340,7 +340,46 @@ with tab_dashboard:
                 df_trend["Đường_Mục_Tiêu"] = round(df_kpi_filter["Muc_Tieu_Tuan_Hien_Tai"].sum(), 2)
                 
                 fig_vs = go.Figure()
-                fig_vs.add_trace(go.Scatter(x=df_trend["Tuần"], y=df_trend[cot_kq], mode='lines+markers+text', name='Kết Quả', text
+                
+                # Vẽ đường Kết Quả (Đã ngắt dòng để chống lỗi copy thiếu)
+                fig_vs.add_trace(go.Scatter(
+                    x=df_trend["Tuần"], 
+                    y=df_trend[cot_kq], 
+                    mode='lines+markers+text', 
+                    name='Kết Quả', 
+                    textposition="top center", 
+                    line=dict(color='#1DB954', width=3)
+                ))
+                
+                # Vẽ đường Mục Tiêu
+                fig_vs.add_trace(go.Scatter(
+                    x=df_trend["Tuần"], 
+                    y=df_trend["Đường_Mục_Tiêu"], 
+                    mode='lines+markers', 
+                    name='Mục Tiêu', 
+                    line=dict(color='#E22134', width=3, dash='dash')
+                ))
+                
+                chart_text_color = '#FAFAFA' if not is_light else '#0C7A33'
+                grid_line_color = 'rgba(255, 255, 255, 0.2)' if not is_light else '#E0E0E0'
+                
+                fig_vs.update_layout(
+                    paper_bgcolor='rgba(0,0,0,0)', 
+                    plot_bgcolor='rgba(0,0,0,0)',
+                    font=dict(color=chart_text_color),
+                    xaxis=dict(
+                        gridcolor=grid_line_color, 
+                        griddash='dot', 
+                        tickfont=dict(color=chart_text_color)
+                    ),
+                    yaxis=dict(
+                        gridcolor=grid_line_color, 
+                        griddash='dot', 
+                        rangemode='tozero', 
+                        tickfont=dict(color=chart_text_color)
+                    )
+                )
+                st.plotly_chart(fig_vs, use_container_width=True, theme=None)
 
                 # --- 🏅 3. BẢNG XẾP HẠNG TOP KÊNH (TUẦN - FORMAT V30) ---
                 st.markdown("---")
