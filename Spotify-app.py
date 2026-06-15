@@ -430,7 +430,7 @@ with tab_master:
         elif "%" in col:
             df_display[col] = df_display[col].apply(lambda x: f"{x:,.1f}%" if pd.notnull(x) and isinstance(x, (int, float)) else x)
             
-    # Format URL
+        # Format URL
     link_columns = [col for col in df_display.columns if "Link" in col or "Dẫn chứng" in col]
     def make_clickable(url):
         if pd.isna(url) or str(url).strip() == "" or url == "NA": return ""
@@ -441,22 +441,28 @@ with tab_master:
     for col in link_columns:
         df_display[col] = df_display[col].apply(make_clickable)
 
-    html_table = df_display.to_html(escape=False, index=False, classes='spotify-table')
+    # FIX LỖI MẤT DẠNG BẢNG: Ép HTML thành 1 dòng duy nhất để Streamlit không bị lỗi Markdown
+    html_table = df_display.to_html(escape=False, index=False, classes='spotify-table').replace('\n', '')
+    
     css = f"""
     <style>
     .spotify-table {{ width: 100%; border-collapse: collapse; font-family: 'Lexend', sans-serif; color: {'#111827' if is_light else '#FAFAFA'}; font-size: 13px; }}
-    .spotify-table th {{ background-color: {'#E22134' if is_light else '#E22134'}; color: white; padding: 12px 8px; text-align: center; border: 1px solid {'#E0E0E0' if is_light else '#404040'}; position: sticky; top: 0; z-index: 1; }}
+    .spotify-table th {{ background-color: #E22134; color: white; padding: 12px 8px; text-align: center; border: 1px solid {'#E0E0E0' if is_light else '#404040'}; position: sticky; top: 0; z-index: 1; }}
     .spotify-table td {{ padding: 10px 8px; text-align: center; border: 1px solid {'#E0E0E0' if is_light else '#404040'}; }}
     .spotify-table tr:nth-child(even) {{ background-color: {'#F8F9FA' if is_light else '#262730'}; }}
     .spotify-table tr:hover {{ background-color: {'#FFD1BA' if is_light else '#404040'}; }}
     .spotify-table tr:first-child {{ font-weight: bold; background-color: {'#FFE5D9' if is_light else '#303030'} !important; border-bottom: 2px solid #E22134; }}
-    .spotify-table tr:first-child td {{ color: {'#E22134' if is_light else '#FFD1BA'} !important; }}
+    .spotify-table tr:first-child td {{ color: #E22134 !important; }}
     .table-container {{ overflow-x: auto; max-height: 600px; border-radius: 8px; border: 1px solid {'#E0E0E0' if is_light else '#404040'}; }}
     </style>
     """
-    st.markdown(css + f'<div class="table-container">{html_table}</div>', unsafe_allow_html=True)
+    
+    # Dùng st.write thay cho st.markdown để render HTML ổn định hơn
+    st.write(css + f'<div class="table-container">{html_table}</div>', unsafe_allow_html=True)
+    
+    # Nút xuất Excel (Đã fix lỗi tên biến chon_thang)
     st.download_button(label="📥 Xuất Excel (Sheet này)", data=df_display.to_csv(index=False).encode('utf-8-sig'), file_name=f"BaoCao_{chon_thang}_{chiso_sheet}.csv", mime='text/csv')
-
+    
 # ==========================================
 # TAB 3: NHẬP KPI
 # ==========================================
