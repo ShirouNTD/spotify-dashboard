@@ -861,35 +861,53 @@ with tab_backup:
         else:
             st.button("📥 KPI (Đang trống)", disabled=True, use_container_width=True)
 
-    # --- PHẦN 2: TẢI LÊN (RESTORE) TÍCH HỢP MULTI-UPLOAD ---
+    # --- PHẦN 2: TẢI LÊN (RESTORE) TÍCH HỢP GỘP DỮ LIỆU ---
     with col2:
-        st.subheader("⬆️ Khôi phục dữ liệu")
-        st.markdown("Boss có thể **kéo thả nhiều file CSV cùng lúc** vào đây để hệ thống nạp đủ data!")
+        st.subheader("⬆️ Khôi phục / Thêm dữ liệu")
+        st.markdown("Boss có thể tải lên file CSV mới. Dữ liệu sẽ tự động được **GỘP CHUNG** với các tháng cũ (không lo bị mất)!")
         
         # Cho phép chọn nhiều file
         uploaded_files = st.file_uploader("Upload các file CSV (MasterData, MonthlyData, KPI):", type=['csv'], accept_multiple_files=True)
         
         if uploaded_files:
-            if st.button("🚀 XÁC NHẬN KHÔI PHỤC TẤT CẢ", type="primary", use_container_width=True):
+            if st.button("🚀 XÁC NHẬN CẬP NHẬT DỮ LIỆU", type="primary", use_container_width=True):
                 so_luong_thanh_cong = 0
                 for file in uploaded_files:
-                    # Tự động nhận diện file dựa vào tên file Boss tải lên
+                    # Tự động nhận diện file
                     if "MasterData" in file.name or "Tuần" in file.name:
                         target_path = FILE_DU_LIEU
+                        subset_keys = ["Tháng", "Tuần", "Kênh_Spotify"] # Chìa khóa để chống trùng
                     elif "MonthlyData" in file.name or "Tháng" in file.name:
                         target_path = FILE_KQ_THANG
+                        subset_keys = ["Tháng", "Kênh_Spotify"]
                     elif "KPI" in file.name or "Mục tiêu" in file.name:
                         target_path = FILE_KPI
+                        subset_keys = ["Tháng", "Kênh_Spotify"]
                     else:
-                        continue # Bỏ qua nếu tên file không chứa các từ khóa trên
+                        continue # Bỏ qua nếu tên file không liên quan
                         
-                    # Tiến hành lưu đè file
-                    with open(target_path, "wb") as f:
-                        f.write(file.getbuffer())
-                    so_luong_thanh_cong += 1
+                    # THUẬT TOÁN GỘP DỮ LIỆU THÔNG MINH
+                    try:
+                        import os
+                        new_df = pd.read_csv(file)
+                        
+                        if os.path.exists(target_path):
+                            old_df = pd.read_csv(target_path)
+                            # Nối 2 bảng lại với nhau
+                            combined_df = pd.concat([old_df, new_df], ignore_index=True)
+                            # Xóa các dòng trùng lặp (nếu ngài up file tháng 5 hai lần, nó sẽ giữ lần up sau cùng)
+                            combined_df = combined_df.drop_duplicates(subset=subset_keys, keep="last")
+                        else:
+                            combined_df = new_df
+                            
+                        # Lưu lại thành file CSV mới đã gộp
+                        combined_df.to_csv(target_path, index=False)
+                        so_luong_thanh_cong += 1
+                    except Exception as e:
+                        st.error(f"❌ Lỗi khi gộp file {file.name}: {e}")
                 
                 if so_luong_thanh_cong > 0:
-                    st.success(f"✅ Đã khôi phục thành công {so_luong_thanh_cong} file! Đang làm mới...")
+                    st.success(f"✅ Đã CẬP NHẬT GỘP thành công {so_luong_thanh_cong} file! Đang làm mới...")
                     import time
                     time.sleep(1)
                     try:
@@ -898,7 +916,6 @@ with tab_backup:
                         st.experimental_rerun()
                 else:
                     st.error("❌ Không tìm thấy file hợp lệ. Vui lòng kiểm tra lại tên file.")
-
 
 # ==========================================
 # TAB 7: HƯỚNG DẪN CONVERT EXCEL SANG CSV
