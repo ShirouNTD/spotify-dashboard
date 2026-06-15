@@ -260,27 +260,26 @@ with tab_dashboard:
     if loai_dashboard == "📅 Báo cáo Tuần (Tiến độ)":
         if df.empty: st.info("Hệ thống chưa có dữ liệu kết quả TUẦN nào.")
         else:
-            col_loc1, col_loc_tuan, col_loc2, col_loc3 = st.columns([1.2, 1.2, 2, 1.2])
-            
-            with col_loc1:
-                thang_hien_co = list(df["Tháng"].unique())
-                thang_chon_db = st.selectbox("📅 Lọc theo Tháng:", ["Tất cả các tháng"] + thang_hien_co, index=(len(thang_hien_co)), key="loc_thang_w")
-            
-            df_thang = df if thang_chon_db == "Tất cả các tháng" else df[df["Tháng"] == thang_chon_db]
-            
-            with col_loc_tuan:
-                if not df_thang.empty and "Tuần" in df_thang.columns:
-                    tuan_hien_co = list(df_thang["Tuần"].dropna().unique())
-                    tuan_hien_co.sort(key=lambda x: int(str(x).replace("Tuần ", "")) if "Tuần " in str(x) else 0)
-                else:
-                    tuan_hien_co = []
-                tuan_chon = st.multiselect("🗓️ Chọn Tuần hiển thị:", options=tuan_hien_co, default=tuan_hien_co, key="loc_tuan_w")
+            # === TẠO CỘT THỜI GIAN GỘP "THÁNG - TUẦN" ===
+            if not df.empty and "Tháng" in df.columns and "Tuần" in df.columns:
+                df["Tháng_Tuần"] = df["Tháng"].astype(str) + " - " + df["Tuần"].astype(str)
 
-            with col_loc2: 
-                danh_sach_kenh_hien_co = list(df_thang["Kênh_Spotify"].unique())
+            # Chia lại bộ lọc thành 3 cột cho gọn gàng
+            col_loc_thoigian, col_loc_kenh, col_loc_bkt = st.columns([2.5, 2.5, 1.5])
+            
+            with col_loc_thoigian:
+                if not df.empty and "Tháng_Tuần" in df.columns:
+                    thoigian_hien_co = df["Tháng_Tuần"].dropna().unique().tolist()
+                else:
+                    thoigian_hien_co = []
+                
+                tuan_chon = st.multiselect("🗓️ Chọn Thời Gian:", options=thoigian_hien_co, default=thoigian_hien_co, key="loc_thoigian_w")
+
+            with col_loc_kenh: 
+                danh_sach_kenh_hien_co = list(df["Kênh_Spotify"].unique())
                 kenh_duoc_chon = st.multiselect("🎧 Lọc theo Kênh:", options=danh_sach_kenh_hien_co, default=danh_sach_kenh_hien_co, key="loc_kenh_w")
                 
-            with col_loc3: 
+            with col_loc_bkt: 
                 loc_bkt = st.selectbox("🚦 Kiếm Tiền:", ["Tất cả", "Đã bật", "Chưa bật"], key="loc_bkt_w")
             
             kenh_hien_thi_cuoi_cung = [k for k in kenh_duoc_chon if (loc_bkt == "Tất cả") or (loc_bkt == "Đã bật" and lay_trang_thai_kiem_tien(k)) or (loc_bkt == "Chưa bật" and not lay_trang_thai_kiem_tien(k))]
@@ -300,16 +299,21 @@ with tab_dashboard:
 
             # 2. Logic kiểm tra hiển thị
             if len(kenh_hien_thi_cuoi_cung) == 0 or len(tuan_chon) == 0: 
-                st.warning("⚠️ App đang chờ lệnh! Boss vui lòng đảm bảo đã chọn ít nhất 1 Kênh VÀ 1 Tuần ở bộ lọc phía trên nhé.")
+                st.warning("⚠️ App đang chờ lệnh! Boss vui lòng đảm bảo đã chọn ít nhất 1 Kênh VÀ 1 Mốc Thời Gian ở bộ lọc phía trên nhé.")
             else:
-                df_final = df_thang[df_thang["Kênh_Spotify"].isin(kenh_hien_thi_cuoi_cung) & df_thang["Tuần"].isin(tuan_chon)]
-                df_kpi_filter = df_kpi[df_kpi["Kênh_Spotify"].isin(kenh_hien_thi_cuoi_cung)]
-                if thang_chon_db != "Tất cả các tháng": 
-                    df_kpi_filter = df_kpi_filter[df_kpi_filter["Tháng"] == thang_chon_db]
+                # Lọc data chính xác theo "Tháng - Tuần"
+                df_final = df[df["Kênh_Spotify"].isin(kenh_hien_thi_cuoi_cung) & df["Tháng_Tuần"].isin(tuan_chon)].copy()
+                
+                # TRÁO CỘT THẦN THÁNH
+                df_final["Tuần"] = df_final["Tháng_Tuần"]
+                
+                # Tự động lấy KPI của các tháng tương ứng
+                thang_lien_quan = df_final["Tháng"].unique().tolist()
+                df_kpi_filter = df_kpi[df_kpi["Kênh_Spotify"].isin(kenh_hien_thi_cuoi_cung) & df_kpi["Tháng"].isin(thang_lien_quan)]
                     
                 so_tuan_chon = len(tuan_chon)
-                target_dt = (df_kpi_filter["KPI_Doanh_Thu"] / df_kpi_filter["So_Tuan"].fillna(4)).sum() * so_tuan_chon if len(tuan_chon) < len(tuan_hien_co) else df_kpi_filter["KPI_Doanh_Thu"].sum()
-                target_play = (df_kpi_filter["KPI_Luot_Play"] / df_kpi_filter["So_Tuan"].fillna(4)).sum() * so_tuan_chon if len(tuan_chon) < len(tuan_hien_co) else df_kpi_filter["KPI_Luot_Play"].sum()
+                target_dt = (df_kpi_filter["KPI_Doanh_Thu"] / df_kpi_filter["So_Tuan"].fillna(4)).sum() * so_tuan_chon if len(tuan_chon) < len(thoigian_hien_co) else df_kpi_filter["KPI_Doanh_Thu"].sum()
+                target_play = (df_kpi_filter["KPI_Luot_Play"] / df_kpi_filter["So_Tuan"].fillna(4)).sum() * so_tuan_chon if len(tuan_chon) < len(thoigian_hien_co) else df_kpi_filter["KPI_Luot_Play"].sum()
 
                 st.markdown("### 🏆 1. Chỉ Số Tuần Tổng Quan")
                 dt_pct = (df_final['Doanh_Thu_USD'].sum() / target_dt * 100) if target_dt > 0 else 0
@@ -329,32 +333,14 @@ with tab_dashboard:
                 df_kpi_filter["Muc_Tieu_Tuan_Hien_Tai"] = df_kpi_filter[cot_kpi].fillna(0) / df_kpi_filter["So_Tuan"].fillna(4)
                 
                 df_trend = df_final.groupby("Tuần")[cot_kq].sum().reset_index()
+                # Xếp hạng lại theo đúng thứ tự thời gian gốc thay vì xếp alphabet
+                df_trend["Tuần"] = pd.Categorical(df_trend["Tuần"], categories=thoigian_hien_co, ordered=True)
+                df_trend = df_trend.sort_values("Tuần")
+                
                 df_trend["Đường_Mục_Tiêu"] = round(df_kpi_filter["Muc_Tieu_Tuan_Hien_Tai"].sum(), 2)
                 
                 fig_vs = go.Figure()
-                fig_vs.add_trace(go.Scatter(x=df_trend["Tuần"], y=df_trend[cot_kq], mode='lines+markers+text', name='Kết Quả', textposition="top center", line=dict(color='#1DB954', width=3)))
-                fig_vs.add_trace(go.Scatter(x=df_trend["Tuần"], y=df_trend["Đường_Mục_Tiêu"], mode='lines+markers', name='Mục Tiêu', line=dict(color='#E22134', width=3, dash='dash')))
-                
-                chart_text_color = '#FAFAFA' if not is_light else '#0C7A33'
-                grid_line_color = 'rgba(255, 255, 255, 0.2)' if not is_light else '#E0E0E0'
-                
-                fig_vs.update_layout(
-                    paper_bgcolor='rgba(0,0,0,0)', 
-                    plot_bgcolor='rgba(0,0,0,0)',
-                    font=dict(color=chart_text_color),
-                    xaxis=dict(
-                        gridcolor=grid_line_color, 
-                        griddash='dot', 
-                        tickfont=dict(color=chart_text_color)
-                    ),
-                    yaxis=dict(
-                        gridcolor=grid_line_color, 
-                        griddash='dot', 
-                        rangemode='tozero', 
-                        tickfont=dict(color=chart_text_color)
-                    )
-                )
-                st.plotly_chart(fig_vs, use_container_width=True, theme=None)
+                fig_vs.add_trace(go.Scatter(x=df_trend["Tuần"], y=df_trend[cot_kq], mode='lines+markers+text', name='Kết Quả', text
 
                 # --- 🏅 3. BẢNG XẾP HẠNG TOP KÊNH (TUẦN - FORMAT V30) ---
                 st.markdown("---")
