@@ -310,8 +310,21 @@ with tab_master:
             
     df_display.rename(columns=rename_map, inplace=True)
     
-    # --- 🛠️ BỔ SUNG BỘ ĐIỀU KHIỂN ẨN / HIỆN ĐỘNG ---
+# --- 🛠️ BỔ SUNG BỘ ĐIỀU KHIỂN ẨN / HIỆN ĐỘNG ---
     with st.expander("👁️ Tùy chỉnh Ẩn / Hiện Cột & Hàng số liệu"):
+        # Tiêm CSS đặc trị: Giới hạn độ cao ô chọn (có thanh cuộn) và fix màu chữ/nền
+        st.markdown("""
+        <style>
+        div[data-baseweb="select"] > div:first-child {
+            max-height: 100px !important;
+            overflow-y: auto !important;
+        }
+        div[data-baseweb="popover"] {
+            z-index: 999999 !important;
+        }
+        </style>
+        """, unsafe_allow_html=True)
+        
         col_cfg1, col_cfg2 = st.columns(2)
         with col_cfg1:
             tat_ca_cot = df_display.columns.tolist()
