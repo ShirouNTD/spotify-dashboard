@@ -374,10 +374,68 @@ with tab_master:
         st.download_button(label="📥 Xuất Excel (Sheet này)", data=df_display_final.to_csv(index=False).encode('utf-8-sig'), file_name=f"BaoCao_{chon_thang}_{chiso_sheet}.csv", mime='text/csv')
 
 # ==========================================
-# TAB 3: NHẬP KPI (GIỮ NGUYÊN)
+# TAB 3: NHẬP KPI (BẢN FULL ĐẦY ĐỦ CÔNG LỰC)
 # ==========================================
 with tab_nhap_kpi:
-    st.info("💡 Boss vui lòng nhập Mục Tiêu tại đây. Nếu có thay đổi, cứ nhập lại cùng Kênh/Tháng để ghi đè.")
+    st.header("🎯 Cài đặt Mục Tiêu (KPI)")
+    rk_kpi = st.session_state.rk_kpi
+    
+    col_kpi1, col_kpi2, col_kpi3 = st.columns(3)
+    with col_kpi1:
+        thang_kpi = st.selectbox("Chọn Tháng thiết lập:", [f"Tháng {i}" for i in range(1, 13)], key=f"t_kpi_{rk_kpi}")
+        lua_chon_kenh_kpi = st.selectbox("Chọn Kênh / Thêm Kênh mới:", ["➕ Nhập kênh mới..."] + danh_sach_kenh_master, key=f"c_kpi_{rk_kpi}")
+        if lua_chon_kenh_kpi == "➕ Nhập kênh mới...":
+            kenh_kpi = st.text_input("Gõ tên kênh mới:", key=f"new_c_kpi_{rk_kpi}").strip()
+            trang_thai_mac_dinh = False
+        else:
+            kenh_kpi = lua_chon_kenh_kpi
+            trang_thai_mac_dinh = lay_trang_thai_kiem_tien(kenh_kpi)
+            
+        bkt_kpi = st.checkbox("✅ Kênh đã bật kiếm tiền", value=trang_thai_mac_dinh, key=f"bkt_{lua_chon_kenh_kpi}_{rk_kpi}")
+        
+    kpi_cu = df_kpi[(df_kpi["Tháng"] == thang_kpi) & (df_kpi["Kênh_Spotify"] == kenh_kpi)]
+    if not kpi_cu.empty and kenh_kpi:
+        v_w = int(kpi_cu.iloc[0]["So_Tuan"]) if pd.notna(kpi_cu.iloc[0]["So_Tuan"]) else 4
+        v_dt = float(kpi_cu.iloc[0]["KPI_Doanh_Thu"]) if pd.notna(kpi_cu.iloc[0]["KPI_Doanh_Thu"]) else 0.0
+        v_p = int(kpi_cu.iloc[0]["KPI_Luot_Play"]) if pd.notna(kpi_cu.iloc[0]["KPI_Luot_Play"]) else 0
+        v_g = float(kpi_cu.iloc[0]["KPI_So_Gio"]) if pd.notna(kpi_cu.iloc[0]["KPI_So_Gio"]) else 0.0
+        v_t = int(kpi_cu.iloc[0]["KPI_So_Tap"]) if pd.notna(kpi_cu.iloc[0]["KPI_So_Tap"]) else 0
+        st.info(f"💡 Đang hiển thị Mục tiêu cũ của **{kenh_kpi}** ({thang_kpi}). Boss có thể sửa số và bấm Lưu để GHI ĐÈ.")
+    else:
+        v_w, v_dt, v_p, v_g, v_t = 4, 0.0, 0, 0.0, 0
+
+    with col_kpi2:
+        so_tuan_kpi = st.number_input("Tháng này có bao nhiêu Tuần?", min_value=1, max_value=5, value=v_w, key=f"w_kpi_{rk_kpi}")
+        dt_kpi = st.number_input("KPI Doanh thu (USD):", min_value=0.0, step=10.0, value=v_dt, key=f"dt_kpi_{rk_kpi}")
+        play_kpi = st.number_input("KPI Lượt Play:", min_value=0, step=1000, value=v_p, key=f"p_kpi_{rk_kpi}")
+    with col_kpi3:
+        gio_kpi = st.number_input("KPI Giờ nghe (h):", min_value=0.0, step=100.0, value=v_g, key=f"g_kpi_{rk_kpi}")
+        tap_kpi = st.number_input("KPI Số tập Upload:", min_value=0, step=1, value=v_t, key=f"tap_kpi_{rk_kpi}")
+        
+        st.markdown("<br><br>", unsafe_allow_html=True)
+        if st.button("Lưu KPI", type="primary", use_container_width=True):
+            if not kenh_kpi:
+                st.error("⚠️ Vui lòng nhập hoặc chọn Tên Kênh!")
+            else:
+                # Lọc bỏ bản ghi cũ nếu trùng Thang và Kenh để chuẩn bị ghi đè
+                df_kpi_filter = df_kpi[~((df_kpi["Tháng"] == thang_kpi) & (df_kpi["Kênh_Spotify"] == kenh_kpi))]
+                kpi_moi = pd.DataFrame([{ "Tháng": thang_kpi, "Kênh_Spotify": kenh_kpi, "KPI_Doanh_Thu": float(dt_kpi), "KPI_Luot_Play": int(play_kpi), "KPI_So_Gio": float(gio_kpi), "KPI_So_Tap": int(tap_kpi), "So_Tuan": int(so_tuan_kpi), "Bat_Kiem_Tien": bkt_kpi }])
+                df_kpi_new = pd.concat([df_kpi_filter, kpi_moi], ignore_index=True)
+                df_kpi_new.to_csv(FILE_KPI, index=False)
+                
+                # Đồng bộ trạng thái Bật Kiếm Tiền sang bảng kết quả tuần
+                df_update_bkt = pd.read_csv(FILE_DU_LIEU)
+                df_update_bkt.loc[df_update_bkt["Kênh_Spotify"] == kenh_kpi, "Bat_Kiem_Tien"] = bkt_kpi
+                df_update_bkt.to_csv(FILE_DU_LIEU, index=False)
+                
+                # Đồng bộ trạng thái Bật Kiếm Tiền sang bảng kết quả tháng chốt
+                df_thang_update = pd.read_csv(FILE_KQ_THANG)
+                df_thang_update.loc[df_thang_update["Kênh_Spotify"] == kenh_kpi, "Bat_Kiem_Tien"] = bkt_kpi
+                df_thang_update.to_csv(FILE_KQ_THANG, index=False)
+                
+                st.session_state.rk_kpi += 1
+                st.success("✅ Đã lưu cấu hình KPI thành công!")
+                import time; time.sleep(0.5); st.rerun()
 
 # ==========================================
 # TAB 4: NHẬP KẾT QUẢ VỚI 4 CỘT LINK
