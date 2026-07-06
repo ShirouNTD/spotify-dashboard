@@ -142,7 +142,14 @@ def tao_sheet_tong_hop(thang_chon, chiso_chon):
     master["Kết quả tháng"] = master["Kết quả tháng"].fillna(0)
     master["% Hoàn thành tháng"] = (master["Kết quả tháng"] / master[col_kpi].replace(0, pd.NA) * 100).fillna(0).replace([float('inf'), -float('inf')], 0)
     
-    tuan_trong_thang = sorted([t for t in df_kq[df_kq["Tháng"] == thang_chon]["Tuần"].unique()], key=lay_so_thu_tu)
+# NÂNG CẤP: Tự động đẻ số lượng cột Tuần theo KPI hoặc theo dữ liệu thực tế lớn nhất
+    max_tuan_kpi = int(master["So_Tuan"].max()) if not master.empty and pd.notna(master["So_Tuan"].max()) else 4
+    tuan_co_san = [lay_so_thu_tu(t) for t in df_kq[df_kq["Tháng"] == thang_chon]["Tuần"].dropna().unique()]
+    max_tuan_thuc_te = max(tuan_co_san) if tuan_co_san else 0
+    so_cot_tuan_can_ve = max(max_tuan_kpi, max_tuan_thuc_te)
+    
+    tuan_trong_thang = [f"Tuần {i}" for i in range(1, so_cot_tuan_can_ve + 1)]
+    
     for tuan in tuan_trong_thang:
         master[f"{tuan}_Target"] = (master[col_kpi] / master["So_Tuan"]).fillna(0)
         
@@ -180,8 +187,8 @@ def tao_sheet_tong_hop(thang_chon, chiso_chon):
     return master, col_kpi
 
 # TABS
-tab_dashboard, tab_master, tab_nhap_kpi, tab_nhap_kq, tab_xoa_data, tab_backup, tab_huong_dan = st.tabs([
-    "📊 Dashboard", "📑 Sheet Tổng Hợp", "🎯 Nhập Mục Tiêu", "📥 Nhập Kết Quả", "🛠️ Quản Lý", "💾 Backup", "🔄 Hướng Dẫn"
+tab_dashboard, tab_master, tab_nhap_kpi, tab_nhap_kq, tab_xoa_data, tab_backup, tab_huong_dan, tab_edit_data = st.tabs([
+    "📊 Dashboard", "📑 Sheet Tổng Hợp", "🎯 Nhập Mục Tiêu", "📥 Nhập Kết Quả", "🛠️ Quản Lý", "💾 Backup", "🔄 Hướng Dẫn", "✏️ Sửa Data"
 ])
 
 # ==========================================
@@ -527,3 +534,36 @@ with tab_huong_dan:
     * Quay lại trang Web Dashboard này. Chuyển sang Tab **"💾 Backup"**.
     * Tại mục **Khôi phục / Thêm dữ liệu**, kéo thả các file CSV vừa tải về vào khung Upload và bấm **Xác nhận**. Hệ thống sẽ tự động cập nhật biểu đồ!
     """)
+
+# ==========================================
+# TAB 8: EDIT DATA TRỰC TIẾP NHƯ EXCEL
+# ==========================================
+with tab_edit_data:
+    st.header("✏️ Chỉnh Sửa Dữ Liệu Trực Tiếp")
+    st.info("💡 Boss click đúp chuột (Double-click) vào ô bất kỳ để sửa số liệu. Để thêm dòng mới, kéo xuống dưới cùng bảng và gõ vào dòng trống. (Có thể bôi đen nhiều dòng rồi bấm phím Delete để xóa). Làm xong nhớ bấm **LƯU THAY ĐỔI** nhé!")
+    
+    bang_chon = st.selectbox("📌 Chọn bảng dữ liệu cần thao tác:", ["🎯 Mục Tiêu (KPI)", "📅 Kết Quả Tuần", "📆 Kết Quả Tháng"])
+    
+    if bang_chon == "🎯 Mục Tiêu (KPI)":
+        df_edit_kpi = pd.read_csv(FILE_KPI)
+        edited_kpi = st.data_editor(df_edit_kpi, num_rows="dynamic", use_container_width=True, key="editor_kpi")
+        if st.button("💾 LƯU BẢNG KPI", type="primary"):
+            edited_kpi.to_csv(FILE_KPI, index=False)
+            st.success("✅ Đã lưu! Bảng Tổng Hợp sẽ tự động thêm/bớt cột Tuần theo số lượng ngài vừa chỉnh.")
+            import time; time.sleep(0.5); st.rerun()
+            
+    elif bang_chon == "📅 Kết Quả Tuần":
+        df_edit_tuan = pd.read_csv(FILE_DU_LIEU)
+        edited_tuan = st.data_editor(df_edit_tuan, num_rows="dynamic", use_container_width=True, key="editor_tuan")
+        if st.button("💾 LƯU BẢNG KẾT QUẢ TUẦN", type="primary"):
+            edited_tuan.to_csv(FILE_DU_LIEU, index=False)
+            st.success("✅ Đã cập nhật Kết Quả Tuần trực tiếp vào Database!")
+            import time; time.sleep(0.5); st.rerun()
+            
+    elif bang_chon == "📆 Kết Quả Tháng":
+        df_edit_thang = pd.read_csv(FILE_KQ_THANG)
+        edited_thang = st.data_editor(df_edit_thang, num_rows="dynamic", use_container_width=True, key="editor_thang")
+        if st.button("💾 LƯU BẢNG KẾT QUẢ THÁNG", type="primary"):
+            edited_thang.to_csv(FILE_KQ_THANG, index=False)
+            st.success("✅ Đã cập nhật Kết Quả Tháng trực tiếp vào Database!")
+            import time; time.sleep(0.5); st.rerun()
