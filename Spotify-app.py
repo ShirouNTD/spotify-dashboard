@@ -104,7 +104,7 @@ def make_card(label, value, pct=None):
     return f'<div class="spotify-card"><div class="spotify-label">{label}</div><div class="spotify-value">{value}</div><div>{badge_html}</div></div>'
 
 # ==========================================
-# CẬP NHẬT HÀM TẠO SHEET TỔNG HỢP (THÔNG MINH NHẬN DIỆN LINK)
+# CẬP NHẬT HÀM TẠO SHEET TỔNG HỢP (CHỈ HIỆN KÊNH CÓ KPI)
 # ==========================================
 def tao_sheet_tong_hop(thang_chon, chiso_chon):
     df_kq = pd.read_csv(FILE_DU_LIEU)
@@ -120,8 +120,14 @@ def tao_sheet_tong_hop(thang_chon, chiso_chon):
     }
     col_kq, col_kpi, col_link = map_col[chiso_chon]["kq"], map_col[chiso_chon]["kpi"], map_col[chiso_chon]["link"]
     
+    # Lọc data KPI theo tháng Boss chọn
     kpi_thang = df_kpi[df_kpi["Tháng"] == thang_chon]
-    master = pd.DataFrame(danh_sach_kenh_master, columns=["Kênh_Spotify"]).merge(kpi_thang[["Kênh_Spotify", col_kpi, "So_Tuan"]], on="Kênh_Spotify", how="left")
+    
+    # --- LOGIC MỚI: CHỈ LẤY CÁC KÊNH CÓ MỤC TIÊU TRONG THÁNG NÀY ---
+    danh_sach_kenh_co_kpi = kpi_thang["Kênh_Spotify"].dropna().unique().tolist()
+    
+    # Tạo bảng gốc chỉ từ danh sách kênh vừa lọc
+    master = pd.DataFrame(danh_sach_kenh_co_kpi, columns=["Kênh_Spotify"]).merge(kpi_thang[["Kênh_Spotify", col_kpi, "So_Tuan"]], on="Kênh_Spotify", how="left")
     master[col_kpi] = master[col_kpi].fillna(0)
 
     if col_kq not in df_kq.columns: return pd.DataFrame(), col_kpi
@@ -283,7 +289,7 @@ with tab_dashboard:
             st.info("💡 Boss xem Sheet Tổng Hợp hoặc nạp thêm dữ liệu để hiển thị biểu đồ Tháng đầy đủ nhé.")
 
 # ==========================================
-# TAB 2: SHEET TỔNG HỢP (HIỂN THỊ LINK ĐỘNG)
+# TAB 2: SHEET TỔNG HỢP (THÊM TÍNH NĂNG ẨN/HIỆN CỘT & HÀNG)
 # ==========================================
 with tab_master:
     st.header("📑 Sheet Tổng Hợp Hiệu Suất")
@@ -304,27 +310,55 @@ with tab_master:
             
     df_display.rename(columns=rename_map, inplace=True)
     
-    for col in df_display.columns:
-        if "KPI" in col or "Kết quả" in col or "Total" in col:
-            if chiso_sheet == "Doanh Thu": df_display[col] = df_display[col].apply(lambda x: f"${x:,.2f}" if pd.notnull(x) and isinstance(x, (int, float)) else x)
-            else: df_display[col] = df_display[col].apply(lambda x: f"{x:,.0f}" if pd.notnull(x) and isinstance(x, (int, float)) else x)
-        elif "%" in col:
-            df_display[col] = df_display[col].apply(lambda x: f"{x:,.1f}%" if pd.notnull(x) and isinstance(x, (int, float)) else x)
-            
-    # Format URL
-    link_columns = [col for col in df_display.columns if "Link" in col or "Dẫn chứng" in col]
-    def make_clickable(url):
-        if pd.isna(url) or str(url).strip() == "" or url == "NA": return ""
-        links = str(url).split(" | ")
-        html_links = [f'<a href="{l.strip()}" target="_blank" style="color: #1DB954; text-decoration: underline;">🔗 Xem Link</a>' for l in links if l.strip()]
-        return " | ".join(html_links)
+    # --- 🛠️ BỔ SUNG BỘ ĐIỀU KHIỂN ẨN / HIỆN ĐỘNG ---
+    with st.expander("👁️ Tùy chỉnh Ẩn / Hiện Cột & Hàng số liệu"):
+        col_cfg1, col_cfg2 = st.columns(2)
+        with col_cfg1:
+            tat_ca_cot = df_display.columns.tolist()
+            cot_chon = st.multiselect("📋 Chọn CỘT muốn hiển thị:", options=tat_ca_cot, default=tat_ca_cot, key="cfg_cot_s")
+        with col_cfg2:
+            tat_ca_hang = df_display["Kênh"].dropna().unique().tolist()
+            hang_chon = st.multiselect("🏢 Chọn HÀNG (Kênh) muốn hiển thị:", options=tat_ca_hang, default=tat_ca_hang, key="cfg_hang_s")
+    
+    # Kiểm tra nếu Boss lỡ tay tắt sạch
+    if not cot_chon or not hang_chon:
+        st.warning("⚠️ App đang chờ lệnh! Boss vui lòng chọn ít nhất 1 Cột và 1 Hàng ở hộp Tùy chỉnh phía trên để hiển thị bảng nhé.")
+    else:
+        # 1. Lọc các Hàng (Kênh) được chọn
+        df_display = df_display[df_display["Kênh"].isin(hang_chon)].copy()
         
-    for col in link_columns: df_display[col] = df_display[col].apply(make_clickable)
+        # 2. Định dạng số liệu cho các cột (Chỉ format trên các cột được Boss chọn hiển thị)
+        for col in df_display.columns:
+            if col in cot_chon:
+                if "KPI" in col or "Kết quả" in col or "Total" in col:
+                    if chiso_sheet == "Doanh Thu": 
+                        df_display[col] = df_display[col].apply(lambda x: f"${x:,.2f}" if pd.notnull(x) and isinstance(x, (int, float)) else x)
+                    else: 
+                        df_display[col] = df_display[col].apply(lambda x: f"{x:,.0f}" if pd.notnull(x) and isinstance(x, (int, float)) else x)
+                elif "%" in col:
+                    df_display[col] = df_display[col].apply(lambda x: f"{x:,.1f}%" if pd.notnull(x) and isinstance(x, (int, float)) else x)
+                
+        # 3. Định dạng URL cho các cột Link nằm trong danh sách hiển thị
+        link_columns = [col for col in df_display.columns if ("Link" in col or "Dẫn chứng" in col) and col in cot_chon]
+        def make_clickable(url):
+            if pd.isna(url) or str(url).strip() == "" or url == "NA": return ""
+            links = str(url).split(" | ")
+            html_links = [f'<a href="{l.strip()}" target="_blank" style="color: #1DB954; text-decoration: underline;">🔗 Xem Link</a>' for l in links if l.strip()]
+            return " | ".join(html_links)
+            
+        for col in link_columns: 
+            df_display[col] = df_display[col].apply(make_clickable)
 
-    html_table = df_display.to_html(escape=False, index=False, classes='spotify-table').replace('\n', '')
-    css = f"<style>.spotify-table {{ width: 100%; border-collapse: collapse; font-family: 'Lexend', sans-serif; color: {'#111827' if is_light else '#FAFAFA'}; font-size: 13px; }} .spotify-table th {{ background-color: #E22134; color: white; padding: 12px 8px; text-align: center; border: 1px solid {'#E0E0E0' if is_light else '#404040'}; position: sticky; top: 0; z-index: 1; }} .spotify-table td {{ padding: 10px 8px; text-align: center; border: 1px solid {'#E0E0E0' if is_light else '#404040'}; }} .spotify-table tr:nth-child(even) {{ background-color: {'#F8F9FA' if is_light else '#262730'}; }} .spotify-table tr:hover {{ background-color: {'#FFD1BA' if is_light else '#404040'}; }} .spotify-table tr:first-child {{ font-weight: bold; background-color: {'#FFE5D9' if is_light else '#303030'} !important; border-bottom: 2px solid #E22134; }} .spotify-table tr:first-child td {{ color: #E22134 !important; }} .table-container {{ overflow-x: auto; max-height: 600px; border-radius: 8px; border: 1px solid {'#E0E0E0' if is_light else '#404040'}; }} </style>"
-    st.write(css + f'<div class="table-container">{html_table}</div>', unsafe_allow_html=True)
-    st.download_button(label="📥 Xuất Excel (Sheet này)", data=df_display.to_csv(index=False).encode('utf-8-sig'), file_name=f"BaoCao_{chon_thang}_{chiso_sheet}.csv", mime='text/csv')
+        # 4. Trích xuất chính xác các Cột cần hiển thị theo cấu hình
+        df_display_final = df_display[cot_chon]
+
+        # Tiến hành vẽ bảng HTML
+        html_table = df_display_final.to_html(escape=False, index=False, classes='spotify-table').replace('\n', '')
+        css = f"<style>.spotify-table {{ width: 100%; border-collapse: collapse; font-family: 'Lexend', sans-serif; color: {'#111827' if is_light else '#FAFAFA'}; font-size: 13px; }} .spotify-table th {{ background-color: #E22134; color: white; padding: 12px 8px; text-align: center; border: 1px solid {'#E0E0E0' if is_light else '#404040'}; position: sticky; top: 0; z-index: 1; }} .spotify-table td {{ padding: 10px 8px; text-align: center; border: 1px solid {'#E0E0E0' if is_light else '#404040'}; }} .spotify-table tr:nth-child(even) {{ background-color: {'#F8F9FA' if is_light else '#262730'}; }} .spotify-table tr:hover {{ background-color: {'#FFD1BA' if is_light else '#404040'}; }} .spotify-table tr:first-child {{ font-weight: bold; background-color: {'#FFE5D9' if is_light else '#303030'} !important; border-bottom: 2px solid #E22134; }} .spotify-table tr:first-child td {{ color: #E22134 !important; }} .table-container {{ overflow-x: auto; max-height: 600px; border-radius: 8px; border: 1px solid {'#E0E0E0' if is_light else '#404040'}; }} </style>"
+        st.write(css + f'<div class="table-container">{html_table}</div>', unsafe_allow_html=True)
+        
+        # Nút xuất Excel cũng tự động cập nhật theo những gì đang hiển thị trên màn hình
+        st.download_button(label="📥 Xuất Excel (Sheet này)", data=df_display_final.to_csv(index=False).encode('utf-8-sig'), file_name=f"BaoCao_{chon_thang}_{chiso_sheet}.csv", mime='text/csv')
 
 # ==========================================
 # TAB 3: NHẬP KPI (GIỮ NGUYÊN)
